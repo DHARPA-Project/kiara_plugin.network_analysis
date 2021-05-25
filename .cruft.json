@@ -1,0 +1,19 @@
+{
+  "template": "https://github.com/DHARPA-Project/kiara_modules.project_template.git",
+  "commit": "aead564fc9a596619fb789a93b32853d0e08db01",
+  "context": {
+    "cookiecutter": {
+      "full_name": "Markus Binsteiner",
+      "email": "markus.binsteiner@uni.lu",
+      "project_name": "network-analysis",
+      "project_slug": "network_analysis",
+      "project_short_description": "Network analysis modules and pipelines for kiara.",
+      "_extensions": [
+        "cookiecutter.extensions.JsonifyExtension"
+      ],
+      "_template": "https://github.com/DHARPA-Project/kiara_modules.project_template.git"
+    }
+  },
+  "directory": null,
+  "checkout": null
+}

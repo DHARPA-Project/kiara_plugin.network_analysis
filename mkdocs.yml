@@ -1,0 +1,43 @@
+site_name: kiara_modules.network_analysis
+repo_url: https://github.com/DHARPA-project/kiara_modules.network_analysis
+site_author: Markus Binsteiner
+docs_dir: docs
+site_dir: build/site
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+
+markdown_extensions:
+- attr_list
+- admonition
+- codehilite:
+    guess_lang: false
+- toc:
+    permalink: true
+- pymdownx.snippets:
+    base_path: docs
+
+nav:
+- Home: index.md
+- Included modules: modules_list.md
+- Included pipelines: pipelines_list.md
+
+plugins:
+- search
+- mknotebooks
+- mkdocstrings:
+    default_handler: python
+    watch:
+      - "src"
+- frkl-docgen:
+    main_module: "kiara_modules.network_analysis"
+- macros:
+   modules:
+     - frkl.project.documentation.mkdocs_macros_frkl
+     - kiara.doc.mkdocs_macros_kiara
+- gen-files:
+    scripts:
+      - scripts/documentation/gen_module_doc.py
