@@ -39,10 +39,10 @@ source .venv/bin/activate
 make init
 ```
 
-After this is done, you should be able to run the included example module via:
+After this is done, you should be able to run one of the included modules via something like:
 
 ```console
-kiara run network_analysis_example text_1="xxx" text_2="yyy"
+kiara run import_network_graph edges_path=path/to/JournalEdges1902.csv source_column=Source target_column=Target
 ...
 ...
 ```
