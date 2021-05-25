@@ -39,6 +39,14 @@ source .venv/bin/activate
 make init
 ```
 
+After this is done, you should be able to run the included example module via:
+
+```console
+kiara run network_analysis_example text_1="xxx" text_2="yyy"
+...
+...
+```
+
 ### ``make`` targets
 
 - ``init``: init development project (install project & dev dependencies into virtualenv, as well as pre-commit git hook)
