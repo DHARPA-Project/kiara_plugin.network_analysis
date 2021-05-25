@@ -47,7 +47,7 @@ MANIFEST
 .venv*/
 pip-wheel-metadata/
 .python-version
-src/kiara_modules/language_processing/version.txt
+src/kiara_modules/network_analysis/version.txt
 .direnv
 public
 site
