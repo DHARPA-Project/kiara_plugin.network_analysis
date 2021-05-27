@@ -3,14 +3,14 @@
   "doc": "First iteration of a network analysis pipeline. This doesn't do much yet.",
   "steps": [
     {
-      "module_type":  "find_shortest_path",
+      "module_type":  "network.graphs.find_shortest_path",
       "step_id": "find_shortest_path",
       "module_config": {
         "mode": "single-pair"
       }
     },
     {
-      "module_type": "graph_properties",
+      "module_type": "network.graphs.graph_properties",
       "module_config": {
         "density": false
       },

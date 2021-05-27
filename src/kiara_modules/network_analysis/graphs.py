@@ -357,6 +357,7 @@ class ExtractGraphPropertiesModule(KiaraModule):
     """Extract inherent properties of a network graph."""
 
     _config_cls = ExtractGraphPropertiesModuleConfig
+    _module_type_name = "graph_properties"
 
     def create_input_schema(
         self,

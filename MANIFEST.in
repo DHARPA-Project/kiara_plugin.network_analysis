@@ -12,3 +12,4 @@ recursive-exclude * *.py[co]
 
 recursive-include docs *.md *.jpg *.png *.gif
 recursive-include src/kiara_modules/network_analysis/resources *
+recursive-include src/kiara_modules/network_analysis/pipelines *
