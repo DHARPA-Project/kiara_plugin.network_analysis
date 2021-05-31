@@ -3,14 +3,36 @@ import copy
 import typing
 from enum import Enum
 
+import networkx
 import networkx as nx
 import pyarrow
 from kiara import KiaraModule
+from kiara.data.types import ValueType
 from kiara.data.values import ValueSchema, ValueSet
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import KiaraModuleConfig
-from networkx import Graph
+from networkx import DiGraph, Graph
 from pydantic import Field, validator
+
+
+class NetworkGraphType(ValueType):
+    def validate(cls, value: typing.Any) -> typing.Any:
+
+        if not isinstance(value, networkx.Graph):
+            raise ValueError(f"Invalid type '{type(value)}' for graph: {value}")
+        return value
+
+    def extract_type_metadata(
+        cls, value: typing.Any
+    ) -> typing.Mapping[str, typing.Any]:
+
+        graph: nx.Graph = value
+        return {
+            "directed": isinstance(value, DiGraph),
+            "number_of_nodes": len(graph.nodes),
+            "number_of_edges": len(graph.edges),
+            "density": nx.density(graph),
+        }
 
 
 class GraphTypesEnum(Enum):
