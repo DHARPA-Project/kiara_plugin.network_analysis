@@ -3,11 +3,11 @@
   "doc": "Create a network graph from 2 tabular data sets: one that contains the edges, one that contains node attributes",
   "steps": [
     {
-      "module_type": "onboarding.import_local_file",
+      "module_type": "onboarding.load_file",
       "step_id": "read_edges_file"
     },
     {
-      "module_type": "onboarding.import_local_file",
+      "module_type": "onboarding.load_file",
       "step_id": "read_nodes_file"
     },
     {
