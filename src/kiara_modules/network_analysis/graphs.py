@@ -37,6 +37,7 @@ class NetworkGraphType(ValueType):
             raise ValueError(f"Invalid type '{type(value)}' for graph: {value}")
         return value
 
+    @classmethod
     def save_config(cls) -> typing.Optional[typing.Mapping[str, typing.Any]]:
 
         return {
