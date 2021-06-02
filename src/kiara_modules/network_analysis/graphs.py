@@ -1,37 +1,59 @@
 # -*- coding: utf-8 -*-
 import copy
+import os
 import typing
 from enum import Enum
 
 import networkx
 import networkx as nx
-import pyarrow
+import pyarrow as pa
 from kiara import KiaraModule
 from kiara.data.types import ValueType
-from kiara.data.values import ValueSchema, ValueSet
+from kiara.data.values import Value, ValueSchema, ValueSet
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import KiaraModuleConfig
-from networkx import DiGraph, Graph
-from pydantic import Field, validator
+from kiara.modules.metadata import ExtractMetadataModule
+from networkx import Graph
+from pyarrow import feather
+from pydantic import BaseModel, Field, validator
 
 
 class NetworkGraphType(ValueType):
+    @classmethod
+    def check_data(cls, data: typing.Any) -> typing.Optional["ValueType"]:
+
+        if isinstance(data, nx.Graph):
+            return NetworkGraphType()
+        else:
+            return None
+
+    @classmethod
+    def python_types(cls) -> typing.Optional[typing.Iterable[typing.Type]]:
+        return [nx.Graph]
+
     def validate(cls, value: typing.Any) -> typing.Any:
 
         if not isinstance(value, networkx.Graph):
             raise ValueError(f"Invalid type '{type(value)}' for graph: {value}")
         return value
 
-    def extract_type_metadata(
-        cls, value: typing.Any
-    ) -> typing.Mapping[str, typing.Any]:
+    def save_config(cls) -> typing.Optional[typing.Mapping[str, typing.Any]]:
 
-        graph: nx.Graph = value
         return {
-            "directed": isinstance(value, DiGraph),
-            "number_of_nodes": len(graph.nodes),
-            "number_of_edges": len(graph.edges),
-            "density": nx.density(graph),
+            "module_type": "network.graphs.write_graph_data",
+            "module_config": {
+                "constants": {
+                    "source_column": "source",
+                    "target_column": "target",
+                    "weight_column": "weight",
+                    "edges_table_name": "edges",
+                    "nodes_table_name": "nodes",
+                    "nodes_table_index": "id",
+                }
+            },
+            "input_name": "graph",
+            "target_name": "folder_path",
+            "load_config_output": "load_config",
         }
 
 
@@ -41,6 +63,148 @@ class GraphTypesEnum(Enum):
     directed = "directed"
     multi_directed = "multi_directed"
     multi_undirected = "multi_undirected"
+
+
+class WriteGraphDataModule(KiaraModule):
+    def create_input_schema(
+        self,
+    ) -> typing.Mapping[
+        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+    ]:
+
+        inputs: typing.Mapping[str, typing.Any] = {
+            "graph": {"type": "network_graph", "doc": "The graph to persist."},
+            "folder_path": {
+                "type": "string",
+                "doc": "The parent directory to save the data to.",
+            },
+            "edges_table_name": {
+                "type": "string",
+                "doc": "The base filename (without extension) for the edges table. If not specified, the edges table won't be written to disk.",
+            },
+            "source_column": {
+                "type": "string",
+                "default": "source",
+                "doc": "The name of the column that contains the edge source in edges table.",
+            },
+            "target_column": {
+                "type": "string",
+                "default": "target",
+                "doc": "The name of the column that contains the edge target in the edges table.",
+            },
+            "weight_column": {
+                "type": "string",
+                "default": "weight",
+                "doc": "The name of the column that contains the edge weight in edges table.",
+            },
+            "nodes_table_name": {
+                "type": "string",
+                "doc": "The base filename (without extension) for the nodes table. If not specified, the nodes table won't be written to disk.",
+                "optional": True,
+            },
+            "nodes_table_index": {
+                "type": "string",
+                "doc": "The name of the column that holds the id property of a node.",
+                "default": "id",
+            },
+        }
+        return inputs
+
+    def create_output_schema(
+        self,
+    ) -> typing.Mapping[
+        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+    ]:
+        outputs: typing.Mapping[str, typing.Any] = {
+            "load_config": {
+                "type": "dict",
+                "doc": "The config to use with kiara to load the saved graph.",
+            }
+        }
+        return outputs
+
+    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+
+        graph: nx.Graph = inputs.get_value_data("graph")
+
+        path = inputs.get_value_data("folder_path")
+
+        edges_table_name = inputs.get_value_data("edges_table_name")
+        nodes_table_name = inputs.get_value_data("nodes_table_name")
+
+        source_column_name = inputs.get_value_data("source_column")
+        target_column_name = inputs.get_value_data("target_column")
+        weight_column_name = inputs.get_value_data("weight_column")
+
+        nodes_table_index = inputs.get_value_data("nodes_table_index")
+
+        graph_type = inputs.get_value_obj("graph").get_metadata("network_graph")[
+            "network_graph"
+        ]["graph_type"]
+
+        input_values = {
+            "edges_file_format": "feather",
+            "nodes_file_format": "feather",
+            "source_column": source_column_name,
+            "target_column": target_column_name,
+            "weight_column": weight_column_name,
+            "nodes_table_index": nodes_table_index,
+            "graph_type": graph_type,
+        }
+
+        if not edges_table_name and not nodes_table_name:
+            raise KiaraProcessingException(
+                "Neither edges_table_name nor nodes_table_name provided."
+            )
+
+        os.makedirs(path, exist_ok=True)
+
+        if edges_table_name:
+            edges_file_name = f"{edges_table_name}.feather"
+            edges_path = os.path.join(path, edges_file_name)
+            df = nx.to_pandas_edgelist(graph, "source", "target")
+            edges_table = pa.Table.from_pandas(df, preserve_index=False)
+
+            # edge_attr_keys = set([k for n in graph.edges for k in graph.edges[n].keys()])
+            # edge_attr_keys.add(weight_column_name)
+
+            feather.write_feather(edges_table, edges_path)
+            input_values["edges_path"] = edges_path
+
+        if nodes_table_name:
+            nodes_file_name = f"{nodes_table_name}.feather"
+            nodes_path = os.path.join(path, nodes_file_name)
+
+            node_attr_keys = set(
+                [k for n in graph.nodes for k in graph.nodes[n].keys()]
+            )
+
+            if nodes_table_index in node_attr_keys:
+                node_attr_keys.remove(nodes_table_index)
+
+            nodes_dict: typing.Dict[str, typing.List[typing.Any]] = {
+                nodes_table_index: []
+            }
+            for k in node_attr_keys:
+                nodes_dict[k] = []
+
+            for node in graph.nodes:
+                nodes_dict[nodes_table_index].append(node)
+                for k in node_attr_keys:
+                    attr = graph.nodes[node].get(k, None)
+                    nodes_dict[k].append(attr)
+
+            nodes_table = pa.Table.from_pydict(nodes_dict)
+            feather.write_feather(nodes_table, nodes_path)
+            input_values["nodes_path"] = nodes_path
+
+        result = {
+            "module_type": "network.graphs.load_network_graph",
+            "inputs": input_values,
+            "output_name": "graph",
+        }
+
+        outputs.set_value("load_config", result)
 
 
 class CreateGraphConfig(KiaraModuleConfig):
@@ -124,7 +288,7 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
         graph_type = GraphTypesEnum[_graph_type]
 
         edges_table_value = inputs.get_value_obj("edges_table")
-        edges_table_obj: pyarrow.Table = edges_table_value.get_value_data()
+        edges_table_obj: pa.Table = edges_table_value.get_value_data()
 
         source_column = inputs.get_value_data("source_column")
         target_column = inputs.get_value_data("target_column")
@@ -205,7 +369,7 @@ class AugmentNetworkGraphModule(KiaraModule):
         input_graph: Graph = inputs.get_value_data("graph")
         graph: Graph = copy.deepcopy(input_graph)
 
-        nodes_table_obj: pyarrow.Table = nodes_table_value.get_value_data()
+        nodes_table_obj: pa.Table = nodes_table_value.get_value_data()
         nodes_table_index = inputs.get_value_data("index_column_name")
         if nodes_table_index not in nodes_table_obj.column_names:
             raise KiaraProcessingException(
@@ -266,7 +430,7 @@ class AddNodesToNetworkGraphModule(KiaraModule):
         input_graph: Graph = inputs.get_value_data("graph")
         graph: Graph = copy.deepcopy(input_graph)
 
-        nodes_table_obj: pyarrow.Table = nodes_table_value.get_value_data()
+        nodes_table_obj: pa.Table = nodes_table_value.get_value_data()
         nodes_table_index = inputs.get_value_data("index_column_name")
 
         attr_dict = (
@@ -447,3 +611,43 @@ class ExtractGraphPropertiesModule(KiaraModule):
         if self.get_config_value("density"):
             density = nx.density(graph)
             outputs.set_values(density=density)
+
+
+class GraphMetadata(BaseModel):
+
+    number_of_nodes: int = Field(description="The number of nodes in this graph.")
+    number_of_edges: int = Field(description="The number of edges in this graph.")
+    directed: bool = Field(description="Whether the graph is directed or not.")
+    density: float = Field(description="The density of the graph.")
+
+
+class GraphMetadataModule(ExtractMetadataModule):
+    @classmethod
+    def _get_supported_types(cls) -> str:
+        return "network_graph"
+
+    @classmethod
+    def get_metadata_key(cls) -> str:
+        return "network_graph"
+
+    def _get_metadata_schema(
+        self, type: str
+    ) -> typing.Union[str, typing.Type[BaseModel]]:
+        return GraphMetadata
+
+    def extract_metadata(self, value: Value) -> typing.Mapping[str, typing.Any]:
+
+        graph: nx.Graph = value.get_value_data()
+
+        # TODO: check for other types
+        if isinstance(graph, nx.DiGraph):
+            graph_type = GraphTypesEnum.directed.value
+        else:
+            graph_type = GraphTypesEnum.undirected.value
+
+        return {
+            "graph_type": graph_type,
+            "number_of_nodes": len(graph.nodes),
+            "number_of_edges": len(graph.edges),
+            "density": nx.density(graph),
+        }

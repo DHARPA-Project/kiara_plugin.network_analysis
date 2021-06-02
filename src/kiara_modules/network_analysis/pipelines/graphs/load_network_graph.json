@@ -1,0 +1,45 @@
+{
+  "module_type_name": "load_network_graph",
+  "doc": "Load a previously saved network graph.",
+  "steps": [
+    {
+      "module_type": "tabular.load_table",
+      "step_id": "load_edges_table"
+    },
+    {
+      "module_type": "tabular.load_table",
+      "step_id": "load_nodes_table"
+    },
+    {
+      "module_type":  "network.graphs.create_graph_from_edges_table",
+      "step_id": "create_graph",
+      "input_links": {
+        "edges_table": "load_edges_table.table"
+      }
+    },
+    {
+      "module_type": "network.graphs.augment_network_graph",
+      "step_id": "augment_graph",
+      "input_links": {
+        "graph": "create_graph.graph",
+        "node_attributes": "load_nodes_table.table"
+      }
+    }
+  ],
+  "input_aliases": {
+    "load_edges_table__path": "edges_path",
+    "load_edges_table__format": "edges_file_format",
+    "load_nodes_table__path": "nodes_path",
+    "load_nodes_table__format": "nodes_file_format",
+    "create_graph__source_column": "source_column",
+    "create_graph__target_column": "target_column",
+    "create_graph__weight_column": "weight_column",
+    "create_graph__graph_type": "graph_type",
+    "augment_graph__nodes_attributes": "nodes_attributes",
+    "augment_graph__index_column_name": "nodes_table_index"
+  },
+  "output_aliases": {
+    "augment_graph__graph": "graph"
+  }
+}
+
