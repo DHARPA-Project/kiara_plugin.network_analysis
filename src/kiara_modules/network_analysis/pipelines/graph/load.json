@@ -1,24 +1,24 @@
 {
-  "module_type_name": "load_network_graph",
-  "doc": "Load a previously saved network graph.",
+  "module_type_name": "load",
+  "doc": "Load a network graph object.",
   "steps": [
     {
-      "module_type": "tabular.load_table",
+      "module_type": "table.load",
       "step_id": "load_edges_table"
     },
     {
-      "module_type": "tabular.load_table",
+      "module_type": "table.load",
       "step_id": "load_nodes_table"
     },
     {
-      "module_type":  "network.graphs.create_graph_from_edges_table",
+      "module_type":  "network.graph.from_edges_table",
       "step_id": "create_graph",
       "input_links": {
         "edges_table": "load_edges_table.table"
       }
     },
     {
-      "module_type": "network.graphs.augment_network_graph",
+      "module_type": "network.graph.augment",
       "step_id": "augment_graph",
       "input_links": {
         "graph": "create_graph.graph",

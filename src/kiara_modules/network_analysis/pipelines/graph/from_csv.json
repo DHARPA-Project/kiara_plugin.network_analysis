@@ -1,38 +1,38 @@
 {
-  "module_type_name": "import_network_graph",
-  "doc": "Create a network graph from 2 tabular data sets: one that contains the edges, one that contains node attributes",
+  "module_type_name": "from_csv",
+  "doc": "Create a network graph from a a csv file that contains edges. You can indicate another csv file if you have node attributes.",
   "steps": [
     {
-      "module_type": "onboarding.load_file",
+      "module_type": "onboarding.file.import",
       "step_id": "read_edges_file"
     },
     {
-      "module_type": "onboarding.load_file",
+      "module_type": "onboarding.file.import",
       "step_id": "read_nodes_file"
     },
     {
-      "module_type": "tabular.create_table_from_file",
+      "module_type": "table.from_file",
       "step_id": "load_edges_table",
       "input_links": {
         "file": "read_edges_file.file"
       }
     },
     {
-      "module_type": "tabular.create_table_from_file",
+      "module_type": "table.from_file",
       "step_id": "load_nodes_table",
       "input_links": {
         "file": "read_nodes_file.file"
       }
     },
     {
-      "module_type":  "network.graphs.create_graph_from_edges_table",
+      "module_type":  "network.graph.from_edges_table",
       "step_id": "create_graph",
       "input_links": {
         "edges_table": "load_edges_table.table"
       }
     },
     {
-      "module_type": "network.graphs.augment_network_graph",
+      "module_type": "network.graph.augment",
       "step_id": "augment_graph",
       "input_links": {
         "graph": "create_graph.graph",

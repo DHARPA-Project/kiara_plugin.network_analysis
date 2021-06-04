@@ -41,7 +41,7 @@ class NetworkGraphType(ValueType):
     def save_config(cls) -> typing.Optional[typing.Mapping[str, typing.Any]]:
 
         return {
-            "module_type": "network.graphs.write_graph_data",
+            "module_type": "network.graph.save",
             "module_config": {
                 "constants": {
                     "source_column": "source",
@@ -66,7 +66,11 @@ class GraphTypesEnum(Enum):
     multi_undirected = "multi_undirected"
 
 
-class WriteGraphDataModule(KiaraModule):
+class SaveGraphDataModule(KiaraModule):
+    """Save a network graph object."""
+
+    _module_type_name = "save"
+
     def create_input_schema(
         self,
     ) -> typing.Mapping[
@@ -200,7 +204,7 @@ class WriteGraphDataModule(KiaraModule):
             input_values["nodes_path"] = nodes_path
 
         result = {
-            "module_type": "network.graphs.load_network_graph",
+            "module_type": "network.graph.load",
             "inputs": input_values,
             "output_name": "graph",
         }
@@ -229,9 +233,10 @@ class CreateGraphConfig(KiaraModuleConfig):
 
 
 class CreateGraphFromEdgesTableModule(KiaraModule):
-    """Create a directed network graph object from tabular data."""
+    """Create a directed network graph object from table data."""
 
     _config_cls = CreateGraphConfig
+    _module_type_name = "from_edges_table"
 
     def create_input_schema(
         self,
@@ -314,7 +319,7 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
         pandas_table = min_table.to_pandas()
 
         if graph_type != GraphTypesEnum.directed:
-            raise NotImplementedError("Only 'directed' graphs supported at the moment.")
+            raise NotImplementedError("Only 'directed' graph supported at the moment.")
         graph_cls = nx.DiGraph
 
         graph: nx.DiGraph = nx.from_pandas_edgelist(
@@ -329,6 +334,8 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
 
 class AugmentNetworkGraphModule(KiaraModule):
     """Augment an existing graph with node attributes."""
+
+    _module_type_name = "augment"
 
     def create_input_schema(
         self,
@@ -390,6 +397,8 @@ class AugmentNetworkGraphModule(KiaraModule):
 
 class AddNodesToNetworkGraphModule(KiaraModule):
     """Add nodes to an existing graph."""
+
+    _module_type_name = "add_nodes"
 
     def create_input_schema(
         self,
@@ -462,9 +471,10 @@ class FindShortestPathModuleConfig(KiaraModuleConfig):
 
 
 class FindShortestPathModule(KiaraModule):
-    """Find the shortest path between two nodes in a graph."""
+    """Find the shortest path between two nodes in a network graph."""
 
     _config_cls = FindShortestPathModuleConfig
+    _module_type_name = "find_shortest_path"
 
     def create_input_schema(
         self,
@@ -544,7 +554,7 @@ class ExtractGraphPropertiesModule(KiaraModule):
     """Extract inherent properties of a network graph."""
 
     _config_cls = ExtractGraphPropertiesModuleConfig
-    _module_type_name = "graph_properties"
+    _module_type_name = "properties"
 
     def create_input_schema(
         self,
@@ -623,6 +633,10 @@ class GraphMetadata(BaseModel):
 
 
 class GraphMetadataModule(ExtractMetadataModule):
+    """Extract metadata from a network graph object."""
+
+    _module_type_name = "metadata"
+
     @classmethod
     def _get_supported_types(cls) -> str:
         return "network_graph"

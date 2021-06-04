@@ -21,7 +21,7 @@ from kiara import (
     find_kiara_pipelines_under,
 )
 
-from kiara_modules.network_analysis.graphs import (
+from kiara_modules.network_analysis.graph import (
     AddNodesToNetworkGraphModule,
     AugmentNetworkGraphModule,
     CreateGraphFromEdgesTableModule,
