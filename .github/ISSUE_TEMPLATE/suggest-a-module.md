@@ -16,5 +16,8 @@ List all the inputs this module would need, along their types, a short descripti
 **Graph types**
 List all the graph types this module can be used. with.
 
+**Outupts**
+List all the outputs this module would produce, along with their types and a short description of what they are.
+
 **Example code**
 If you have example code how to do what you are proposing to do, copy and paste it here.
