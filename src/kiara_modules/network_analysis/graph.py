@@ -4,11 +4,9 @@ import os
 import typing
 from enum import Enum
 
-import networkx
 import networkx as nx
 import pyarrow as pa
 from kiara import KiaraModule
-from kiara.data.types import ValueType
 from kiara.data.values import Value, ValueSchema, ValueSet
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import KiaraModuleConfig
@@ -17,45 +15,7 @@ from networkx import Graph
 from pyarrow import feather
 from pydantic import BaseModel, Field, validator
 
-
-class NetworkGraphType(ValueType):
-    @classmethod
-    def check_data(cls, data: typing.Any) -> typing.Optional["ValueType"]:
-
-        if isinstance(data, nx.Graph):
-            return NetworkGraphType()
-        else:
-            return None
-
-    @classmethod
-    def python_types(cls) -> typing.Optional[typing.Iterable[typing.Type]]:
-        return [nx.Graph]
-
-    def validate(cls, value: typing.Any) -> typing.Any:
-
-        if not isinstance(value, networkx.Graph):
-            raise ValueError(f"Invalid type '{type(value)}' for graph: {value}")
-        return value
-
-    @classmethod
-    def save_config(cls) -> typing.Optional[typing.Mapping[str, typing.Any]]:
-
-        return {
-            "module_type": "network.graph.save",
-            "module_config": {
-                "constants": {
-                    "source_column": "source",
-                    "target_column": "target",
-                    "weight_column": "weight",
-                    "edges_table_name": "edges",
-                    "nodes_table_name": "nodes",
-                    "nodes_table_index": "id",
-                }
-            },
-            "input_name": "graph",
-            "target_name": "folder_path",
-            "load_config_output": "load_config",
-        }
+from kiara_modules.network_analysis.metadata_models import GraphMetadata
 
 
 class GraphTypesEnum(Enum):
@@ -622,14 +582,6 @@ class ExtractGraphPropertiesModule(KiaraModule):
         if self.get_config_value("density"):
             density = nx.density(graph)
             outputs.set_values(density=density)
-
-
-class GraphMetadata(BaseModel):
-
-    number_of_nodes: int = Field(description="The number of nodes in this graph.")
-    number_of_edges: int = Field(description="The number of edges in this graph.")
-    directed: bool = Field(description="Whether the graph is directed or not.")
-    density: float = Field(description="The density of the graph.")
 
 
 class GraphMetadataModule(ExtractMetadataModule):

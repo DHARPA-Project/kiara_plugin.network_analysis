@@ -8,3 +8,12 @@ it is recommended to create a metadata model, because it is much easier overall.
 
 Metadata models must be a sub-class of [kiara.metadata.MetadataModel][kiara.metadata.MetadataModel].
 """
+from pydantic import BaseModel, Field
+
+
+class GraphMetadata(BaseModel):
+
+    number_of_nodes: int = Field(description="The number of nodes in this graph.")
+    number_of_edges: int = Field(description="The number of edges in this graph.")
+    directed: bool = Field(description="Whether the graph is directed or not.")
+    density: float = Field(description="The density of the graph.")
