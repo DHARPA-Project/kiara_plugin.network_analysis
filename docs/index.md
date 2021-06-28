@@ -1,4 +1,4 @@
-# kiara modules for: network analysis
+# kiara modules for: network-analysis
 
 This package contains a set of commonly used/useful modules, pipelines, types and metadata schemas for [*Kiara*](https://github.com/DHARPA-project/kiara).
 
