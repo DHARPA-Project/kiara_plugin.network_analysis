@@ -38,7 +38,7 @@ class SaveGraphDataModule(KiaraModule):
     ]:
 
         inputs: typing.Mapping[str, typing.Any] = {
-            "graph": {"type": "network_graph", "doc": "The graph to persist."},
+            "graph": {"type": "network.graph", "doc": "The graph to persist."},
             "folder_path": {
                 "type": "string",
                 "doc": "The parent directory to save the data to.",
@@ -384,7 +384,7 @@ class AddNodesToNetworkGraphModule(KiaraModule):
     ) -> typing.Mapping[
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
-        return {"graph": {"type": "network_graph", "doc": "The network graph"}}
+        return {"graph": {"type": "network.graph", "doc": "The network graph"}}
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
@@ -616,7 +616,7 @@ class GrpahComponentsModule(KiaraModule):
     """
 
     _config_cls = FindLargestComponentsModuleConfig
-    _module_type_name = "graph_components"
+    _module_type_name = "components"
 
     def create_input_schema(
         self,
