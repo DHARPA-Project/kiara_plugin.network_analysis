@@ -500,9 +500,6 @@ class FindShortestPathModule(KiaraModule):
 
 class ExtractGraphPropertiesModuleConfig(KiaraModuleConfig):
 
-    # find_largest_component: bool = Field(
-    #     description="Find the largest component of a graph.", default=True
-    # )
     number_of_nodes: bool = Field(
         description="Count the number of nodes.", default=True
     )
@@ -531,15 +528,6 @@ class ExtractGraphPropertiesModule(KiaraModule):
     ]:
 
         result = {}
-        # if self.get_config_value("find_largest_component"):
-        #     result["largest_component"] = {
-        #         "type": "network.graph",
-        #         "doc": "A sub-graph of the largest component of the graph.",
-        #     }
-        #     result["density_largest_component"] = {
-        #         "type": "float",
-        #         "doc": "The density of the largest component.",
-        #     }
 
         if self.get_config_value("number_of_nodes"):
             result["number_of_nodes"] = {
@@ -561,17 +549,6 @@ class ExtractGraphPropertiesModule(KiaraModule):
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
         graph: Graph = inputs.get_value_data("graph")
-
-        # if self.get_config_value("find_largest_component"):
-        #     lc_graph = copy.deepcopy(graph)
-        #     # largest_component = max(nx.strongly_connected_components_recursive(lc_graph), key=len)
-        #     lc_graph.remove_nodes_from(
-        #         list(nx.isolates(lc_graph))
-        #     )  # remove unconnected nodes from graph
-        #     lc_density = nx.density(lc_graph)
-        #     outputs.set_values(
-        #         largest_component=lc_graph, density_largest_component=lc_density
-        #     )
 
         if self.get_config_value("number_of_nodes"):
             outputs.set_values(number_of_nodes=len(graph.nodes))
@@ -618,3 +595,72 @@ class GraphMetadataModule(ExtractMetadataModule):
             "number_of_edges": len(graph.edges),
             "density": nx.density(graph),
         }
+
+
+class FindLargestComponentsModuleConfig(KiaraModuleConfig):
+
+    find_largest_component: bool = Field(
+        description="Find the largest component of a graph.", default=True
+    )
+
+    number_of_components: bool = Field(
+        description="Count the number of components.", default=True
+    )
+
+
+class GrpahComponentsModule(KiaraModule):
+    """Extract component information from a graph.
+
+    In particular, this module can calculate the number of components of a graph, and extract the largest sub-component
+    from it.
+    """
+
+    _config_cls = FindLargestComponentsModuleConfig
+    _module_type_name = "graph_components"
+
+    def create_input_schema(
+        self,
+    ) -> typing.Mapping[
+        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+    ]:
+
+        return {"graph": {"type": "network.graph", "doc": "The network graph."}}
+
+    def create_output_schema(
+        self,
+    ) -> typing.Mapping[
+        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+    ]:
+
+        result = {}
+        if self.get_config_value("find_largest_component"):
+            result["largest_component"] = {
+                "type": "network.graph",
+                "doc": "A sub-graph of the largest component of the graph.",
+            }
+
+        if self.get_config_value("number_of_components"):
+            result["number_of_components"] = {
+                "type": "integer",
+                "doc": "The number of components in the graph.",
+            }
+
+        return result
+
+    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+
+        if self.get_config_value("find_largest_component"):
+            input_graph: Graph = inputs.get_value_data("graph")
+            undir_graph = nx.to_undirected(input_graph)
+            undir_components = nx.connected_components(undir_graph)
+            lg_component = max(undir_components, key=len)
+            subgraph = input_graph.subgraph(lg_component)
+
+            outputs.set_values(largest_component=subgraph)
+
+        if self.get_config_value("number_of_components"):
+            input_graph = inputs.get_value_data("graph")
+            undir_graph = nx.to_undirected(input_graph)
+            number_of_components = nx.number_connected_components(undir_graph)
+
+            outputs.set_values(number_of_components=number_of_components)
