@@ -241,7 +241,7 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
     ]:
 
         return {
-            "graph": {"type": "network_graph", "doc": "The (networkx) graph object."},
+            "graph": {"type": "network.graph", "doc": "The (networkx) graph object."},
         }
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
@@ -303,7 +303,7 @@ class AugmentNetworkGraphModule(KiaraModule):
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
         return {
-            "graph": {"type": "network_graph", "doc": "The network graph"},
+            "graph": {"type": "network.graph", "doc": "The network graph"},
             "node_attributes": {
                 "type": "table",
                 "doc": "The table containing node attributes.",
@@ -321,7 +321,7 @@ class AugmentNetworkGraphModule(KiaraModule):
     ) -> typing.Mapping[
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
-        return {"graph": {"type": "network_graph", "doc": "The network graph"}}
+        return {"graph": {"type": "network.graph", "doc": "The network graph"}}
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
@@ -366,7 +366,7 @@ class AddNodesToNetworkGraphModule(KiaraModule):
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
         return {
-            "graph": {"type": "network_graph", "doc": "The network graph"},
+            "graph": {"type": "network.graph", "doc": "The network graph"},
             "nodes": {
                 "type": "table",
                 "doc": "The table containing node attributes.",
@@ -445,13 +445,13 @@ class FindShortestPathModule(KiaraModule):
         mode = self.get_config_value("mode")
         if mode == "single-pair":
             return {
-                "graph": {"type": "network_graph", "doc": "The network graph"},
+                "graph": {"type": "network.graph", "doc": "The network graph"},
                 "source_node": {"type": "any", "doc": "The id of the source node."},
                 "target_node": {"type": "any", "doc": "The id of the target node."},
             }
         else:
             return {
-                "graph": {"type": "network_graph", "doc": "The network graph"},
+                "graph": {"type": "network.graph", "doc": "The network graph"},
                 "source_nodes": {"type": "list", "doc": "The ids of the source nodes."},
                 "target_nodes": {"type": "list", "doc": "The ids of the target nodes."},
             }
@@ -500,9 +500,9 @@ class FindShortestPathModule(KiaraModule):
 
 class ExtractGraphPropertiesModuleConfig(KiaraModuleConfig):
 
-    find_largest_component: bool = Field(
-        description="Find the largest component of a graph.", default=True
-    )
+    # find_largest_component: bool = Field(
+    #     description="Find the largest component of a graph.", default=True
+    # )
     number_of_nodes: bool = Field(
         description="Count the number of nodes.", default=True
     )
@@ -522,7 +522,7 @@ class ExtractGraphPropertiesModule(KiaraModule):
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
 
-        return {"graph": {"type": "network_graph", "doc": "The network graph."}}
+        return {"graph": {"type": "network.graph", "doc": "The network graph."}}
 
     def create_output_schema(
         self,
@@ -531,15 +531,15 @@ class ExtractGraphPropertiesModule(KiaraModule):
     ]:
 
         result = {}
-        if self.get_config_value("find_largest_component"):
-            result["largest_component"] = {
-                "type": "network_graph",
-                "doc": "A sub-graph of the largest component of the graph.",
-            }
-            result["density_largest_component"] = {
-                "type": "float",
-                "doc": "The density of the largest component.",
-            }
+        # if self.get_config_value("find_largest_component"):
+        #     result["largest_component"] = {
+        #         "type": "network.graph",
+        #         "doc": "A sub-graph of the largest component of the graph.",
+        #     }
+        #     result["density_largest_component"] = {
+        #         "type": "float",
+        #         "doc": "The density of the largest component.",
+        #     }
 
         if self.get_config_value("number_of_nodes"):
             result["number_of_nodes"] = {
@@ -562,16 +562,16 @@ class ExtractGraphPropertiesModule(KiaraModule):
 
         graph: Graph = inputs.get_value_data("graph")
 
-        if self.get_config_value("find_largest_component"):
-            lc_graph = copy.deepcopy(graph)
-            # largest_component = max(nx.strongly_connected_components_recursive(lc_graph), key=len)
-            lc_graph.remove_nodes_from(
-                list(nx.isolates(lc_graph))
-            )  # remove unconnected nodes from graph
-            lc_density = nx.density(lc_graph)
-            outputs.set_values(
-                largest_component=lc_graph, density_largest_component=lc_density
-            )
+        # if self.get_config_value("find_largest_component"):
+        #     lc_graph = copy.deepcopy(graph)
+        #     # largest_component = max(nx.strongly_connected_components_recursive(lc_graph), key=len)
+        #     lc_graph.remove_nodes_from(
+        #         list(nx.isolates(lc_graph))
+        #     )  # remove unconnected nodes from graph
+        #     lc_density = nx.density(lc_graph)
+        #     outputs.set_values(
+        #         largest_component=lc_graph, density_largest_component=lc_density
+        #     )
 
         if self.get_config_value("number_of_nodes"):
             outputs.set_values(number_of_nodes=len(graph.nodes))
@@ -591,7 +591,7 @@ class GraphMetadataModule(ExtractMetadataModule):
 
     @classmethod
     def _get_supported_types(cls) -> str:
-        return "network_graph"
+        return "network.graph"
 
     @classmethod
     def get_metadata_key(cls) -> str:

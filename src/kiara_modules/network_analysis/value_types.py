@@ -17,6 +17,9 @@ value_types: KiaraEntryPointItem = (
 
 
 class NetworkGraphType(ValueType):
+
+    _value_type_name = "graph"
+
     @classmethod
     def check_data(cls, data: typing.Any) -> typing.Optional["ValueType"]:
 
