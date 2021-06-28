@@ -47,6 +47,17 @@ kiara run import_network_graph edges_path=path/to/JournalEdges1902.csv source_co
 ...
 ```
 
+### Re-activate the development environment
+
+The 'prepare' step from above only has to be done once. After that, to re-enable your virtual environment,
+you'll need to navigate to the directory again (wherever that is, in your case), and run the ``source`` command from before again:
+
+```console
+cd path/to/kiara_modules.network_analysis
+source .venv/bin/activate
+kiara --help  # or whatever, point is, kiara should be available for you now,
+```
+
 ### ``make`` targets
 
 - ``init``: init development project (install project & dev dependencies into virtualenv, as well as pre-commit git hook)

@@ -6,7 +6,14 @@ import typing
 
 import networkx
 import networkx as nx
+from kiara import KiaraEntryPointItem
 from kiara.data.types import ValueType
+from kiara.utils.class_loading import find_value_types_under
+
+value_types: KiaraEntryPointItem = (
+    find_value_types_under,
+    ["kiara_modules.network_analysis.value_types"],
+)
 
 
 class NetworkGraphType(ValueType):

@@ -8,10 +8,18 @@ it is recommended to create a metadata model, because it is much easier overall.
 
 Metadata models must be a sub-class of [kiara.metadata.MetadataModel][kiara.metadata.MetadataModel].
 """
-from pydantic import BaseModel, Field
+from kiara import KiaraEntryPointItem
+from kiara.metadata import MetadataModel
+from kiara.utils.class_loading import find_metadata_schemas_under
+from pydantic import Field
+
+metadata_schemas: KiaraEntryPointItem = (
+    find_metadata_schemas_under,
+    ["kiara_modules.network_analysis.metadata_schemas"],
+)
 
 
-class GraphMetadata(BaseModel):
+class GraphMetadata(MetadataModel):
 
     number_of_nodes: int = Field(description="The number of nodes in this graph.")
     number_of_edges: int = Field(description="The number of edges in this graph.")

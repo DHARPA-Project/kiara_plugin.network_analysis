@@ -15,7 +15,7 @@ from networkx import Graph
 from pyarrow import feather
 from pydantic import BaseModel, Field, validator
 
-from kiara_modules.network_analysis.metadata_models import GraphMetadata
+from kiara_modules.network_analysis.metadata_schemas import GraphMetadata
 
 
 class GraphTypesEnum(Enum):

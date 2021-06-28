@@ -18,7 +18,7 @@ import os
 from kiara import (
     KiaraEntryPointItem,
     find_kiara_modules_under,
-    find_kiara_pipelines_under,
+    find_pipeline_base_path_for_module,
 )
 
 from kiara_modules.network_analysis.graph import (
@@ -34,12 +34,30 @@ __email__ = "markus.binsteiner@uni.lu"
 
 log = logging.getLogger("kiara_modules")
 
+KIARA_METADATA = {
+    "authors": [{"name": __author__, "email": __email__}],
+    "description": "Kiara modules for: network-analysis",
+    "references": {
+        "homepage": {
+            "desc": "The module package homepage.",
+            "url": "https://github.com/DHARPA-Project/kiara_modules.network_analysis",
+        },
+        "documentation": {
+            "desc": "The url for the module package documentation.",
+            "url": "https://dharpa.org/kiara_modules.network_analysis/",
+        },
+    },
+    "tags": ["network_analysis"],
+    "labels": {"package": "kiara_modules.network_analysis"},
+}
+
+
 modules: KiaraEntryPointItem = (
     find_kiara_modules_under,
     ["kiara_modules.network_analysis"],
 )
 pipelines: KiaraEntryPointItem = (
-    find_kiara_pipelines_under,
+    find_pipeline_base_path_for_module,
     ["kiara_modules.network_analysis"],
 )
 
