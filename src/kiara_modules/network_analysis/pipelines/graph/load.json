@@ -1,6 +1,6 @@
 {
   "module_type_name": "load",
-  "doc": "Load a network graph object.",
+  "documentation": "Load a network graph object.",
   "steps": [
     {
       "module_type": "table.load",

@@ -1,6 +1,6 @@
 {
   "module_type_name": "network_analysis",
-  "doc": "First iteration of a network analysis pipeline. This doesn't do much yet.",
+  "documentation": "First iteration of a network analysis pipeline. This doesn't do much yet.",
   "steps": [
     {
       "module_type":  "network.graph.find_shortest_path",

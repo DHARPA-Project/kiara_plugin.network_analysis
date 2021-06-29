@@ -1,6 +1,6 @@
 {
   "module_type_name": "from_csv",
-  "doc": "Create a network graph from a a csv file that contains edges. You can indicate another csv file if you have node attributes.",
+  "documentation": "Create a network graph from a a csv file that contains edges. You can indicate another csv file if you have node attributes.",
   "steps": [
     {
       "module_type": "onboarding.file.import",

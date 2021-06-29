@@ -649,8 +649,10 @@ class GrpahComponentsModule(KiaraModule):
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
+        # TODO: check whether we need to deepcopy the graph first, but I don't think so
+
+        input_graph: Graph = inputs.get_value_data("graph")
         if self.get_config_value("find_largest_component"):
-            input_graph: Graph = inputs.get_value_data("graph")
             undir_graph = nx.to_undirected(input_graph)
             undir_components = nx.connected_components(undir_graph)
             lg_component = max(undir_components, key=len)
@@ -659,7 +661,6 @@ class GrpahComponentsModule(KiaraModule):
             outputs.set_values(largest_component=subgraph)
 
         if self.get_config_value("number_of_components"):
-            input_graph = inputs.get_value_data("graph")
             undir_graph = nx.to_undirected(input_graph)
             number_of_components = nx.number_connected_components(undir_graph)
 
