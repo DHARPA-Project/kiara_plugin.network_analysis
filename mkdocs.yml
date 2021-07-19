@@ -37,8 +37,9 @@ plugins:
     main_module: "kiara_modules.network_analysis"
 - macros:
    modules:
-     - frkl.project.documentation.mkdocs_macros_frkl
+     - kiara.doc.mkdocs_macros_cli
      - kiara.doc.mkdocs_macros_kiara
+
 - gen-files:
     scripts:
       - scripts/documentation/gen_module_doc.py
