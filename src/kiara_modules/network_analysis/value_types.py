@@ -17,6 +17,10 @@ value_types: KiaraEntryPointItem = (
 
 
 class NetworkGraphType(ValueType):
+    """A network graph object.
+
+    Internally, this is backed by a ``Graph`` object of the [networkx](https://networkx.org/) Python library.
+    """
 
     _value_type_name = "network_graph"
 
@@ -37,23 +41,3 @@ class NetworkGraphType(ValueType):
         if not isinstance(value, networkx.Graph):
             raise ValueError(f"Invalid type '{type(value)}' for graph: {value}")
         return value
-
-    @classmethod
-    def save_config(cls) -> typing.Optional[typing.Mapping[str, typing.Any]]:
-
-        return {
-            "module_type": "network.graph.save",
-            "module_config": {
-                "constants": {
-                    "source_column": "source",
-                    "target_column": "target",
-                    "weight_column": "weight",
-                    "edges_table_name": "edges",
-                    "nodes_table_name": "nodes",
-                    "nodes_table_index": "id",
-                }
-            },
-            "input_name": "graph",
-            "target_name": "folder_path",
-            "output_map": {"load_config": "load_config"},
-        }
