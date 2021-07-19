@@ -7,6 +7,7 @@ from enum import Enum
 import networkx as nx
 import pyarrow as pa
 from kiara import KiaraModule
+from kiara.data.operations.save_value import SaveValueModule
 from kiara.data.values import Value, ValueSchema, ValueSet
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import KiaraModuleConfig
@@ -25,6 +26,89 @@ class GraphTypesEnum(Enum):
     directed = "directed"
     multi_directed = "multi_directed"
     multi_undirected = "multi_undirected"
+
+
+DEFAULT_SAVE_GRAPH_EDGES_TABLE_NAME = "edges.feather"
+DEFAULT_SAVE_GRAPH_NODES_TABLE_NAME = "nodes.feather"
+DEFAULT_SAVE_GRAPH_SOURCE_COLUMN_NAME = "source"
+DEFAULT_SAVE_GRAPH_TARGET_COLUMN_NAME = "target"
+DEFAULT_SAVE_GRAPH_WEIGHT_COLUMN_NAME = "weight"
+DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME = "id"
+
+
+class SaveGraphDataModule(SaveValueModule):
+    """Save a network graph object."""
+
+    @classmethod
+    def _get_supported_types(cls) -> typing.Union[str, typing.Iterable[str]]:
+        return "network_graph"
+
+    _module_type_name = "save"
+
+    def save_value(
+        self, value: Value, value_id: str, base_path: str
+    ) -> typing.Dict[str, typing.Any]:
+
+        graph: nx.Graph = value.get_value_data()
+
+        graph_type = value.get_metadata("network_graph")["network_graph"]["graph_type"]
+
+        input_values = {
+            "base_path": base_path,
+            "edges_file_format": "feather",
+            "nodes_file_format": "feather",
+            "source_column": DEFAULT_SAVE_GRAPH_SOURCE_COLUMN_NAME,
+            "target_column": DEFAULT_SAVE_GRAPH_TARGET_COLUMN_NAME,
+            "weight_column": DEFAULT_SAVE_GRAPH_WEIGHT_COLUMN_NAME,
+            "nodes_table_index": DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME,
+            "graph_type": graph_type,
+        }
+
+        os.makedirs(base_path, exist_ok=True)
+
+        edges_file_name = f"{DEFAULT_SAVE_GRAPH_EDGES_TABLE_NAME}.feather"
+        edges_path = os.path.join(base_path, edges_file_name)
+        df = nx.to_pandas_edgelist(graph, "source", "target")
+        edges_table = pa.Table.from_pandas(df, preserve_index=False)
+
+        # edge_attr_keys = set([k for n in graph.edges for k in graph.edges[n].keys()])
+        # edge_attr_keys.add(weight_column_name)
+
+        feather.write_feather(edges_table, edges_path)
+        input_values["edges_path"] = edges_file_name
+
+        nodes_file_name = f"{DEFAULT_SAVE_GRAPH_NODES_TABLE_NAME}.feather"
+        nodes_path = os.path.join(base_path, nodes_file_name)
+
+        node_attr_keys = set([k for n in graph.nodes for k in graph.nodes[n].keys()])
+
+        if DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME in node_attr_keys:
+            node_attr_keys.remove(DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME)
+
+        nodes_dict: typing.Dict[str, typing.List[typing.Any]] = {
+            DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME: []
+        }
+        for k in node_attr_keys:
+            nodes_dict[k] = []
+
+        for node in graph.nodes:
+            nodes_dict[DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME].append(node)
+            for k in node_attr_keys:
+                attr = graph.nodes[node].get(k, None)
+                nodes_dict[k].append(attr)
+
+        nodes_table = pa.Table.from_pydict(nodes_dict)
+        feather.write_feather(nodes_table, nodes_path)
+        input_values["nodes_path"] = nodes_file_name
+
+        load_config = {
+            "base_path_input_name": "base_path",
+            "module_type": "network.graph.load",
+            "inputs": input_values,
+            "output_name": "graph",
+        }
+
+        return load_config
 
 
 SUPPORTED_INPUT_FILE_TYPES = ["auto", "graphml"]
@@ -62,7 +146,7 @@ class CreateGraphFromFileModule(KiaraModule):
     ]:
 
         outputs: typing.Mapping[str, typing.Any] = {
-            "graph": {"type": "network.graph", "doc": "The network graph."}
+            "graph": {"type": "network_graph", "doc": "The network graph."}
         }
         return outputs
 
@@ -86,152 +170,6 @@ class CreateGraphFromFileModule(KiaraModule):
             )
 
         outputs.set_value("graph", graph)
-
-
-class SaveGraphDataModule(KiaraModule):
-    """Save a network graph object."""
-
-    _module_type_name = "save"
-
-    def create_input_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        inputs: typing.Mapping[str, typing.Any] = {
-            "graph": {"type": "network.graph", "doc": "The graph to persist."},
-            "folder_path": {
-                "type": "string",
-                "doc": "The parent directory to save the data to.",
-            },
-            "edges_table_name": {
-                "type": "string",
-                "doc": "The base filename (without extension) for the edges table. If not specified, the edges table won't be written to disk.",
-            },
-            "source_column": {
-                "type": "string",
-                "default": "source",
-                "doc": "The name of the column that contains the edge source in edges table.",
-            },
-            "target_column": {
-                "type": "string",
-                "default": "target",
-                "doc": "The name of the column that contains the edge target in the edges table.",
-            },
-            "weight_column": {
-                "type": "string",
-                "default": "weight",
-                "doc": "The name of the column that contains the edge weight in edges table.",
-            },
-            "nodes_table_name": {
-                "type": "string",
-                "doc": "The base filename (without extension) for the nodes table. If not specified, the nodes table won't be written to disk.",
-                "optional": True,
-            },
-            "nodes_table_index": {
-                "type": "string",
-                "doc": "The name of the column that holds the id property of a node.",
-                "default": "id",
-            },
-        }
-        return inputs
-
-    def create_output_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-        outputs: typing.Mapping[str, typing.Any] = {
-            "load_config": {
-                "type": "dict",
-                "doc": "The config to use with kiara to load the saved graph.",
-            }
-        }
-        return outputs
-
-    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
-
-        graph: nx.Graph = inputs.get_value_data("graph")
-
-        path = inputs.get_value_data("folder_path")
-
-        edges_table_name = inputs.get_value_data("edges_table_name")
-        nodes_table_name = inputs.get_value_data("nodes_table_name")
-
-        source_column_name = inputs.get_value_data("source_column")
-        target_column_name = inputs.get_value_data("target_column")
-        weight_column_name = inputs.get_value_data("weight_column")
-
-        nodes_table_index = inputs.get_value_data("nodes_table_index")
-
-        graph_type = inputs.get_value_obj("graph").get_metadata("network_graph")[
-            "network_graph"
-        ]["graph_type"]
-
-        input_values = {
-            "edges_file_format": "feather",
-            "nodes_file_format": "feather",
-            "source_column": source_column_name,
-            "target_column": target_column_name,
-            "weight_column": weight_column_name,
-            "nodes_table_index": nodes_table_index,
-            "graph_type": graph_type,
-        }
-
-        if not edges_table_name and not nodes_table_name:
-            raise KiaraProcessingException(
-                "Neither edges_table_name nor nodes_table_name provided."
-            )
-
-        os.makedirs(path, exist_ok=True)
-
-        if edges_table_name:
-            edges_file_name = f"{edges_table_name}.feather"
-            edges_path = os.path.join(path, edges_file_name)
-            df = nx.to_pandas_edgelist(graph, "source", "target")
-            edges_table = pa.Table.from_pandas(df, preserve_index=False)
-
-            # edge_attr_keys = set([k for n in graph.edges for k in graph.edges[n].keys()])
-            # edge_attr_keys.add(weight_column_name)
-
-            feather.write_feather(edges_table, edges_path)
-            input_values["edges_path"] = edges_path
-
-        if nodes_table_name:
-            nodes_file_name = f"{nodes_table_name}.feather"
-            nodes_path = os.path.join(path, nodes_file_name)
-
-            node_attr_keys = set(
-                [k for n in graph.nodes for k in graph.nodes[n].keys()]
-            )
-
-            if nodes_table_index in node_attr_keys:
-                node_attr_keys.remove(nodes_table_index)
-
-            nodes_dict: typing.Dict[str, typing.List[typing.Any]] = {
-                nodes_table_index: []
-            }
-            for k in node_attr_keys:
-                nodes_dict[k] = []
-
-            for node in graph.nodes:
-                nodes_dict[nodes_table_index].append(node)
-                for k in node_attr_keys:
-                    attr = graph.nodes[node].get(k, None)
-                    nodes_dict[k].append(attr)
-
-            nodes_table = pa.Table.from_pydict(nodes_dict)
-            feather.write_feather(nodes_table, nodes_path)
-            input_values["nodes_path"] = nodes_path
-
-        result = {
-            "module_type": "network.graph.load",
-            "inputs": input_values,
-            "output_name": "graph",
-        }
-
-        outputs.set_value("load_config", result)
 
 
 class CreateGraphConfig(KiaraModuleConfig):
@@ -303,7 +241,7 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
     ]:
 
         return {
-            "graph": {"type": "network.graph", "doc": "The (networkx) graph object."},
+            "graph": {"type": "network_graph", "doc": "The (networkx) graph object."},
         }
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
@@ -365,7 +303,7 @@ class AugmentNetworkGraphModule(KiaraModule):
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
         return {
-            "graph": {"type": "network.graph", "doc": "The network graph"},
+            "graph": {"type": "network_graph", "doc": "The network graph"},
             "node_attributes": {
                 "type": "table",
                 "doc": "The table containing node attributes.",
@@ -383,7 +321,7 @@ class AugmentNetworkGraphModule(KiaraModule):
     ) -> typing.Mapping[
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
-        return {"graph": {"type": "network.graph", "doc": "The network graph"}}
+        return {"graph": {"type": "network_graph", "doc": "The network graph"}}
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
@@ -428,7 +366,7 @@ class AddNodesToNetworkGraphModule(KiaraModule):
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
         return {
-            "graph": {"type": "network.graph", "doc": "The network graph"},
+            "graph": {"type": "network_graph", "doc": "The network graph"},
             "nodes": {
                 "type": "table",
                 "doc": "The table containing node attributes.",
@@ -446,7 +384,7 @@ class AddNodesToNetworkGraphModule(KiaraModule):
     ) -> typing.Mapping[
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
-        return {"graph": {"type": "network.graph", "doc": "The network graph"}}
+        return {"graph": {"type": "network_graph", "doc": "The network graph"}}
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
@@ -507,13 +445,13 @@ class FindShortestPathModule(KiaraModule):
         mode = self.get_config_value("mode")
         if mode == "single-pair":
             return {
-                "graph": {"type": "network.graph", "doc": "The network graph"},
+                "graph": {"type": "network_graph", "doc": "The network graph"},
                 "source_node": {"type": "any", "doc": "The id of the source node."},
                 "target_node": {"type": "any", "doc": "The id of the target node."},
             }
         else:
             return {
-                "graph": {"type": "network.graph", "doc": "The network graph"},
+                "graph": {"type": "network_graph", "doc": "The network graph"},
                 "source_nodes": {"type": "list", "doc": "The ids of the source nodes."},
                 "target_nodes": {"type": "list", "doc": "The ids of the target nodes."},
             }
@@ -581,7 +519,7 @@ class ExtractGraphPropertiesModule(KiaraModule):
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
 
-        return {"graph": {"type": "network.graph", "doc": "The network graph."}}
+        return {"graph": {"type": "network_graph", "doc": "The network graph."}}
 
     def create_output_schema(
         self,
@@ -630,7 +568,7 @@ class GraphMetadataModule(ExtractMetadataModule):
 
     @classmethod
     def _get_supported_types(cls) -> str:
-        return "network.graph"
+        return "network_graph"
 
     @classmethod
     def get_metadata_key(cls) -> str:
@@ -686,7 +624,7 @@ class GrpahComponentsModule(KiaraModule):
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
 
-        return {"graph": {"type": "network.graph", "doc": "The network graph."}}
+        return {"graph": {"type": "network_graph", "doc": "The network graph."}}
 
     def create_output_schema(
         self,
@@ -697,7 +635,7 @@ class GrpahComponentsModule(KiaraModule):
         result = {}
         if self.get_config_value("find_largest_component"):
             result["largest_component"] = {
-                "type": "network.graph",
+                "type": "network_graph",
                 "doc": "The largest connected component of the graph, as a new graph.",
             }
 

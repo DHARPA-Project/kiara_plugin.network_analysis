@@ -27,9 +27,11 @@
     }
   ],
   "input_aliases": {
-    "load_edges_table__path": "edges_path",
+    "load_edges_table__base_path": "base_path",
+    "load_edges_table__rel_path": "edges_path",
     "load_edges_table__format": "edges_file_format",
-    "load_nodes_table__path": "nodes_path",
+    "load_nodes_table__base_path": "base_path",
+    "load_nodes_table__rel_path": "nodes_path",
     "load_nodes_table__format": "nodes_file_format",
     "create_graph__source_column": "source_column",
     "create_graph__target_column": "target_column",
