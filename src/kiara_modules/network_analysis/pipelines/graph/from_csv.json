@@ -3,11 +3,11 @@
   "documentation": "Create a network graph from a a csv file that contains edges. You can indicate another csv file if you have node attributes.",
   "steps": [
     {
-      "module_type": "onboarding.file.import",
+      "module_type": "onboard.file",
       "step_id": "read_edges_file"
     },
     {
-      "module_type": "onboarding.file.import",
+      "module_type": "onboard.file",
       "step_id": "read_nodes_file"
     },
     {
