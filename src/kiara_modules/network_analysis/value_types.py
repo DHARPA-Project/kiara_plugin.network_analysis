@@ -29,7 +29,7 @@ class NetworkGraphType(ValueType):
             return None
 
     @classmethod
-    def python_types(cls) -> typing.Optional[typing.Iterable[typing.Type]]:
+    def candidate_python_types(cls) -> typing.Optional[typing.Iterable[typing.Type]]:
         return [nx.Graph]
 
     def validate(cls, value: typing.Any) -> typing.Any:
@@ -55,5 +55,5 @@ class NetworkGraphType(ValueType):
             },
             "input_name": "graph",
             "target_name": "folder_path",
-            "load_config_output": "load_config",
+            "output_map": {"load_config": "load_config"},
         }

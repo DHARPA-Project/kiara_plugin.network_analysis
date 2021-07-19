@@ -11,6 +11,7 @@ from kiara.data.values import Value, ValueSchema, ValueSet
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import KiaraModuleConfig
 from kiara.modules.metadata import ExtractMetadataModule
+from kiara_modules.core.metadata_schemas import FileMetadata
 from networkx import Graph
 from pyarrow import feather
 from pydantic import BaseModel, Field, validator
@@ -24,6 +25,67 @@ class GraphTypesEnum(Enum):
     directed = "directed"
     multi_directed = "multi_directed"
     multi_undirected = "multi_undirected"
+
+
+SUPPORTED_INPUT_FILE_TYPES = ["auto", "graphml"]
+
+
+class CreateGraphFromFileModule(KiaraModule):
+    """Create a graph object from a file."""
+
+    _module_type_name = "from_file"
+
+    def create_input_schema(
+        self,
+    ) -> typing.Mapping[
+        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+    ]:
+
+        inputs: typing.Mapping[str, typing.Any] = {
+            "file": {
+                "type": "file",
+                "doc": "The file that contains the graph data.",
+                "optional": False,
+            },
+            "input_type": {
+                "type": "string",
+                "doc": f"The input file type, supported: {', '.join(SUPPORTED_INPUT_FILE_TYPES)}",
+                "default": "auto",
+            },
+        }
+        return inputs
+
+    def create_output_schema(
+        self,
+    ) -> typing.Mapping[
+        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+    ]:
+
+        outputs: typing.Mapping[str, typing.Any] = {
+            "graph": {"type": "network.graph", "doc": "The network graph."}
+        }
+        return outputs
+
+    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+
+        input_file_type = inputs.get_value_data("input_type")
+        input_file: FileMetadata = inputs.get_value_data("file")
+
+        if input_file_type == "auto":
+            if input_file.orig_filename.endswith(".graphml"):
+                input_file_type = "graphml"
+            else:
+                input_file_type = "graphml"
+                # raise NotImplementedError()
+
+        if input_file_type == "graphml":
+            graph = nx.read_graphml(input_file.path)
+        else:
+            raise KiaraProcessingException(
+                f"Invalid input type '{input_file_type}'. Supported: {', '.join(SUPPORTED_INPUT_FILE_TYPES)}"
+            )
+
+        outputs.set_value("graph", graph)
 
 
 class SaveGraphDataModule(KiaraModule):
@@ -636,7 +698,7 @@ class GrpahComponentsModule(KiaraModule):
         if self.get_config_value("find_largest_component"):
             result["largest_component"] = {
                 "type": "network.graph",
-                "doc": "A sub-graph of the largest component of the graph.",
+                "doc": "The largest connected component of the graph, as a new graph.",
             }
 
         if self.get_config_value("number_of_components"):
