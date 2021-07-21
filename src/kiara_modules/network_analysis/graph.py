@@ -7,7 +7,7 @@ from enum import Enum
 import networkx as nx
 import pyarrow as pa
 from kiara import KiaraModule
-from kiara.data.operations.save_value import SaveValueModule
+from kiara.data.operations.save_value import SaveValueTypeModule
 from kiara.data.values import Value, ValueSchema, ValueSet
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import KiaraModuleConfig
@@ -36,7 +36,7 @@ DEFAULT_SAVE_GRAPH_WEIGHT_COLUMN_NAME = "weight"
 DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME = "id"
 
 
-class SaveGraphDataModule(SaveValueModule):
+class SaveGraphDataTypeModule(SaveValueTypeModule):
     """Save a network graph object."""
 
     @classmethod
