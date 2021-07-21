@@ -51,7 +51,11 @@ class SaveGraphDataTypeModule(SaveValueTypeModule):
 
         graph: nx.Graph = value.get_value_data()
 
-        graph_type = value.get_metadata("network_graph")["network_graph"]["graph_type"]
+        # import pp
+        # pp(value.get_metadata())
+        # graph_type = value.get_metadata("network_graph")["network_graph"]["graph_type"]
+        # TODO: fix metadata for 'any' types
+        graph_type = "directed"
 
         input_values = {
             "base_path": base_path,

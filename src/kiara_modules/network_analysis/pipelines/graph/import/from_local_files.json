@@ -1,13 +1,13 @@
 {
-  "module_type_name": "from_csv",
+  "module_type_name": "from_local_files",
   "documentation": "Create a network graph from a a csv file that contains edges. You can indicate another csv file if you have node attributes.",
   "steps": [
     {
-      "module_type": "onboard.file",
+      "module_type": "import.local_file",
       "step_id": "read_edges_file"
     },
     {
-      "module_type": "onboard.file",
+      "module_type": "import.local_file",
       "step_id": "read_nodes_file"
     },
     {
@@ -38,19 +38,33 @@
         "graph": "create_graph.graph",
         "node_attributes": "load_nodes_table.table"
       }
+    },
+    {
+      "module_type": "value.save",
+      "module_config": {
+        "value_type": "network_graph"
+      },
+      "step_id": "save_graph",
+      "input_links": {
+        "value_item": "augment_graph.graph"
+      }
     }
   ],
   "input_aliases": {
     "read_edges_file__path": "edges_path",
+    "read_edges_file__aliases": "edges_file_aliases",
     "read_nodes_file__path": "nodes_path",
+    "read_nodes_file__aliases": "nodes_file_aliases",
     "create_graph__source_column": "source_column",
     "create_graph__target_column": "target_column",
     "create_graph__weight_column": "weight_column",
     "create_graph__graph_type": "graph_type",
     "augment_graph__nodes_attributes": "nodes_attributes",
-    "augment_graph__index_column_name": "nodes_table_index"
+    "augment_graph__index_column_name": "nodes_table_index",
+    "save_graph__aliases": "aliases"
   },
   "output_aliases": {
+    "save_graph__value_id": "value_id",
     "augment_graph__graph": "graph"
   }
 }
