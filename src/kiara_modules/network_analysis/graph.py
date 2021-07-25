@@ -5,7 +5,6 @@ import typing
 from enum import Enum
 
 import networkx as nx
-import pyarrow as pa
 from kiara import KiaraModule
 from kiara.data.operations.save_value import SaveValueTypeModule
 from kiara.data.values import Value, ValueSchema, ValueSet
@@ -14,7 +13,6 @@ from kiara.module_config import KiaraModuleConfig
 from kiara.modules.metadata import ExtractMetadataModule
 from kiara_modules.core.metadata_schemas import FileMetadata
 from networkx import Graph
-from pyarrow import feather
 from pydantic import BaseModel, Field, validator
 
 from kiara_modules.network_analysis.metadata_schemas import GraphMetadata
@@ -49,12 +47,11 @@ class SaveGraphDataTypeModule(SaveValueTypeModule):
         self, value: Value, value_id: str, base_path: str
     ) -> typing.Dict[str, typing.Any]:
 
+        import pyarrow as pa
+        from pyarrow import feather
+
         graph: nx.Graph = value.get_value_data()
 
-        # import pp
-        # pp(value.get_metadata())
-        # graph_type = value.get_metadata("network_graph")["network_graph"]["graph_type"]
-        # TODO: fix metadata for 'any' types
         graph_type = "directed"
 
         input_values = {
@@ -250,6 +247,8 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
+        import pyarrow as pa
+
         if self.get_config_value("graph_type") is not None:
             _graph_type = self.get_config_value("graph_type")
         else:
@@ -329,6 +328,8 @@ class AugmentNetworkGraphModule(KiaraModule):
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
+        import pyarrow as pa
+
         nodes_table_value = inputs.get_value_obj("node_attributes")
 
         if nodes_table_value.is_none or not nodes_table_value:
@@ -391,6 +392,8 @@ class AddNodesToNetworkGraphModule(KiaraModule):
         return {"graph": {"type": "network_graph", "doc": "The network graph"}}
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+
+        import pyarrow as pa
 
         nodes_table_value = inputs.get_value_obj("node_attributes")
 
