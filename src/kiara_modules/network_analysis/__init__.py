@@ -26,7 +26,7 @@ from kiara_modules.network_analysis.graph import (
 )
 
 __author__ = """Markus Binsteiner"""
-__email__ = "markus.binsteiner@uni.lu"
+__email__ = "markus@frkl.io"
 
 log = logging.getLogger("kiara_modules")
 

@@ -1,3 +1,3 @@
 # Contributors
 
-* Markus Binsteiner <markus.binsteiner@uni.lu>
+* Markus Binsteiner <markus@frkl.io>

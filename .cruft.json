@@ -4,7 +4,7 @@
     "context": {
         "cookiecutter": {
             "full_name": "Markus Binsteiner",
-            "email": "markus.binsteiner@uni.lu",
+            "email": "markus@frkl.io",
             "project_name": "network-analysis",
             "project_slug": "network_analysis",
             "project_short_description": "Network analysis modules and pipelines for kiara.",
