@@ -6,11 +6,11 @@ from enum import Enum
 
 import networkx as nx
 from kiara import KiaraModule
-from kiara.data.operations.save_value import SaveValueTypeModule
 from kiara.data.values import Value, ValueSchema, ValueSet
 from kiara.exceptions import KiaraProcessingException
-from kiara.module_config import KiaraModuleConfig
+from kiara.module_config import ModuleTypeConfig
 from kiara.modules.metadata import ExtractMetadataModule
+from kiara.operations.type_operations.save_value import SaveValueTypeModule
 from kiara_modules.core.metadata_schemas import FileMetadata
 from networkx import Graph
 from pydantic import BaseModel, Field, validator
@@ -173,7 +173,7 @@ class CreateGraphFromFileModule(KiaraModule):
         outputs.set_value("graph", graph)
 
 
-class CreateGraphConfig(KiaraModuleConfig):
+class CreateGraphConfig(ModuleTypeConfig):
     class Config:
         use_enum_values = True
 
@@ -421,7 +421,7 @@ class AddNodesToNetworkGraphModule(KiaraModule):
         outputs.set_value("graph", graph)
 
 
-class FindShortestPathModuleConfig(KiaraModuleConfig):
+class FindShortestPathModuleConfig(ModuleTypeConfig):
 
     mode: str = Field(
         description="Whether to calculate one shortest path for only one pair ('single-pair'), or use two node lists as input and select one of the following strategies: shortest path for each pair ('one-to-one'), the shortest path to all targets ('one-to-many'), or a matrix of all possible combinations ('many-to-many').",
@@ -505,7 +505,7 @@ class FindShortestPathModule(KiaraModule):
         outputs.set_value("path", shortest_path)
 
 
-class ExtractGraphPropertiesModuleConfig(KiaraModuleConfig):
+class ExtractGraphPropertiesModuleConfig(ModuleTypeConfig):
 
     number_of_nodes: bool = Field(
         description="Count the number of nodes.", default=True
@@ -604,7 +604,7 @@ class GraphMetadataModule(ExtractMetadataModule):
         }
 
 
-class FindLargestComponentsModuleConfig(KiaraModuleConfig):
+class FindLargestComponentsModuleConfig(ModuleTypeConfig):
 
     find_largest_component: bool = Field(
         description="Find the largest component of a graph.", default=True
