@@ -9,8 +9,8 @@ from kiara import KiaraModule
 from kiara.data.values import Value, ValueSchema, ValueSet
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import ModuleTypeConfig
-from kiara.modules.metadata import ExtractMetadataModule
-from kiara.operations.type_operations.save_value import SaveValueTypeModule
+from kiara.operations.extract_metadata import ExtractMetadataModule
+from kiara.operations.save_value import SaveValueTypeModule
 from kiara_modules.core.metadata_schemas import FileMetadata
 from networkx import Graph
 from pydantic import BaseModel, Field, validator
@@ -38,7 +38,7 @@ class SaveGraphDataTypeModule(SaveValueTypeModule):
     """Save a network graph object."""
 
     @classmethod
-    def _get_supported_types(cls) -> typing.Union[str, typing.Iterable[str]]:
+    def retrieve_supported_types(cls) -> typing.Union[str, typing.Iterable[str]]:
         return "network_graph"
 
     _module_type_name = "save"

@@ -1,5 +1,5 @@
 {
-  "module_type_name": "network_analysis",
+  "module_type_name": "analyze",
   "documentation": "First iteration of a network analysis pipeline. This doesn't do much yet.",
   "steps": [
     {

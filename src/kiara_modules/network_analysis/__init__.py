@@ -17,7 +17,7 @@ import os
 
 from kiara import KiaraEntryPointItem, find_kiara_modules_under
 
-from kiara_modules.network_analysis.graph import (
+from kiara_modules.network_analysis.network_graph import (
     AddNodesToNetworkGraphModule,
     AugmentNetworkGraphModule,
     CreateGraphFromEdgesTableModule,
@@ -51,6 +51,7 @@ KIARA_METADATA = {
 modules: KiaraEntryPointItem = (
     find_kiara_modules_under,
     ["kiara_modules.network_analysis"],
+    {"remove_namespace_tokens": ["kiara_modules.network_analysis."], "prefix": None},
 )
 
 
