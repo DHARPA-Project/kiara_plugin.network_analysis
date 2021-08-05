@@ -1,6 +1,6 @@
 {
   "module_type_name": "from_local_files",
-  "documentation": "Create a network graph from a a csv file that contains edges. You can indicate another csv file if you have node attributes.",
+  "documentation": "Create a network graph from a a csv file that contains edges. You can specify an additional csv file if you have node attributes.",
   "steps": [
     {
       "module_type": "import.local_file",
@@ -25,14 +25,14 @@
       }
     },
     {
-      "module_type":  "network.graph.from_edges_table",
+      "module_type":  "network_graph.from_edges_table",
       "step_id": "create_graph",
       "input_links": {
         "edges_table": "load_edges_table.table"
       }
     },
     {
-      "module_type": "network.graph.augment",
+      "module_type": "network_graph.augment",
       "step_id": "augment_graph",
       "input_links": {
         "graph": "create_graph.graph",
