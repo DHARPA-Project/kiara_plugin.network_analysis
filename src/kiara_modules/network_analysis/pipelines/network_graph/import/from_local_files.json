@@ -3,32 +3,32 @@
   "documentation": "Create a network graph from a a csv file that contains edges. You can specify an additional csv file if you have node attributes.",
   "steps": [
     {
-      "module_type": "import.local_file",
+      "module_type": "file.import_from.path.string",
       "step_id": "read_edges_file"
     },
     {
-      "module_type": "import.local_file",
+      "module_type": "file.import_from.path.string",
       "step_id": "read_nodes_file"
     },
     {
-      "module_type": "table.create.from_file",
+      "module_type": "file.convert_to.table",
       "step_id": "load_edges_table",
       "input_links": {
-        "file": "read_edges_file.file"
+        "value_item": "read_edges_file.value_item"
       }
     },
     {
-      "module_type": "table.create.from_file",
+      "module_type": "file.convert_to.table",
       "step_id": "load_nodes_table",
       "input_links": {
-        "file": "read_nodes_file.file"
+        "value_item": "read_nodes_file.value_item"
       }
     },
     {
       "module_type":  "network_graph.from_edges_table",
       "step_id": "create_graph",
       "input_links": {
-        "edges_table": "load_edges_table.table"
+        "edges_table": "load_edges_table.value_item"
       }
     },
     {
@@ -36,7 +36,7 @@
       "step_id": "augment_graph",
       "input_links": {
         "graph": "create_graph.graph",
-        "node_attributes": "load_nodes_table.table"
+        "node_attributes": "load_nodes_table.value_item"
       }
     },
     {
@@ -51,9 +51,9 @@
     }
   ],
   "input_aliases": {
-    "read_edges_file__path": "edges_path",
+    "read_edges_file__source": "edges_path",
     "read_edges_file__aliases": "edges_file_aliases",
-    "read_nodes_file__path": "nodes_path",
+    "read_nodes_file__source": "nodes_path",
     "read_nodes_file__aliases": "nodes_file_aliases",
     "create_graph__source_column": "source_column",
     "create_graph__target_column": "target_column",

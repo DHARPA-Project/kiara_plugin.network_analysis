@@ -43,9 +43,7 @@ class SaveGraphDataTypeModule(SaveValueTypeModule):
 
     _module_type_name = "save"
 
-    def save_value(
-        self, value: Value, value_id: str, base_path: str
-    ) -> typing.Dict[str, typing.Any]:
+    def save_value(self, value: Value, base_path: str) -> typing.Dict[str, typing.Any]:
 
         import pyarrow as pa
         from pyarrow import feather
@@ -104,7 +102,7 @@ class SaveGraphDataTypeModule(SaveValueTypeModule):
 
         load_config = {
             "base_path_input_name": "base_path",
-            "module_type": "network.graph.load",
+            "module_type": "network_graph.load",
             "inputs": input_values,
             "output_name": "graph",
         }
