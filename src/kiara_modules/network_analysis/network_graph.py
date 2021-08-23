@@ -556,24 +556,24 @@ class ExtractGraphPropertiesModule(KiaraModule):
         if self.get_config_value("degrees"):
             result["average_degree"] = {
                 "type": "float",
-                "optional": True,
+                "optional": "True",
                 "doc": "Average degree of the graph if it is not directed."
             }
             result["average_in_degree"] = {
                 "type": "float",
-                "optional": True,
+                "optional": "True",
                 "doc": "Average in degree of the graph if it is directed."
             }
             result["average_out_degree"] = {
                 "type": "float",
-                "optional": True,
+                "optional": "True",
                 "doc": "Average out degree of the graph if it is directed."
             }
 
         if self.get_config_value("shortest_path"):
             result["average_shortest_path_length"] = {
                 "type": "float",
-                "optional": True,
+                "optional": "True",
                 "doc": "Average shortest path length."
             }
 
