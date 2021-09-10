@@ -26,6 +26,10 @@ nav:
 - Included modules: modules_list.md
 - Included pipelines: pipelines_list.md
 
+extra:
+  version:
+    provider: mike
+
 plugins:
 - search
 - mknotebooks
