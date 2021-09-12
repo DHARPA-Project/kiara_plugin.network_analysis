@@ -728,6 +728,12 @@ class GrpahComponentsModule(KiaraModule):
 
 
 class AddCentralityCalculationsModule(KiaraModule):
+    """Add centrality properties to a graph."""
+
+    KIARA_METADATA = {
+        "authors": [{"name": "Roman Kalyakin", "email": "roman@kalyakin.com"}],
+    }
+
     def create_input_schema(self) -> typing.Mapping[str, ValueSchema]:
         return {
             "graph": ValueSchema(type="network_graph"),
@@ -749,6 +755,7 @@ class AddCentralityCalculationsModule(KiaraModule):
         }
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+
         graph: Graph = inputs.get_value_data("graph")
         graph = copy.deepcopy(graph)
 
