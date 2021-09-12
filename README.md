@@ -5,7 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/DHARPA-Project/kiara_modules.network_analysis/badge.svg?branch=develop)](https://coveralls.io/github/DHARPA-Project/kiara_modules.network_analysis?branch=develop)
 [![Code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-# kiara modules (default)
+# kiara modules for network analysis
 
 A set of commonly used/useful default modules (and pipelines) for [*Kiara*](https://github.com/DHARPA-project/kiara).
 
