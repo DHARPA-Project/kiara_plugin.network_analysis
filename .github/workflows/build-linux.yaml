@@ -3,6 +3,16 @@ name: "linux tests and documentation builds for 'kiara_modules.network_analysis'
 on: [push]
 
 jobs:
+
+  commitlint:
+    name: lint commit message
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v4
+
   test-linux:
     name: pytest on linux
     runs-on: ubuntu-latest
@@ -70,6 +80,7 @@ jobs:
       - name: Test with flake8
         run: make flake
 
+
   build-docs:
     name: build documentation
     if: ${{ github.ref == 'refs/heads/develop' }} || ${{ github.ref == 'refs/heads/main' }} || startsWith(github.ref, 'refs/tags/')
@@ -133,3 +144,26 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}""
+
+  merge_tag_to_main:
+    name: merge current tag to main branch
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags') }}
+    needs:
+      - test-linux
+      - mypy-linux
+      - flake8-linux
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - run: git config --global user.email "markus@frkl.io"
+    - run: git config --global user.name "Markus Binsteiner"
+    - name: extract tag name
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - name: checkout main branch
+      run: git checkout main
+    - name: merge tag
+      run: git merge "${RELEASE_VERSION}"
+    - name: push updated main branch
+      run: git push https://${{ secrets.GITHUB_TOKEN }}@github.com/DHARPA-Project/kiara_modules.network_analysis.git
