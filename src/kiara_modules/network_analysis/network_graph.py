@@ -6,9 +6,10 @@ from enum import Enum
 
 import networkx as nx
 from kiara import KiaraModule
-from kiara.data.values import Value, ValueSchema, ValueSet
+from kiara.data import ValueSet
+from kiara.data.values import Value, ValueSchema
 from kiara.exceptions import KiaraProcessingException
-from kiara.module_config import ModuleTypeConfig
+from kiara.module_config import ModuleTypeConfigSchema
 from kiara.operations.extract_metadata import ExtractMetadataModule
 from kiara.operations.save_value import SaveValueTypeModule
 from kiara_modules.core.metadata_schemas import FileMetadata
@@ -171,7 +172,7 @@ class CreateGraphFromFileModule(KiaraModule):
         outputs.set_value("graph", graph)
 
 
-class CreateGraphConfig(ModuleTypeConfig):
+class CreateGraphConfig(ModuleTypeConfigSchema):
     class Config:
         use_enum_values = True
 
@@ -420,7 +421,7 @@ class AddNodesToNetworkGraphModule(KiaraModule):
         outputs.set_value("graph", graph)
 
 
-class FindShortestPathModuleConfig(ModuleTypeConfig):
+class FindShortestPathModuleConfig(ModuleTypeConfigSchema):
 
     mode: str = Field(
         description="Whether to calculate one shortest path for only one pair ('single-pair'), or use two node lists as input and select one of the following strategies: shortest path for each pair ('one-to-one'), the shortest path to all targets ('one-to-many'), or a matrix of all possible combinations ('many-to-many').",
@@ -505,15 +506,19 @@ class FindShortestPathModule(KiaraModule):
         outputs.set_value("path", shortest_path)
 
 
-class ExtractGraphPropertiesModuleConfig(ModuleTypeConfig):
+class ExtractGraphPropertiesModuleConfig(ModuleTypeConfigSchema):
 
     number_of_nodes: bool = Field(
         description="Count the number of nodes.", default=True
     )
     number_of_edges: bool = Field(description="Count the number of edges", default=True)
     density: bool = Field(description="Calculate the graph density.", default=True)
-    degrees: bool = Field(description="Calculate the graph degrees metrics.", default=True)
-    shortest_path: bool = Field(description="Calculate the graph shortest path.", default=True)
+    degrees: bool = Field(
+        description="Calculate the graph degrees metrics.", default=True
+    )
+    shortest_path: bool = Field(
+        description="Calculate the graph shortest path.", default=True
+    )
 
 
 class ExtractGraphPropertiesModule(KiaraModule):
@@ -536,7 +541,7 @@ class ExtractGraphPropertiesModule(KiaraModule):
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
 
-        result = {}
+        result: typing.Dict[str, typing.Any] = {}
 
         if self.get_config_value("number_of_nodes"):
             result["number_of_nodes"] = {
@@ -556,25 +561,25 @@ class ExtractGraphPropertiesModule(KiaraModule):
         if self.get_config_value("degrees"):
             result["average_degree"] = {
                 "type": "float",
-                "optional": "True",
-                "doc": "Average degree of the graph if it is not directed."
+                "optional": True,
+                "doc": "Average degree of the graph if it is not directed.",
             }
             result["average_in_degree"] = {
                 "type": "float",
-                "optional": "True",
-                "doc": "Average in degree of the graph if it is directed."
+                "optional": True,
+                "doc": "Average in degree of the graph if it is directed.",
             }
             result["average_out_degree"] = {
                 "type": "float",
-                "optional": "True",
-                "doc": "Average out degree of the graph if it is directed."
+                "optional": True,
+                "doc": "Average out degree of the graph if it is directed.",
             }
 
         if self.get_config_value("shortest_path"):
             result["average_shortest_path_length"] = {
                 "type": "float",
-                "optional": "True",
-                "doc": "Average shortest path length."
+                "optional": True,
+                "doc": "Average shortest path length.",
             }
 
         return result
@@ -596,16 +601,20 @@ class ExtractGraphPropertiesModule(KiaraModule):
             outputs.set_values(density=density)
 
         if self.get_config_value("degrees"):
+            nodes_count: int = graph.number_of_nodes()
             if nodes_count > 0:
                 if nx.is_directed(graph):
                     digraph = typing.cast(nx.DiGraph, graph)
                     outputs.set_values(
-                        average_in_degree=sum(d for _, d in digraph.in_degree()) / float(nodes_count),
-                        average_out_degree=sum(d for _, d in digraph.out_degree()) / float(nodes_count)
+                        average_in_degree=sum(d for _, d in digraph.in_degree())
+                        / float(nodes_count),
+                        average_out_degree=sum(d for _, d in digraph.out_degree())
+                        / float(nodes_count),
                     )
                 else:
                     outputs.set_values(
-                        average_degree=sum(d for _, d in graph.degree()) / float(nodes_count)
+                        average_degree=sum(d for _, d in graph.degree())
+                        / float(nodes_count)
                     )
         if self.get_config_value("shortest_path"):
             if nx.is_weakly_connected(graph):
@@ -650,7 +659,7 @@ class GraphMetadataModule(ExtractMetadataModule):
         }
 
 
-class FindLargestComponentsModuleConfig(ModuleTypeConfig):
+class FindLargestComponentsModuleConfig(ModuleTypeConfigSchema):
 
     find_largest_component: bool = Field(
         description="Find the largest component of a graph.", default=True
@@ -721,51 +730,41 @@ class GrpahComponentsModule(KiaraModule):
 
 
 class AddCentralityCalculationsModule(KiaraModule):
+    """Add centrality properties to a graph."""
+
+    KIARA_METADATA = {
+        "authors": [{"name": "Roman Kalyakin", "email": "roman@kalyakin.com"}],
+    }
 
     def create_input_schema(self) -> typing.Mapping[str, ValueSchema]:
         return {
-            'graph': ValueSchema(type='network_graph'),
-            'degree_property_name': ValueSchema(
-                type='string',
-                default='degree'
+            "graph": ValueSchema(type="network_graph"),
+            "degree_property_name": ValueSchema(type="string", default="degree"),
+            "indegree_property_name": ValueSchema(type="string", default="indegree"),
+            "outdegree_property_name": ValueSchema(type="string", default="outdegree"),
+            "isolated_property_name": ValueSchema(type="string", default="isolated"),
+            "betweenness_property_name": ValueSchema(
+                type="string", default="betweenness"
             ),
-            'indegree_property_name': ValueSchema(
-                type='string',
-                default='indegree'
-            ),
-            'outdegree_property_name': ValueSchema(
-                type='string',
-                default='outdegree'
-            ),
-            'isolated_property_name': ValueSchema(
-                type='string',
-                default='isolated'
-            ),
-            'betweenness_property_name': ValueSchema(
-                type='string',
-                default='betweenness'
-            ),
-            'eigenvector_property_name': ValueSchema(
-                type='string',
-                default='eigenvector'
+            "eigenvector_property_name": ValueSchema(
+                type="string", default="eigenvector"
             ),
         }
 
     def create_output_schema(self) -> typing.Mapping[str, ValueSchema]:
         return {
-            'graph': ValueSchema(type='network_graph'),
+            "graph": ValueSchema(type="network_graph"),
         }
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+
         graph: Graph = inputs.get_value_data("graph")
         graph = copy.deepcopy(graph)
 
         # degree
         degree_dict = graph.degree()
         nx.set_node_attributes(
-            graph,
-            dict(degree_dict),
-            inputs.get_value_data('degree_property_name')
+            graph, dict(degree_dict), inputs.get_value_data("degree_property_name")
         )
 
         # isolated
@@ -784,7 +783,7 @@ class AddCentralityCalculationsModule(KiaraModule):
             nx.set_node_attributes(
                 graph,
                 dict(indegree_dict),
-                inputs.get_value_data('indegree_property_name')
+                inputs.get_value_data("indegree_property_name"),
             )
 
             # outdegree
@@ -792,7 +791,7 @@ class AddCentralityCalculationsModule(KiaraModule):
             nx.set_node_attributes(
                 graph,
                 dict(outdegree_dict),
-                inputs.get_value_data('outdegree_property_name')
+                inputs.get_value_data("outdegree_property_name"),
             )
 
         # eigenvector
@@ -801,14 +800,10 @@ class AddCentralityCalculationsModule(KiaraModule):
         eigenvector_dict = nx.eigenvector_centrality(graph)
 
         nx.set_node_attributes(
-            graph,
-            betweenness_dict,
-            inputs.get_value_data('betweenness_property_name')
+            graph, betweenness_dict, inputs.get_value_data("betweenness_property_name")
         )
         nx.set_node_attributes(
-            graph,
-            eigenvector_dict,
-            inputs.get_value_data('eigenvector_property_name')
+            graph, eigenvector_dict, inputs.get_value_data("eigenvector_property_name")
         )
 
-        outputs.set_value('graph', graph)
+        outputs.set_value("graph", graph)
