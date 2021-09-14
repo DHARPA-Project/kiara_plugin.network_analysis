@@ -803,3 +803,58 @@ class AddCentralityCalculationsModule(KiaraModule):
         )
 
         outputs.set_value("graph", graph)
+
+
+class GraphToNodesTableTransformationModule(KiaraModule):
+    """Transform a network_graph object to an Arrow table with a list of nodes and their properties."""
+
+    _module_type_name = 'to_nodes_table'
+
+    def create_input_schema(self) -> typing.Mapping[str, ValueSchema]:
+        return {
+            'source': ValueSchema(type='network_graph'),
+            'node_id_column': ValueSchema(type='string', default='id')
+        }
+
+    def create_output_schema(self) -> typing.Mapping[str, ValueSchema]:
+        return {
+            'target': ValueSchema(type='table')
+        }
+
+    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+        import pyarrow as pa
+        import pandas as pd
+
+        graph: Graph = inputs.get_value_data('source')
+        node_id_column: str = inputs.get_value_data('node_id_column')
+
+        nodes = [
+            {**node_attrs, node_id_column: node_id}
+            for node_id, node_attrs in graph.nodes.data()
+        ]
+        df = pd.DataFrame.from_records(nodes)
+        table = pa.Table.from_pandas(df)
+        outputs.set_value('target', table)
+
+
+class GraphToEdgesTableTransformationModule(KiaraModule):
+    """Transform a network_graph object to an Arrow table with a list of edges."""
+    _module_type_name = 'to_edges_table'
+
+    def create_input_schema(self) -> typing.Mapping[str, ValueSchema]:
+        return {
+            'source': ValueSchema(type='network_graph')
+        }
+
+    def create_output_schema(self) -> typing.Mapping[str, ValueSchema]:
+        return {
+            'target': ValueSchema(type='table')
+        }
+
+    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+        import pyarrow as pa
+
+        graph: Graph = inputs.get_value_data('source')
+        df = nx.to_pandas_edgelist(graph, "source", "target")
+        table = pa.Table.from_pandas(df)
+        outputs.set_value('target', table)
