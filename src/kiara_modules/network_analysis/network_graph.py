@@ -577,7 +577,7 @@ class ExtractGraphPropertiesModule(KiaraModule):
             result["average_shortest_path_length"] = {
                 "type": "float",
                 "optional": True,
-                "doc": "Average shortest path length.",
+                "doc": "Average shortest path length (only computed when graph is weekly connected).",
             }
 
         return result
@@ -615,10 +615,12 @@ class ExtractGraphPropertiesModule(KiaraModule):
                         / float(nodes_count)
                     )
         if self.get_config_value("shortest_path"):
-            if nx.is_weakly_connected(graph):
-                outputs.set_values(
-                    average_shortest_path_length=nx.average_shortest_path_length(graph)
-                )
+            # TODO: double check why the 'if' was deemed necessary
+            # TODO: rename config option to 'average_shortest_path'
+            # if nx.is_weakly_connected(graph):
+            outputs.set_values(
+                average_shortest_path_length=nx.average_shortest_path_length(graph)
+            )
 
 
 class GraphMetadataModule(ExtractMetadataModule):
