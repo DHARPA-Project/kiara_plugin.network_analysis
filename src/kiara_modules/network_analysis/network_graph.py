@@ -53,11 +53,11 @@ class SaveGraphDataTypeModule(SaveValueTypeModule):
         if isinstance(graph, nx.MultiDiGraph):
             graph_type = GraphTypesEnum.multi_directed
         elif isinstance(graph, nx.MultiGraph):
-            graph_type = GraphTypesEnum.multi_directed
+            graph_type = GraphTypesEnum.multi_undirected
         elif isinstance(graph, nx.DiGraph):
-            graph_type = GraphTypesEnum.undirected
-        elif isinstance(graph, nx.Graph):
             graph_type = GraphTypesEnum.directed
+        elif isinstance(graph, nx.Graph):
+            graph_type = GraphTypesEnum.undirected
 
         input_values = {
             "base_path": base_path,
