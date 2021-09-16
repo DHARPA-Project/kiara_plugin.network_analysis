@@ -50,8 +50,14 @@ class SaveGraphDataTypeModule(SaveValueTypeModule):
         from pyarrow import feather
 
         graph: nx.Graph = value.get_value_data()
-
-        graph_type = "directed"
+        if isinstance(graph, nx.MultiDiGraph):
+            graph_type = GraphTypesEnum.multi_directed
+        elif isinstance(graph, nx.MultiGraph):
+            graph_type = GraphTypesEnum.directed
+        elif isinstance(graph, nx.DiGraph):
+            graph_type = GraphTypesEnum.undirected
+        elif isinstance(graph, nx.Graph):
+            graph_type = GraphTypesEnum.directed
 
         input_values = {
             "base_path": base_path,
@@ -596,12 +602,13 @@ class ExtractGraphPropertiesModule(KiaraModule):
             density = nx.density(graph)
             outputs.set_values(density=density)
 
+        # TODO: rename config value to 'average_degrees'
         if self.get_config_value("degrees"):
 
             nodes_count: int = graph.number_of_nodes()
 
-            if nodes_count > 0:
-                if nx.is_directed(graph):
+            if nx.is_directed(graph):
+                if nodes_count > 0:
                     digraph = typing.cast(nx.DiGraph, graph)
                     outputs.set_values(
                         average_in_degree=sum(d for _, d in digraph.in_degree())
@@ -610,10 +617,16 @@ class ExtractGraphPropertiesModule(KiaraModule):
                         / float(nodes_count),
                     )
                 else:
+                    outputs.set_values(average_in_degree=0, average_out_degree=0)
+            else:
+                if nodes_count:
                     outputs.set_values(
                         average_degree=sum(d for _, d in graph.degree())
                         / float(nodes_count)
                     )
+                else:
+                    outputs.set_values(average_degree=0)
+
         if self.get_config_value("shortest_path"):
             # TODO: double check why the 'if' was deemed necessary
             # TODO: rename config option to 'average_shortest_path'
