@@ -53,7 +53,7 @@ class SaveGraphDataTypeModule(SaveValueTypeModule):
         if isinstance(graph, nx.MultiDiGraph):
             graph_type = GraphTypesEnum.multi_directed
         elif isinstance(graph, nx.MultiGraph):
-            graph_type = GraphTypesEnum.directed
+            graph_type = GraphTypesEnum.multi_directed
         elif isinstance(graph, nx.DiGraph):
             graph_type = GraphTypesEnum.undirected
         elif isinstance(graph, nx.Graph):
