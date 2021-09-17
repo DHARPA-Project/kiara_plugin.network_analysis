@@ -258,7 +258,6 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
             _graph_type = self.get_config_value("graph_type")
         else:
             _graph_type = inputs.get_value_data("graph_type")
-
         graph_type = GraphTypesEnum[_graph_type]
 
         edges_table_value = inputs.get_value_obj("edges_table")
@@ -630,10 +629,10 @@ class ExtractGraphPropertiesModule(KiaraModule):
         if self.get_config_value("shortest_path"):
             # TODO: double check why the 'if' was deemed necessary
             # TODO: rename config option to 'average_shortest_path'
-            # if nx.is_weakly_connected(graph):
-            outputs.set_values(
-                average_shortest_path_length=nx.average_shortest_path_length(graph)
-            )
+            if nx.is_weakly_connected(graph):
+                outputs.set_values(
+                    average_shortest_path_length=nx.average_shortest_path_length(graph)
+                )
 
 
 class GraphMetadataModule(ExtractMetadataModule):
@@ -732,7 +731,6 @@ class GrpahComponentsModule(KiaraModule):
             undir_components = nx.connected_components(undir_graph)
             lg_component = max(undir_components, key=len)
             subgraph = input_graph.subgraph(lg_component)
-
             outputs.set_values(largest_component=subgraph)
 
         if self.get_config_value("number_of_components"):
