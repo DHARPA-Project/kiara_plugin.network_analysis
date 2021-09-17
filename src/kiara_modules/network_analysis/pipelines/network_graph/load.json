@@ -11,7 +11,7 @@
       "step_id": "load_nodes_table"
     },
     {
-      "module_type":  "network_graph.from_edges_table",
+      "module_type":  "playground.lena.graphs.improved_from_edges_table",
       "step_id": "create_graph",
       "input_links": {
         "edges_table": "load_edges_table.table"
