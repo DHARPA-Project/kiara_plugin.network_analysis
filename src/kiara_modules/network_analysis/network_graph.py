@@ -187,7 +187,7 @@ class CreateGraphConfig(ModuleTypeConfigSchema):
         default=None,
     )
 
-    @validator("graph_type")
+    @validator("graph_type", allow_reuse=True)
     def _validate_graph_type(cls, v):
 
         try:
@@ -432,7 +432,7 @@ class FindShortestPathModuleConfig(ModuleTypeConfigSchema):
         default="single-pair",
     )
 
-    @validator("mode")
+    @validator("mode", allow_reuse=True)
     def _validate_mode(cls, v):
 
         allowed = ["single-pair", "one-to-one", "one-to-many", "many-to-many"]
