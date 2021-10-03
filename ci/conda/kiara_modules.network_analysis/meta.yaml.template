@@ -23,8 +23,8 @@ requirements:
     - setuptools_scm_git_archive
   run:
     - python
-    - kiara
-    - kiara_modules.core
+    - kiara>=0.2.0
+    - kiara_modules.core>=0.2.0
 about:
   home: https://github.com/DHARPA-Project/kiara_modules.network_analysis
   license: "Mozilla Public 2.0 (MPL 2.0)"
