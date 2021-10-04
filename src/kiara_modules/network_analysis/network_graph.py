@@ -12,7 +12,7 @@ from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import ModuleTypeConfigSchema
 from kiara.operations.extract_metadata import ExtractMetadataModule
 from kiara.operations.save_value import SaveValueTypeModule
-from kiara_modules.core.metadata_schemas import FileMetadata
+from kiara_modules.core.metadata_schemas import KiaraFile
 from networkx import Graph
 from pydantic import BaseModel, Field, validator
 
@@ -159,7 +159,7 @@ class CreateGraphFromFileModule(KiaraModule):
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
         input_file_type = inputs.get_value_data("input_type")
-        input_file: FileMetadata = inputs.get_value_data("file")
+        input_file: KiaraFile = inputs.get_value_data("file")
 
         if input_file_type == "auto":
             if input_file.orig_filename.endswith(".graphml"):
@@ -187,7 +187,7 @@ class CreateGraphConfig(ModuleTypeConfigSchema):
         default=None,
     )
 
-    @validator("graph_type")
+    @validator("graph_type", allow_reuse=True)
     def _validate_graph_type(cls, v):
 
         try:
@@ -218,17 +218,17 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
             "source_column": {
                 "type": "string",
                 "default": "source",
-                "doc": "The name of the column that contains the edge source in edges table.",
+                "doc": "The name of the edge source column.",
             },
             "target_column": {
                 "type": "string",
                 "default": "target",
-                "doc": "The name of the column that contains the edge target in the edges table.",
+                "doc": "The name of the edge target column.",
             },
             "weight_column": {
                 "type": "string",
                 "default": "weight",
-                "doc": "The name of the column that contains the edge weight in edges table.",
+                "doc": "The name of the weight column.",
             },
         }
 
@@ -236,7 +236,7 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
             inputs["graph_type"] = {
                 "type": "string",
                 "default": "directed",
-                "doc": "The type of the graph. Allowed: 'undirected', 'directed', 'multi_directed', 'multi_undirected'.",
+                "doc": "The type of the graph.",
             }
         return inputs
 
@@ -310,7 +310,7 @@ class AugmentNetworkGraphModule(KiaraModule):
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
         return {
-            "graph": {"type": "network_graph", "doc": "The network graph"},
+            "graph": {"type": "network_graph", "doc": "The network graph."},
             "node_attributes": {
                 "type": "table",
                 "doc": "The table containing node attributes.",
@@ -328,7 +328,7 @@ class AugmentNetworkGraphModule(KiaraModule):
     ) -> typing.Mapping[
         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
     ]:
-        return {"graph": {"type": "network_graph", "doc": "The network graph"}}
+        return {"graph": {"type": "network_graph", "doc": "The network graph."}}
 
     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
 
@@ -336,7 +336,7 @@ class AugmentNetworkGraphModule(KiaraModule):
 
         nodes_table_value = inputs.get_value_obj("node_attributes")
 
-        if nodes_table_value.is_none or not nodes_table_value:
+        if not nodes_table_value or nodes_table_value.is_none:
             # we return the graph as is
             # we are using the 'get_value_obj' method, because there is no need to retrieve the
             # actual data at all
@@ -432,7 +432,7 @@ class FindShortestPathModuleConfig(ModuleTypeConfigSchema):
         default="single-pair",
     )
 
-    @validator("mode")
+    @validator("mode", allow_reuse=True)
     def _validate_mode(cls, v):
 
         allowed = ["single-pair", "one-to-one", "one-to-many", "many-to-many"]

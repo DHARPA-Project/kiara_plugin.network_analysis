@@ -25,8 +25,8 @@ from kiara_modules.network_analysis.network_graph import (
     FindShortestPathModule,
 )
 
-__author__ = """Markus Binsteiner"""
-__email__ = "markus@frkl.io"
+__author__ = """Lena Jaskov"""
+__email__ = "helena.jaskov@uni.lu"
 
 log = logging.getLogger("kiara_modules")
 
