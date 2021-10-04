@@ -376,7 +376,7 @@ class AddNodesToNetworkGraphModule(KiaraModule):
     ]:
         return {
             "graph": {"type": "network_graph", "doc": "The network graph"},
-            "nodes": {
+            "node_attributes": {
                 "type": "table",
                 "doc": "The table containing node attributes.",
                 "optional": True,
