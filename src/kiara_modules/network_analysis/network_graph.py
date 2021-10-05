@@ -199,7 +199,7 @@ class CreateGraphConfig(ModuleTypeConfigSchema):
 
 
 class CreateGraphFromEdgesTableModule(KiaraModule):
-    """Create a directed network graph object from table data."""
+    """Create a network graph object from table data."""
 
     _config_cls = CreateGraphConfig
     _module_type_name = "from_edges_table"
@@ -235,7 +235,7 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
         if self.get_config_value("graph_type") is None:
             inputs["graph_type"] = {
                 "type": "string",
-                "default": "directed",
+                "default": "undirected",
                 "doc": "The type of the graph.",
             }
         return inputs
@@ -285,11 +285,16 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
         )
         pandas_table = min_table.to_pandas()
 
-        if graph_type != GraphTypesEnum.directed:
-            raise NotImplementedError("Only 'directed' graph supported at the moment.")
-        graph_cls = nx.DiGraph
+        if graph_type is GraphTypesEnum.undirected:
+            graph_cls = nx.Graph
+        elif graph_type is GraphTypesEnum.directed:
+            graph_cls = nx.DiGraph
+        elif graph_type is GraphTypesEnum.multi_directed:
+            graph_cls = nx.MultiDiGraph
+        elif graph_type is GraphTypesEnum.multi_undirected:
+            graph_cls = nx.MultiGraph
 
-        graph: nx.DiGraph = nx.from_pandas_edgelist(
+        graph = nx.from_pandas_edgelist(
             pandas_table,
             source_column,
             target_column,
