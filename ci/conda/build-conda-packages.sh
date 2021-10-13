@@ -39,7 +39,7 @@ create_meta_yaml() {
         echo "No version specified."
         exit 1
     fi
-    sed "s/__VERSION__/${INPUT_VERSION}/" meta.yaml.template >> meta.yaml
+    sed "s/__VERSION__/${INPUT_VERSION}/" meta.yaml.template > meta.yaml
 }
 
 build_package(){
