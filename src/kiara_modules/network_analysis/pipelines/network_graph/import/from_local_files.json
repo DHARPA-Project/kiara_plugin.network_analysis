@@ -3,25 +3,25 @@
   "documentation": "Create a network graph from a a csv file that contains edges. You can specify an additional csv file if you have node attributes.",
   "steps": [
     {
-      "module_type": "file.import_from.path.string",
+      "module_type": "file.import_from.local.file_path",
       "step_id": "read_edges_file"
     },
     {
-      "module_type": "file.import_from.path.string",
+      "module_type": "file.import_from.local.file_path",
       "step_id": "read_nodes_file"
     },
     {
       "module_type": "file.convert_to.table",
       "step_id": "load_edges_table",
       "input_links": {
-        "value_item": "read_edges_file.value_item"
+        "value_item": "read_edges_file.file"
       }
     },
     {
       "module_type": "file.convert_to.table",
       "step_id": "load_nodes_table",
       "input_links": {
-        "value_item": "read_nodes_file.value_item"
+        "value_item": "read_nodes_file.file"
       }
     },
     {
@@ -51,10 +51,8 @@
     }
   ],
   "input_aliases": {
-    "read_edges_file__source": "edges_path",
-    "read_edges_file__aliases": "edges_file_aliases",
-    "read_nodes_file__source": "nodes_path",
-    "read_nodes_file__aliases": "nodes_file_aliases",
+    "read_edges_file__file": "edges_path",
+    "read_nodes_file__file": "nodes_path",
     "create_graph__source_column": "source_column",
     "create_graph__target_column": "target_column",
     "create_graph__weight_column": "weight_column",
