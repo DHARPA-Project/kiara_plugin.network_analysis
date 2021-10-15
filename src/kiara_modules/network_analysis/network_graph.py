@@ -14,6 +14,7 @@ from kiara.operations.extract_metadata import ExtractMetadataModule
 from kiara.operations.save_value import SaveValueTypeModule
 from kiara_modules.core.metadata_schemas import KiaraFile
 from networkx import Graph
+from networkx.exception import NetworkXError
 from pydantic import BaseModel, Field, validator
 
 from kiara_modules.network_analysis.metadata_schemas import GraphMetadata
@@ -634,10 +635,19 @@ class ExtractGraphPropertiesModule(KiaraModule):
         if self.get_config_value("shortest_path"):
             # TODO: double check why the 'if' was deemed necessary
             # TODO: rename config option to 'average_shortest_path'
-            if nx.is_weakly_connected(graph):
-                outputs.set_values(
-                    average_shortest_path_length=nx.average_shortest_path_length(graph)
-                )
+            if nx.is_directed(graph):
+                if nx.is_weakly_connected(graph):
+                    outputs.set_values(
+                        average_shortest_path_length=nx.average_shortest_path_length(graph)
+                    )
+            elif nx.is_directed(graph) != True:
+                if nx.is_connected(graph):
+                    outputs.set_values(
+                        average_shortest_path_length=nx.average_shortest_path_length(graph)
+                    )
+            else:
+                raise NetworkXError("Graph is disconnected.")
+            
 
 
 class GraphMetadataModule(ExtractMetadataModule):
