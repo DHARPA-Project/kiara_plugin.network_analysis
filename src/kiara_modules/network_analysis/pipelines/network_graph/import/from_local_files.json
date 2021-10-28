@@ -14,14 +14,14 @@
       "module_type": "file.convert_to.table",
       "step_id": "load_edges_table",
       "input_links": {
-        "value_item": "read_edges_file.file"
+        "value_item": "read_edges_file.value_item"
       }
     },
     {
       "module_type": "file.convert_to.table",
       "step_id": "load_nodes_table",
       "input_links": {
-        "value_item": "read_nodes_file.file"
+        "value_item": "read_nodes_file.value_item"
       }
     },
     {

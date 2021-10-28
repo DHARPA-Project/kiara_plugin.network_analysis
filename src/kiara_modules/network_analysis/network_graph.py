@@ -199,7 +199,11 @@ class CreateGraphConfig(ModuleTypeConfigSchema):
 
 
 class CreateGraphFromEdgesTableModule(KiaraModule):
-    """Create a network graph object from table data."""
+    """Create a network graph object from table data.
+
+    The table data must have (at least) 2 columns, one that contains source items, and on for targets. Each row in that
+    table indicates an edge in the network graph that is created.
+    """
 
     _config_cls = CreateGraphConfig
     _module_type_name = "from_edges_table"
@@ -305,7 +309,11 @@ class CreateGraphFromEdgesTableModule(KiaraModule):
 
 
 class AugmentNetworkGraphModule(KiaraModule):
-    """Augment an existing graph with node attributes."""
+    """Augment an existing graph with node attributes.
+
+    This module takes an existing graph object, and a table containing node attributes, and uses the latter to add attributes
+    to existing graph nodes using one colum as the index to match table rows to graph nodes.
+    """
 
     _module_type_name = "augment"
 
@@ -369,65 +377,66 @@ class AugmentNetworkGraphModule(KiaraModule):
         outputs.set_value("graph", graph)
 
 
-class AddNodesToNetworkGraphModule(KiaraModule):
-    """Add nodes to an existing graph."""
-
-    _module_type_name = "add_nodes"
-
-    def create_input_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-        return {
-            "graph": {"type": "network_graph", "doc": "The network graph"},
-            "node_attributes": {
-                "type": "table",
-                "doc": "The table containing node attributes.",
-                "optional": True,
-            },
-            "index_column_name": {
-                "type": "string",
-                "doc": "The name of the column that contains the node index in the node attributes table.",
-                "optional": True,
-            },
-        }
-
-    def create_output_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-        return {"graph": {"type": "network_graph", "doc": "The network graph"}}
-
-    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
-
-        import pyarrow as pa
-
-        nodes_table_value = inputs.get_value_obj("node_attributes")
-
-        if nodes_table_value.is_none:
-            # we return the graph as is
-            # we are using the 'get_value_obj' method, because there is no need to retrieve the
-            # actual data at all
-            outputs.set_value("graph", inputs.get_value_obj("graph"))
-            return
-
-        input_graph: Graph = inputs.get_value_data("graph")
-        graph: Graph = copy.deepcopy(input_graph)
-
-        nodes_table_obj: pa.Table = nodes_table_value.get_value_data()
-        nodes_table_index = inputs.get_value_data("index_column_name")
-
-        attr_dict = (
-            nodes_table_obj.to_pandas()
-            .set_index(nodes_table_index)
-            .to_dict("index")
-            .items()
-        )
-        graph.add_nodes_from(attr_dict)
-
-        outputs.set_value("graph", graph)
+# class AddNodesToNetworkGraphModule(KiaraModule):
+#     """Add nodes to an existing graph.
+#     """
+#
+#     _module_type_name = "add_nodes"
+#
+#     def create_input_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#         return {
+#             "graph": {"type": "network_graph", "doc": "The network graph"},
+#             "node_attributes": {
+#                 "type": "table",
+#                 "doc": "The table containing node attributes.",
+#                 "optional": True,
+#             },
+#             "index_column_name": {
+#                 "type": "string",
+#                 "doc": "The name of the column that contains the node index in the node attributes table.",
+#                 "optional": True,
+#             },
+#         }
+#
+#     def create_output_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#         return {"graph": {"type": "network_graph", "doc": "The network graph"}}
+#
+#     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+#
+#         import pyarrow as pa
+#
+#         nodes_table_value = inputs.get_value_obj("node_attributes")
+#
+#         if nodes_table_value.is_none:
+#             # we return the graph as is
+#             # we are using the 'get_value_obj' method, because there is no need to retrieve the
+#             # actual data at all
+#             outputs.set_value("graph", inputs.get_value_obj("graph"))
+#             return
+#
+#         input_graph: Graph = inputs.get_value_data("graph")
+#         graph: Graph = copy.deepcopy(input_graph)
+#
+#         nodes_table_obj: pa.Table = nodes_table_value.get_value_data()
+#         nodes_table_index = inputs.get_value_data("index_column_name")
+#
+#         attr_dict = (
+#             nodes_table_obj.to_pandas()
+#             .set_index(nodes_table_index)
+#             .to_dict("index")
+#             .items()
+#         )
+#         graph.add_nodes_from(attr_dict)
+#
+#         outputs.set_value("graph", graph)
 
 
 class FindShortestPathModuleConfig(ModuleTypeConfigSchema):

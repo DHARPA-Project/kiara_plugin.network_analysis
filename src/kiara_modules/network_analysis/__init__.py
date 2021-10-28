@@ -5,7 +5,6 @@
 __all__ = [
     "AugmentNetworkGraphModule",
     "CreateGraphFromEdgesTableModule",
-    "AddNodesToNetworkGraphModule",
     "ExtractGraphPropertiesModule",
     "FindShortestPathModule",
     "get_version",
@@ -18,7 +17,6 @@ import os
 from kiara import KiaraEntryPointItem, find_kiara_modules_under
 
 from kiara_modules.network_analysis.network_graph import (
-    AddNodesToNetworkGraphModule,
     AugmentNetworkGraphModule,
     CreateGraphFromEdgesTableModule,
     ExtractGraphPropertiesModule,
