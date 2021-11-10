@@ -11,7 +11,7 @@ from kiara.data.values import Value, ValueSchema
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import ModuleTypeConfigSchema
 from kiara.operations.extract_metadata import ExtractMetadataModule
-from kiara.operations.save_value import SaveValueTypeModule
+from kiara.operations.store_value import StoreValueTypeModule
 from kiara_modules.core.metadata_schemas import KiaraFile
 from networkx import Graph
 from networkx.exception import NetworkXError
@@ -36,7 +36,7 @@ DEFAULT_SAVE_GRAPH_WEIGHT_COLUMN_NAME = "weight"
 DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME = "id"
 
 
-class SaveGraphDataTypeModule(SaveValueTypeModule):
+class SaveGraphDataTypeModule(StoreValueTypeModule):
     """Save a network graph object."""
 
     @classmethod
@@ -45,7 +45,12 @@ class SaveGraphDataTypeModule(SaveValueTypeModule):
 
     _module_type_name = "save"
 
-    def save_value(self, value: Value, base_path: str) -> typing.Dict[str, typing.Any]:
+    def store_value(
+        self, value: Value, base_path: str
+    ) -> typing.Union[
+        typing.Tuple[typing.Dict[str, typing.Any], typing.Any],
+        typing.Dict[str, typing.Any],
+    ]:
 
         import pyarrow as pa
         from pyarrow import feather
@@ -647,16 +652,19 @@ class ExtractGraphPropertiesModule(KiaraModule):
             if nx.is_directed(graph):
                 if nx.is_weakly_connected(graph):
                     outputs.set_values(
-                        average_shortest_path_length=nx.average_shortest_path_length(graph)
+                        average_shortest_path_length=nx.average_shortest_path_length(
+                            graph
+                        )
                     )
-            elif nx.is_directed(graph) != True:
+            elif nx.is_directed(graph) is not True:
                 if nx.is_connected(graph):
                     outputs.set_values(
-                        average_shortest_path_length=nx.average_shortest_path_length(graph)
+                        average_shortest_path_length=nx.average_shortest_path_length(
+                            graph
+                        )
                     )
             else:
                 raise NetworkXError("Graph is disconnected.")
-            
 
 
 class GraphMetadataModule(ExtractMetadataModule):
