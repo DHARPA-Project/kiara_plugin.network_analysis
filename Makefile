@@ -35,7 +35,7 @@ init: clean ## initialize a development environment (to be run in virtualenv)
 	git init
 	git checkout -b develop || true
 	pip install -U pip
-	pip install --pre --extra-index-url https://pypi.fury.io/dharpa/ --extra-index-url https://gitlab.com/api/v4/projects/25344049/packages/pypi/simple -U -e '.[all_dev]'
+	pip install --extra-index-url https://pypi.fury.io/dharpa/ --extra-index-url https://gitlab.com/api/v4/projects/25344049/packages/pypi/simple -U -e '.[all_dev]'
 	pre-commit install
 	pre-commit install --hook-type commit-msg
 	setup-cfg-fmt setup.cfg || true
@@ -45,7 +45,7 @@ init: clean ## initialize a development environment (to be run in virtualenv)
 
 update-dependencies:  ## update all development dependencies
 	pip install -U pip
-	pip install --pre --extra-index-url https://pypi.fury.io/dharpa/ --extra-index-url https://gitlab.com/api/v4/projects/25344049/packages/pypi/simple -U -e '.[all_dev]'
+	pip install --extra-index-url https://pypi.fury.io/dharpa/ --extra-index-url https://gitlab.com/api/v4/projects/25344049/packages/pypi/simple -U -e '.[all_dev]'
 
 
 setup-cfg-fmt: # format setup.cfg
