@@ -2,7 +2,6 @@
 import copy
 import os
 import typing
-from enum import Enum
 
 import networkx as nx
 from kiara import KiaraModule
@@ -18,15 +17,7 @@ from networkx.exception import NetworkXError
 from pydantic import BaseModel, Field, validator
 
 from kiara_modules.network_analysis.metadata_schemas import GraphMetadata
-
-
-class GraphTypesEnum(Enum):
-
-    undirected = "undirected"
-    directed = "directed"
-    multi_directed = "multi_directed"
-    multi_undirected = "multi_undirected"
-
+from kiara_modules.network_analysis.utils import GraphTypesEnum
 
 DEFAULT_SAVE_GRAPH_EDGES_TABLE_NAME = "edges.feather"
 DEFAULT_SAVE_GRAPH_NODES_TABLE_NAME = "nodes.feather"
