@@ -7,13 +7,8 @@ from enum import Enum
 
 from kiara.utils.output import DictTabularWrap, TabularWrap
 
+from kiara_modules.network_analysis.defaults import TableType
 from kiara_modules.network_analysis.metadata_schemas import NetworkData
-
-
-class TableType(Enum):
-
-    EDGES = "edges"
-    NODES = "nodes"
 
 
 class NetworkDataTabularWrap(TabularWrap):

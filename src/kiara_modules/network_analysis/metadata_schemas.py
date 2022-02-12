@@ -9,7 +9,6 @@ it is recommended to create a metadata model, because it is much easier overall.
 Metadata models must be a sub-class of [kiara.metadata.MetadataModel][kiara.metadata.MetadataModel].
 """
 import atexit
-import json
 import os
 import shutil
 import tempfile
@@ -20,8 +19,18 @@ from kiara.metadata import MetadataModel
 from kiara.utils.class_loading import find_metadata_schemas_under
 from kiara_modules.core.metadata_schemas import KiaraDatabase
 from pydantic import Field, PrivateAttr
-from simple_graph_sqlite import database as simple_graph_db
-from simple_graph_sqlite.database import read_sql
+from sqlalchemy import MetaData, Table
+
+from kiara_modules.network_analysis.defaults import (
+    ID_COLUMN_NAME,
+    LABEL_COLUMN_NAME,
+    SOURCE_COLUMN_NAME,
+    TARGET_COLUMN_NAME,
+    TableType,
+)
+
+if typing.TYPE_CHECKING:
+    import networkx as nx
 
 metadata_schemas: KiaraEntryPointItem = (
     find_metadata_schemas_under,
@@ -41,6 +50,12 @@ class NetworkData(KiaraDatabase):
 
     _metadata_key: typing.ClassVar[str] = "network_data"
 
+    _nodes_table_obj = PrivateAttr(default=None)
+    _edges_table_obj = PrivateAttr(default=None)
+    _metadata_obj = PrivateAttr(default=MetaData())
+
+    _nx_graph = PrivateAttr(default={})
+
     @classmethod
     def create_in_temp_dir(cls):
 
@@ -53,115 +68,109 @@ class NetworkData(KiaraDatabase):
         atexit.register(cleanup)
 
         db = NetworkData(db_file_path=db_path)
-        db.initialize()
         return db
 
-    _invalidated: bool = PrivateAttr(default=False)
+    def get_sqlalchemy_nodes_table(self) -> Table:
 
-    def initialize(self):
+        if self._nodes_table_obj is not None:
+            return self._nodes_table_obj
 
-        simple_graph_db.initialize(self.db_file_path)
+        self._nodes_table_obj = Table(
+            TableType.NODES.value,
+            self._metadata_obj,
+            autoload_with=self.get_sqlalchemy_engine(),
+        )
+        return self._nodes_table_obj
 
-    def upsert_nodes(
-        self,
-        node_ids: typing.List[int],
-        node_details: typing.Iterable[typing.Mapping[str, typing.Any]],
-    ):
+    def get_sqlalchemy_edges_table(self) -> Table:
 
-        # if len(node_ids) != len(node_details):
-        #     raise Exception("Can't add nodes: different length for node_ids and node_details.")
+        if self._edges_table_obj is not None:
+            return self._edges_table_obj
 
-        def _prepare_item(identifier, data):
-            if identifier is None:
-                raise Exception("Missing identifier.")
+        self._edges_table_obj = Table(
+            TableType.EDGES.value,
+            self._metadata_obj,
+            autoload_with=self.get_sqlalchemy_engine(),
+        )
+        return self._edges_table_obj
 
-            if data is None:
-                data = {}
-            if "id" not in data.keys():
-                data["id"] = identifier
-            elif data["id"] != identifier:
-                raise Exception(f"Clashing ids: {data['id']} <-> {identifier}")
-            return data
+    def insert_nodes(self, *nodes: typing.Mapping[str, typing.Any]):
 
-        def _add_nodes(cursor):
-            cursor.executemany(
-                read_sql("insert-node.sql"),
-                [
-                    (x,)
-                    for x in map(
-                        lambda node: json.dumps(_prepare_item(node[0], node[1])),
-                        zip(node_ids, node_details),
-                    )
-                ],
-            )
+        engine = self.get_sqlalchemy_engine()
+        nodes_table = self.get_sqlalchemy_nodes_table()
 
-        simple_graph_db.atomic(self.db_file_path, _add_nodes)
-        self._invalidated = True
+        with engine.connect() as conn:
+            with conn.begin():
+                conn.execute(nodes_table.insert(), nodes)
 
     def insert_edges(
         self,
-        edges_dict: typing.Mapping[str, typing.Sequence[typing.Any]],
-        source_column_name: str = "source",
-        target_column_name: str = "target",
-        existing_node_ids: typing.Set[int] = None,
+        *edges: typing.Mapping[str, typing.Any],
+        existing_node_ids: typing.Iterable[int] = None,
     ) -> typing.Set[int]:
         """Add edges to a network data item.
 
         All the edges need to have their node-ids registered already.
+
+        Arguments:
+            edges: a list of dicts with the edges
+            existing_node_ids: a set of ids that can be assumed to already exist, this is mainly for performance reasons
 
         Returns:
             a unique set of all node ids contained in source and target columns
         """
 
         if existing_node_ids is None:
+            # TODO: run query
             existing_node_ids = set()
+        else:
+            existing_node_ids = set(existing_node_ids)
 
-        required_node_ids = set(edges_dict[source_column_name])
-        required_node_ids.update(edges_dict[target_column_name])
+        required_node_ids = set((edge[SOURCE_COLUMN_NAME] for edge in edges))
+        required_node_ids.update(edge[TARGET_COLUMN_NAME] for edge in edges)
 
         node_ids = list(required_node_ids.difference(existing_node_ids))
 
         if node_ids:
-            self.upsert_nodes(
-                node_ids=node_ids,
-                node_details=({"id": i, "label": str(i)} for i in node_ids),
+            self.insert_nodes(
+                *(
+                    {ID_COLUMN_NAME: node_id, LABEL_COLUMN_NAME: str(node_id)}
+                    for node_id in node_ids
+                )
             )
 
-        def get_edge_data(index: int):
-
-            source_edge = None
-            target_edge = None
-            other = {}
-
-            for key in edges_dict.keys():
-                if key == source_column_name:
-                    source_edge = edges_dict[key][index]
-                elif key == target_column_name:
-                    target_edge = edges_dict[key][index]
-                else:
-                    other[key] = edges_dict[key][index]
-
-            return (source_edge, target_edge, json.dumps(other))
-
-        def _add_edges(cursor):
-            cursor.executemany(
-                read_sql("insert-edge.sql"),
-                [
-                    get_edge_data(index)
-                    for index in range(0, len(edges_dict[source_column_name]))
-                ],
-            )
-
-        simple_graph_db.atomic(self.db_file_path, _add_edges)
-        self._invalidated = True
+        engine = self.get_sqlalchemy_engine()
+        with engine.connect() as conn:
+            with conn.begin():
+                conn.execute(self.get_sqlalchemy_edges_table().insert(), edges)
 
         return required_node_ids
 
-    # def get_simple_graph_db(self):
-    #
-    #     if self._simple_graph_db is not None:
-    #         return self._simple_graph_db
-    #
-    #     from simple_graph_sqlite import database as simple_graph_db
-    #     self._simple_graph_db = simple_graph_db.initialize(self.db_file_path)
-    #     return self._simple_graph_db
+    def as_networkx_graph(self, graph_type: typing.Type["nx.Graph"]) -> "nx.Graph":
+
+        if graph_type in self._nx_graph.keys():
+            return self._nx_graph[graph_type]
+
+        graph = graph_type()
+
+        engine = self.get_sqlalchemy_engine()
+        nodes = self.get_sqlalchemy_nodes_table()
+        edges = self.get_sqlalchemy_edges_table()
+
+        with engine.connect() as conn:
+            with conn.begin():
+                result = conn.execute(nodes.select())
+                for r in result:
+                    row = dict(r)
+                    node_id = row.pop(ID_COLUMN_NAME)
+                    graph.add_node(node_id, **row)
+
+                result = conn.execute(edges.select())
+                for r in result:
+                    row = dict(r)
+                    source = row.pop(SOURCE_COLUMN_NAME)
+                    target = row.pop(TARGET_COLUMN_NAME)
+                    graph.add_edge(source, target, **row)
+
+        self._nx_graph[graph_type] = graph
+        return self._nx_graph[graph_type]

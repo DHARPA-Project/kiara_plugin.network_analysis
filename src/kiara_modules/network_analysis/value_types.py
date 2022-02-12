@@ -12,8 +12,9 @@ from kiara.data.types import ValueType
 from kiara.utils.class_loading import find_value_types_under
 from kiara_modules.core.metadata_schemas import KiaraDatabase
 
+from kiara_modules.network_analysis.defaults import TableType
 from kiara_modules.network_analysis.metadata_schemas import NetworkData
-from kiara_modules.network_analysis.utils import NetworkDataTabularWrap, TableType
+from kiara_modules.network_analysis.utils import NetworkDataTabularWrap
 
 value_types: KiaraEntryPointItem = (
     find_value_types_under,

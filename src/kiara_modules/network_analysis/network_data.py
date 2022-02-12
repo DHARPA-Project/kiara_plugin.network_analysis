@@ -2,6 +2,7 @@
 #  Copyright (c) 2022, Markus Binsteiner
 #
 #  Mozilla Public License, version 2.0 (see LICENSE or https://www.mozilla.org/en-US/MPL/2.0/)
+
 import typing
 
 from kiara import KiaraModule
@@ -13,8 +14,18 @@ from kiara_modules.core.database import (
     BaseDatabaseMetadataModule,
     BaseStoreDatabaseTypeModule,
 )
+from kiara_modules.core.table.utils import create_sqlite_schema_from_arrow_table
 
+from kiara_modules.network_analysis.defaults import (
+    ID_COLUMN_NAME,
+    LABEL_COLUMN_NAME,
+    SOURCE_COLUMN_NAME,
+    TARGET_COLUMN_NAME,
+)
 from kiara_modules.network_analysis.metadata_schemas import NetworkData
+
+if typing.TYPE_CHECKING:
+    import pyarrow as pa
 
 
 class StoreNetworkDataTypeModule(BaseStoreDatabaseTypeModule):
@@ -82,6 +93,11 @@ class CreateGraphFromFilesModule(KiaraModule):
                 "doc": "The name of the target column name in the edges table.",
                 "default": "target",
             },
+            "edges_column_map": {
+                "type": "dict",
+                "doc": "An optional map of original column name to desired.",
+                "optional": True,
+            },
             "nodes": {
                 "type": "table",
                 "doc": "A table that contains the nodes data.",
@@ -89,8 +105,18 @@ class CreateGraphFromFilesModule(KiaraModule):
             },
             "id_column_name": {
                 "type": "string",
-                "doc": "The name of the column that contains the node identifier (which is used in the sources).",
+                "doc": "The name (before any potential column mapping) of the node-table column that contains the node identifier (used in the edges table).",
                 "default": "id",
+            },
+            "label_column_name": {
+                "type": "string",
+                "doc": "The name of a column that contains the node label (before any potential column name mapping). If not specified, the value of the id value will be used as label.",
+                "optional": True,
+            },
+            "nodes_column_map": {
+                "type": "dict",
+                "doc": "An optional map of original column name to desired.",
+                "optional": True,
             },
         }
         return inputs
@@ -123,46 +149,153 @@ class CreateGraphFromFilesModule(KiaraModule):
             )
 
         nodes = inputs.get_value_obj("nodes")
-        id_column_name = inputs.get_value_data("id_column_name")
 
-        import pyarrow as pa
-
-        CHUNK_SIZE = 1024
+        DEFAULT_DB_CHUNK_SIZE = 1024
         network_data = NetworkData.create_in_temp_dir()
 
         added_node_ids = set()
+        edges_table: pa.Table = edges.get_value_data()
 
-        if nodes is not None:
-            nodes_columns = nodes.get_metadata("table")["table"]["column_names"]
-            if id_column_name not in nodes_columns:
+        id_column_name = inputs.get_value_data("id_column_name")
+        label_column_name = inputs.get_value_data("label_column_name")
+        nodes_column_map: typing.Dict[str, str] = inputs.get_value_data(
+            "nodes_column_map"
+        )
+        if nodes_column_map is None:
+            nodes_column_map = {}
+
+        nodes_table: typing.Optional[pa.Table] = None
+        if nodes.is_set:
+
+            if id_column_name in nodes_column_map.keys():
                 raise KiaraProcessingException(
-                    f"Nodes table does not contain id column '{id_column_name}'. Choose one of: {', '.join(nodes_columns)}."
+                    "The value of the 'id_column_name' argument is not allowed in the node column map."
                 )
 
-            nodes_table: pa.Table = nodes.get_value_data()
-            for batch in nodes_table.to_batches(CHUNK_SIZE):
+            nodes_column_map[id_column_name] = ID_COLUMN_NAME
+
+            nodes_table = nodes.get_value_data()
+
+            extra_schema = []
+            if label_column_name is None:
+                label_column_name = LABEL_COLUMN_NAME
+
+            for cn in nodes_table.column_names:
+                if cn.lower() == LABEL_COLUMN_NAME.lower():
+                    label_column_name = cn
+                    break
+
+            if LABEL_COLUMN_NAME in nodes_table.column_names:
+                if label_column_name != LABEL_COLUMN_NAME:
+                    raise KiaraProcessingException(
+                        f"Can't create database for graph data: original data contains column called 'label', which is a protected column name. If this column can be used as a label, remove your '{label_column_name}' input value for the 'label_column_name' input and re-run this module."
+                    )
+
+            if label_column_name in nodes_table.column_names:
+                if label_column_name in nodes_column_map.keys():
+                    raise KiaraProcessingException(
+                        "The value of the 'label_column_name' argument is not allowed in the node column map."
+                    )
+            else:
+                extra_schema.append("    label    TEXT")
+
+            nodes_column_map[label_column_name] = LABEL_COLUMN_NAME
+            schema_sql = (
+                create_sqlite_schema_from_arrow_table(
+                    table=nodes_table,
+                    table_name="nodes",
+                    index_columns=["id"],
+                    column_map=nodes_column_map,
+                    extra_column_info={"id": "NOT NULL UNIQUE"},
+                    extra_schema=extra_schema,
+                )
+                + "\n"
+            )
+
+        else:
+            schema_sql = """CREATE TABLE IF NOT EXISTS nodes (
+    id    INTEGER    NOT NULL UNIQUE,
+    label    TEXT
+);
+CREATE INDEX IF NOT EXISTS id_idx ON nodes(id);
+"""
+
+        edges_column_map: typing.Dict[str, str] = inputs.get_value_data(
+            "edges_column_map"
+        )
+        if edges_column_map is None:
+            edges_column_map = {}
+        if edges_source_column_name in edges_column_map.keys():
+            raise KiaraProcessingException(
+                "The value of the 'source_column_name' argument is not allowed in the edges column map."
+            )
+        if edges_target_column_name in edges_column_map.keys():
+            raise KiaraProcessingException(
+                "The value of the 'source_column_name' argument is not allowed in the edges column map."
+            )
+
+        edges_column_map[edges_source_column_name] = SOURCE_COLUMN_NAME
+        edges_column_map[edges_target_column_name] = TARGET_COLUMN_NAME
+
+        edges_sql = create_sqlite_schema_from_arrow_table(
+            table=edges_table,
+            table_name="edges",
+            index_columns=["source", "target"],
+            column_map=edges_column_map,
+            extra_schema=[
+                "    FOREIGN KEY(source) REFERENCES nodes(id)",
+                "    FOREIGN KEY(target) REFERENCES nodes(id)",
+            ],
+        )
+
+        schema_sql = f"{schema_sql}{edges_sql}"
+
+        network_data = NetworkData.create_in_temp_dir()
+
+        # create table schema
+        network_data.execute_sql(schema_sql)
+
+        # =============================================
+        # import data
+
+        if nodes_table is not None:
+            for batch in nodes_table.to_batches(DEFAULT_DB_CHUNK_SIZE):
                 batch_dict = batch.to_pydict()
-                ids = batch_dict.pop(id_column_name)
 
-                keys = ["id", *batch_dict.keys()]
-                data = (row for row in zip(ids, *batch_dict.values()))
+                for k, v in nodes_column_map.items():
+                    if k in batch_dict.keys():
+                        if k == ID_COLUMN_NAME and v == LABEL_COLUMN_NAME:
+                            _data = batch_dict.get(k)
+                        else:
+                            _data = batch_dict.pop(k)
+                            if v in batch_dict.keys():
+                                raise Exception(
+                                    "Duplicate nodes column name after mapping: {v}"
+                                )
+                        batch_dict[v] = _data
 
-                def assemble_dict(d):
-                    result = {"id": d[0]}
-                    for i in range(0, len(keys)):
-                        result[keys[i]] = d[i]
-                    return result
+                ids = batch_dict[ID_COLUMN_NAME]
+                data = [dict(zip(batch_dict, t)) for t in zip(*batch_dict.values())]
+                network_data.insert_nodes(*data)
 
-                dicts = map(assemble_dict, data)
-                network_data.upsert_nodes(ids, dicts)
                 added_node_ids.update(ids)
 
-        edges_table: pa.Table = edges.get_value_data()
-        for batch in edges_table.to_batches(CHUNK_SIZE):
+        for batch in edges_table.to_batches(DEFAULT_DB_CHUNK_SIZE):
+
+            batch_dict = batch.to_pydict()
+            for k, v in edges_column_map.items():
+                if k in batch_dict.keys():
+                    _data = batch_dict.pop(k)
+                    if v in batch_dict.keys():
+                        raise Exception(
+                            "Duplicate edges column name after mapping: {v}"
+                        )
+                    batch_dict[v] = _data
+
+            data = [dict(zip(batch_dict, t)) for t in zip(*batch_dict.values())]
+
             all_node_ids = network_data.insert_edges(
-                batch.to_pydict(),
-                source_column_name=edges_source_column_name,
-                target_column_name=edges_target_column_name,
+                *data,
                 existing_node_ids=added_node_ids,
             )
             added_node_ids.update(all_node_ids)
