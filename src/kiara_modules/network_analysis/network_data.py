@@ -229,6 +229,7 @@ class CreateGraphFromTablesModule(KiaraModule):
         edges_column_map[edges_target_column_name] = TARGET_COLUMN_NAME
 
         edges_data = create_sqlite_schema_data_from_arrow_table(
+            table=edges_table,
             index_columns=[SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME],
             column_map=edges_column_map,
         )
