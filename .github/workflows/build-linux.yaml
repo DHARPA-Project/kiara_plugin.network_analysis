@@ -96,7 +96,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: install kiara_modules.network_analysis
+      - name: install kiara_modules.network_analysis develop
+        if: ${{ ( github.ref == 'refs/heads/develop') }}
+        run: pip install -U --pre --extra-index-url https://pypi.fury.io/dharpa/ .[all,dev_documentation]
+      - name: install kiara_modules.network_analysis release
+        if: startsWith(github.ref, 'refs/tags')
         run: pip install -U --extra-index-url https://pypi.fury.io/dharpa/ .[all,dev_documentation]
       - run: git config --global user.email "Markus Binsteiner"
       - run: git config --global user.name "markus@frkl.io"
