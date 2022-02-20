@@ -11,8 +11,14 @@ from kiara.data import Value
 from kiara.data.types import ValueType
 from kiara.utils.class_loading import find_value_types_under
 from kiara_modules.core.metadata_schemas import KiaraDatabase
+from kiara_modules.core.value_types import DatabaseType
 
-from kiara_modules.network_analysis.defaults import TableType
+from kiara_modules.network_analysis.defaults import (
+    ID_COLUMN_NAME,
+    SOURCE_COLUMN_NAME,
+    TARGET_COLUMN_NAME,
+    TableType,
+)
 from kiara_modules.network_analysis.metadata_schemas import NetworkData
 from kiara_modules.network_analysis.utils import NetworkDataTabularWrap
 
@@ -49,7 +55,7 @@ class NetworkGraphType(ValueType):
         return value
 
 
-class NetworkDataType(ValueType):
+class NetworkDataType(DatabaseType):
     """Data that can be assembled into a graph.
 
     Internally, this is backed by a sqlite database, using https://github.com/dpapathanasiou/simple-graph .
@@ -63,8 +69,41 @@ class NetworkDataType(ValueType):
 
     def validate(cls, value: typing.Any) -> typing.Any:
 
-        if isinstance(value, networkx.Graph):
-            raise NotImplementedError()
+        network_data: NetworkData = value
+
+        table_names = network_data.table_names
+        for tn in ["edges", "nodes"]:
+            if tn not in table_names:
+                raise Exception(
+                    f"Invalid 'network_data' value: database does not contain table '{tn}'"
+                )
+
+        table_names = network_data.table_names
+        if "edges" not in table_names:
+            raise Exception(
+                "Invalid 'network_data' value: database does not contain table 'edges'"
+            )
+        if "nodes" not in table_names:
+            raise Exception(
+                "Invalid 'network_data' value: database does not contain table 'nodes'"
+            )
+
+        schema = network_data.get_schema_for_table("edges")
+        if SOURCE_COLUMN_NAME not in schema.keys():
+            raise Exception(
+                f"Invalid 'network_data' value: 'edges' table does not contain a '{SOURCE_COLUMN_NAME}' column. Available columns: {', '.join(schema.keys())}."
+            )
+        if TARGET_COLUMN_NAME not in schema.keys():
+            raise Exception(
+                f"Invalid 'network_data' value: 'edges' table does not contain a '{TARGET_COLUMN_NAME}' column. Available columns: {', '.join(schema.keys())}."
+            )
+
+        schema = network_data.get_schema_for_table("nodes")
+        if ID_COLUMN_NAME not in schema.keys():
+            raise Exception(
+                f"Invalid 'network_data' value: 'nodes' table does not contain a '{ID_COLUMN_NAME}' column. Available columns: {', '.join(schema.keys())}."
+            )
+
         return value
 
     def pretty_print_as_renderables(

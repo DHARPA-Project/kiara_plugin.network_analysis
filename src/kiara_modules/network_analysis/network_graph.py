@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import copy
-import os
 import typing
 
 import networkx as nx
@@ -10,7 +9,6 @@ from kiara.data.values import Value, ValueSchema
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import ModuleTypeConfigSchema
 from kiara.operations.extract_metadata import ExtractMetadataModule
-from kiara.operations.store_value import StoreValueTypeModule
 from kiara_modules.core.metadata_schemas import KiaraFile
 from networkx import Graph
 from networkx.exception import NetworkXError
@@ -27,91 +25,91 @@ DEFAULT_SAVE_GRAPH_WEIGHT_COLUMN_NAME = "weight"
 DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME = "id"
 
 
-class SaveGraphDataTypeModule(StoreValueTypeModule):
-    """Save a network graph object."""
-
-    @classmethod
-    def retrieve_supported_types(cls) -> typing.Union[str, typing.Iterable[str]]:
-        return "network_graph"
-
-    _module_type_name = "save"
-
-    def store_value(
-        self, value: Value, base_path: str
-    ) -> typing.Union[
-        typing.Tuple[typing.Dict[str, typing.Any], typing.Any],
-        typing.Dict[str, typing.Any],
-    ]:
-
-        import pyarrow as pa
-        from pyarrow import feather
-
-        graph: nx.Graph = value.get_value_data()
-        if isinstance(graph, nx.MultiDiGraph):
-            graph_type = GraphTypesEnum.multi_directed
-        elif isinstance(graph, nx.MultiGraph):
-            graph_type = GraphTypesEnum.multi_undirected
-        elif isinstance(graph, nx.DiGraph):
-            graph_type = GraphTypesEnum.directed
-        elif isinstance(graph, nx.Graph):
-            graph_type = GraphTypesEnum.undirected
-
-        input_values = {
-            "base_path": base_path,
-            "edges_file_format": "feather",
-            "nodes_file_format": "feather",
-            "source_column": DEFAULT_SAVE_GRAPH_SOURCE_COLUMN_NAME,
-            "target_column": DEFAULT_SAVE_GRAPH_TARGET_COLUMN_NAME,
-            "weight_column": DEFAULT_SAVE_GRAPH_WEIGHT_COLUMN_NAME,
-            "nodes_table_index": DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME,
-            "graph_type": graph_type,
-        }
-
-        os.makedirs(base_path, exist_ok=True)
-
-        edges_file_name = f"{DEFAULT_SAVE_GRAPH_EDGES_TABLE_NAME}.feather"
-        edges_path = os.path.join(base_path, edges_file_name)
-        df = nx.to_pandas_edgelist(graph, "source", "target")
-        edges_table = pa.Table.from_pandas(df, preserve_index=False)
-
-        # edge_attr_keys = set([k for n in graph.edges for k in graph.edges[n].keys()])
-        # edge_attr_keys.add(weight_column_name)
-
-        feather.write_feather(edges_table, edges_path)
-        input_values["edges_path"] = edges_file_name
-
-        nodes_file_name = f"{DEFAULT_SAVE_GRAPH_NODES_TABLE_NAME}.feather"
-        nodes_path = os.path.join(base_path, nodes_file_name)
-
-        node_attr_keys = set([k for n in graph.nodes for k in graph.nodes[n].keys()])
-
-        if DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME in node_attr_keys:
-            node_attr_keys.remove(DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME)
-
-        nodes_dict: typing.Dict[str, typing.List[typing.Any]] = {
-            DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME: []
-        }
-        for k in node_attr_keys:
-            nodes_dict[k] = []
-
-        for node in graph.nodes:
-            nodes_dict[DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME].append(node)
-            for k in node_attr_keys:
-                attr = graph.nodes[node].get(k, None)
-                nodes_dict[k].append(attr)
-
-        nodes_table = pa.Table.from_pydict(nodes_dict)
-        feather.write_feather(nodes_table, nodes_path)
-        input_values["nodes_path"] = nodes_file_name
-
-        load_config = {
-            "base_path_input_name": "base_path",
-            "module_type": "network_graph.load",
-            "inputs": input_values,
-            "output_name": "graph",
-        }
-
-        return load_config
+# class SaveGraphDataTypeModule(StoreValueTypeModule):
+#     """Save a network graph object."""
+#
+#     @classmethod
+#     def retrieve_supported_types(cls) -> typing.Union[str, typing.Iterable[str]]:
+#         return "network_graph"
+#
+#     _module_type_name = "save"
+#
+#     def store_value(
+#         self, value: Value, base_path: str
+#     ) -> typing.Union[
+#         typing.Tuple[typing.Dict[str, typing.Any], typing.Any],
+#         typing.Dict[str, typing.Any],
+#     ]:
+#
+#         import pyarrow as pa
+#         from pyarrow import feather
+#
+#         graph: nx.Graph = value.get_value_data()
+#         if isinstance(graph, nx.MultiDiGraph):
+#             graph_type = GraphTypesEnum.multi_directed
+#         elif isinstance(graph, nx.MultiGraph):
+#             graph_type = GraphTypesEnum.multi_undirected
+#         elif isinstance(graph, nx.DiGraph):
+#             graph_type = GraphTypesEnum.directed
+#         elif isinstance(graph, nx.Graph):
+#             graph_type = GraphTypesEnum.undirected
+#
+#         input_values = {
+#             "base_path": base_path,
+#             "edges_file_format": "feather",
+#             "nodes_file_format": "feather",
+#             "source_column": DEFAULT_SAVE_GRAPH_SOURCE_COLUMN_NAME,
+#             "target_column": DEFAULT_SAVE_GRAPH_TARGET_COLUMN_NAME,
+#             "weight_column": DEFAULT_SAVE_GRAPH_WEIGHT_COLUMN_NAME,
+#             "nodes_table_index": DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME,
+#             "graph_type": graph_type,
+#         }
+#
+#         os.makedirs(base_path, exist_ok=True)
+#
+#         edges_file_name = f"{DEFAULT_SAVE_GRAPH_EDGES_TABLE_NAME}.feather"
+#         edges_path = os.path.join(base_path, edges_file_name)
+#         df = nx.to_pandas_edgelist(graph, "source", "target")
+#         edges_table = pa.Table.from_pandas(df, preserve_index=False)
+#
+#         # edge_attr_keys = set([k for n in graph.edges for k in graph.edges[n].keys()])
+#         # edge_attr_keys.add(weight_column_name)
+#
+#         feather.write_feather(edges_table, edges_path)
+#         input_values["edges_path"] = edges_file_name
+#
+#         nodes_file_name = f"{DEFAULT_SAVE_GRAPH_NODES_TABLE_NAME}.feather"
+#         nodes_path = os.path.join(base_path, nodes_file_name)
+#
+#         node_attr_keys = set([k for n in graph.nodes for k in graph.nodes[n].keys()])
+#
+#         if DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME in node_attr_keys:
+#             node_attr_keys.remove(DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME)
+#
+#         nodes_dict: typing.Dict[str, typing.List[typing.Any]] = {
+#             DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME: []
+#         }
+#         for k in node_attr_keys:
+#             nodes_dict[k] = []
+#
+#         for node in graph.nodes:
+#             nodes_dict[DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME].append(node)
+#             for k in node_attr_keys:
+#                 attr = graph.nodes[node].get(k, None)
+#                 nodes_dict[k].append(attr)
+#
+#         nodes_table = pa.Table.from_pydict(nodes_dict)
+#         feather.write_feather(nodes_table, nodes_path)
+#         input_values["nodes_path"] = nodes_file_name
+#
+#         load_config = {
+#             "base_path_input_name": "base_path",
+#             "module_type": "network_graph.load",
+#             "inputs": input_values,
+#             "output_name": "graph",
+#         }
+#
+#         return load_config
 
 
 SUPPORTED_INPUT_FILE_TYPES = ["auto", "graphml"]

@@ -2,19 +2,18 @@
 #  Copyright (c) 2022, Markus Binsteiner
 #
 #  Mozilla Public License, version 2.0 (see LICENSE or https://www.mozilla.org/en-US/MPL/2.0/)
-
 import typing
+from enum import Enum
 
 from kiara import KiaraModule
 from kiara.data import ValueSet
-from kiara.data.values import ValueSchema
+from kiara.data.values import Value, ValueSchema
 from kiara.exceptions import KiaraProcessingException
-from kiara_modules.core.database import (
-    BaseDatabaseInfoMetadataModule,
-    BaseDatabaseMetadataModule,
-    BaseStoreDatabaseTypeModule,
-)
-from kiara_modules.core.table.utils import create_sqlite_schema_from_arrow_table
+from kiara.operations.create_value import CreateValueModule
+from kiara.operations.extract_metadata import ExtractMetadataModule
+from kiara_modules.core.metadata_schemas import KiaraFile
+from kiara_modules.core.table.utils import create_sqlite_schema_data_from_arrow_table
+from pydantic import BaseModel, Field
 
 from kiara_modules.network_analysis.defaults import (
     ID_COLUMN_NAME,
@@ -28,45 +27,94 @@ if typing.TYPE_CHECKING:
     import pyarrow as pa
 
 
-class StoreNetworkDataTypeModule(BaseStoreDatabaseTypeModule):
-    """Save network data a sqlite database file."""
+class GraphType(Enum):
+    """All possible graph types."""
 
-    _module_type_name = "store"
+    UNDIRECTED = "undirected"
+    DIRECTED = "directed"
+    UNDIRECTED_MULTI = "undirected-multi"
+    DIRECTED_MULTI = "directed-multi"
 
-    @classmethod
-    def retrieve_supported_types(cls) -> typing.Union[str, typing.Iterable[str]]:
-        return "network_data"
+
+class PropertiesByGraphType(BaseModel):
+    """Properties of graph data, if interpreted as a specific graph type."""
+
+    graph_type: GraphType = Field(description="The graph type name.")
+    number_of_edges: int = Field(description="The number of edges.")
 
 
-class DatabaseMetadataModule(BaseDatabaseMetadataModule):
-    """Extract basic metadata from a database object."""
+class NetworkProperties(BaseModel):
+    """Common properties of network data."""
 
-    _module_type_name = "metadata"
+    number_of_nodes: int = Field(description="Number of nodes in the network graph.")
+    properties_by_graph_type: typing.List[PropertiesByGraphType] = Field(
+        description="Properties of the network data, by graph type."
+    )
+
+
+class ExtractNetworkPropertiesMetadataModule(ExtractMetadataModule):
+    """Extract commpon properties of network data."""
+
+    _module_type_name = "network_properties"
 
     @classmethod
     def _get_supported_types(cls) -> str:
         return "network_data"
 
-    @classmethod
-    def get_metadata_key(cls) -> str:
-        return "database"
+    def _get_metadata_schema(
+        self, type: str
+    ) -> typing.Union[str, typing.Type[BaseModel]]:
+        """Create the metadata schema for the configured type."""
+
+        return NetworkProperties
+
+    def extract_metadata(
+        self, value: Value
+    ) -> typing.Union[typing.Mapping[str, typing.Any], BaseModel]:
+
+        from sqlalchemy import text
+
+        network_data: NetworkData = value.get_value_data()
+
+        with network_data.get_sqlalchemy_engine().connect() as con:
+            result = con.execute(text("SELECT count(*) from nodes"))
+            num_rows = result.fetchone()[0]
+            result = con.execute(text("SELECT count(*) from edges"))
+            num_rows_eges = result.fetchone()[0]
+            result = con.execute(
+                text("SELECT COUNT(*) FROM (SELECT DISTINCT source, target FROM edges)")
+            )
+            num_edges_directed = result.fetchone()[0]
+            query = "SELECT COUNT(*) FROM edges WHERE rowid in (SELECT DISTINCT MIN(rowid) FROM (SELECT rowid, source, target from edges UNION ALL SELECT rowid, target, source from edges) GROUP BY source, target)"
+
+            result = con.execute(text(query))
+            num_edges_undirected = result.fetchone()[0]
+
+        directed = PropertiesByGraphType(
+            graph_type=GraphType.DIRECTED, number_of_edges=num_edges_directed
+        )
+        undirected = PropertiesByGraphType(
+            graph_type=GraphType.UNDIRECTED, number_of_edges=num_edges_undirected
+        )
+        directed_multi = PropertiesByGraphType(
+            graph_type=GraphType.DIRECTED_MULTI, number_of_edges=num_rows_eges
+        )
+        undirected_multi = PropertiesByGraphType(
+            graph_type=GraphType.UNDIRECTED_MULTI, number_of_edges=num_rows_eges
+        )
+
+        return NetworkProperties(
+            number_of_nodes=num_rows,
+            properties_by_graph_type=[
+                directed,
+                undirected,
+                directed_multi,
+                undirected_multi,
+            ],
+        )
 
 
-class DatabaseInfoMetadataModule(BaseDatabaseInfoMetadataModule):
-    """Extract extended metadata (like tables, schemas) from a database object."""
-
-    _module_type_name = "info"
-
-    @classmethod
-    def _get_supported_types(cls) -> str:
-        return "network_data"
-
-    @classmethod
-    def get_metadata_key(cls) -> str:
-        return "database_info"
-
-
-class CreateGraphFromFilesModule(KiaraModule):
+class CreateGraphFromTablesModule(KiaraModule):
     """Create a graph object from a file."""
 
     _module_type_name = "from_tables"
@@ -151,7 +199,6 @@ class CreateGraphFromFilesModule(KiaraModule):
         nodes = inputs.get_value_obj("nodes")
 
         DEFAULT_DB_CHUNK_SIZE = 1024
-        network_data = NetworkData.create_in_temp_dir()
 
         added_node_ids = set()
         edges_table: pa.Table = edges.get_value_data()
@@ -164,9 +211,30 @@ class CreateGraphFromFilesModule(KiaraModule):
         if nodes_column_map is None:
             nodes_column_map = {}
 
+        edges_column_map: typing.Dict[str, str] = inputs.get_value_data(
+            "edges_column_map"
+        )
+        if edges_column_map is None:
+            edges_column_map = {}
+        if edges_source_column_name in edges_column_map.keys():
+            raise KiaraProcessingException(
+                "The value of the 'source_column_name' argument is not allowed in the edges column map."
+            )
+        if edges_target_column_name in edges_column_map.keys():
+            raise KiaraProcessingException(
+                "The value of the 'source_column_name' argument is not allowed in the edges column map."
+            )
+
+        edges_column_map[edges_source_column_name] = SOURCE_COLUMN_NAME
+        edges_column_map[edges_target_column_name] = TARGET_COLUMN_NAME
+
+        edges_data = create_sqlite_schema_data_from_arrow_table(
+            index_columns=[SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME],
+            column_map=edges_column_map,
+        )
+
         nodes_table: typing.Optional[pa.Table] = None
         if nodes.is_set:
-
             if id_column_name in nodes_column_map.keys():
                 raise KiaraProcessingException(
                     "The value of the 'id_column_name' argument is not allowed in the node column map."
@@ -200,60 +268,21 @@ class CreateGraphFromFilesModule(KiaraModule):
                 extra_schema.append("    label    TEXT")
 
             nodes_column_map[label_column_name] = LABEL_COLUMN_NAME
-            schema_sql = (
-                create_sqlite_schema_from_arrow_table(
-                    table=nodes_table,
-                    table_name="nodes",
-                    index_columns=["id"],
-                    column_map=nodes_column_map,
-                    extra_column_info={"id": "NOT NULL UNIQUE"},
-                    extra_schema=extra_schema,
-                )
-                + "\n"
+
+            nodes_data = create_sqlite_schema_data_from_arrow_table(
+                table=nodes_table,
+                index_columns=[ID_COLUMN_NAME],
+                column_map=nodes_column_map,
+                extra_column_info={ID_COLUMN_NAME: "NOT NULL UNIQUE"},
             )
 
         else:
-            schema_sql = """CREATE TABLE IF NOT EXISTS nodes (
-    id    INTEGER    NOT NULL UNIQUE,
-    label    TEXT
-);
-CREATE INDEX IF NOT EXISTS id_idx ON nodes(id);
-"""
+            nodes_data = None
 
-        edges_column_map: typing.Dict[str, str] = inputs.get_value_data(
-            "edges_column_map"
+        init_sql = NetworkData.create_network_data_init_sql(
+            edge_attrs=edges_data, node_attrs=nodes_data
         )
-        if edges_column_map is None:
-            edges_column_map = {}
-        if edges_source_column_name in edges_column_map.keys():
-            raise KiaraProcessingException(
-                "The value of the 'source_column_name' argument is not allowed in the edges column map."
-            )
-        if edges_target_column_name in edges_column_map.keys():
-            raise KiaraProcessingException(
-                "The value of the 'source_column_name' argument is not allowed in the edges column map."
-            )
-
-        edges_column_map[edges_source_column_name] = SOURCE_COLUMN_NAME
-        edges_column_map[edges_target_column_name] = TARGET_COLUMN_NAME
-
-        edges_sql = create_sqlite_schema_from_arrow_table(
-            table=edges_table,
-            table_name="edges",
-            index_columns=["source", "target"],
-            column_map=edges_column_map,
-            extra_schema=[
-                "    FOREIGN KEY(source) REFERENCES nodes(id)",
-                "    FOREIGN KEY(target) REFERENCES nodes(id)",
-            ],
-        )
-
-        schema_sql = f"{schema_sql}{edges_sql}"
-
-        network_data = NetworkData.create_in_temp_dir()
-
-        # create table schema
-        network_data.execute_sql(schema_sql)
+        network_data = NetworkData.create_in_temp_dir(init_sql=init_sql)
 
         # =============================================
         # import data
@@ -301,3 +330,70 @@ CREATE INDEX IF NOT EXISTS id_idx ON nodes(id);
             added_node_ids.update(all_node_ids)
 
         outputs.set_value("network_data", network_data)
+
+
+class CreateNetworkDataModule(CreateValueModule):
+    @classmethod
+    def get_target_value_type(cls) -> str:
+        return "network_data"
+
+    def from_graphml_file(self, value: Value):
+
+        input_file: KiaraFile = value.get_value_data()
+
+        from kiara_modules.network_analysis.utils import parse_graphml_file
+
+        graph, edge_props, node_props = parse_graphml_file(input_file.path)
+
+        label_match: typing.Optional[str] = None
+        for column_name in node_props.keys():
+            if column_name.lower() == LABEL_COLUMN_NAME.lower():
+                label_match = column_name
+                break
+
+        if label_match:
+            temp = node_props.pop(label_match)
+            node_props[LABEL_COLUMN_NAME] = temp
+        else:
+            node_props[LABEL_COLUMN_NAME] = {"type": "TEXT"}
+
+        init_sql = NetworkData.create_network_data_init_sql(
+            edge_attrs=edge_props, node_attrs=node_props
+        )
+        network_data = NetworkData.create_in_temp_dir(init_sql=init_sql)
+
+        nodes = []
+        node_ids = []
+        for node in graph.nodes():
+            data = {}
+            for v in node.attr.values():
+                if label_match and label_match == v.name:
+                    data[LABEL_COLUMN_NAME] = v.value
+                else:
+                    data[v.name] = v.value
+            if LABEL_COLUMN_NAME not in data.keys() or not data[LABEL_COLUMN_NAME]:
+                data[LABEL_COLUMN_NAME] = str(node.id)
+            data[ID_COLUMN_NAME] = node.id
+            node_ids.append(node.id)
+            nodes.append(data)
+
+        network_data.insert_nodes(*nodes)
+
+        edges = []
+        for edge in graph.edges():
+            data = {}
+            for v in edge.attr.values():
+                data[v.name] = v.value
+
+            data[SOURCE_COLUMN_NAME] = edge.node1.id
+            data[TARGET_COLUMN_NAME] = edge.node2.id
+            edges.append(data)
+
+        network_data.insert_edges(*edges, existing_node_ids=node_ids)
+
+        return network_data
+
+        # graph = nx.read_graphml(input_file.path)
+        # network_data = NetworkData.create_from_networkx_graph(graph=graph)
+        #
+        # print("XXXXXXXXXXXXX")
