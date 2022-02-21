@@ -14,7 +14,7 @@ from pathlib import Path
 
 from kiara import KiaraEntryPointItem
 from kiara.metadata import MetadataModel
-from kiara.utils.class_loading import find_metadata_schemas_under
+from kiara.utils.class_loading import find_metadata_models_under
 from kiara_modules.core.metadata_schemas import KiaraDatabase
 from pydantic import Field, PrivateAttr
 
@@ -32,7 +32,7 @@ if typing.TYPE_CHECKING:
     from sqlalchemy import Metadata, Table  # noqa
 
 metadata_schemas: KiaraEntryPointItem = (
-    find_metadata_schemas_under,
+    find_metadata_models_under,
     ["kiara_modules.network_analysis.metadata_schemas"],
 )
 
@@ -59,8 +59,6 @@ class NetworkData(KiaraDatabase):
     def create_from_networkx_graph(
         cls, graph: "nx.Graph", edge_types: typing.Optional[typing.Mapping[str, str]]
     ) -> "NetworkData":
-
-        pass
 
         # adapted from networx code
         # License: 3-clause BSD license
