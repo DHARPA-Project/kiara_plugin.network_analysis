@@ -20,7 +20,7 @@ from kiara_modules.network_analysis.defaults import (
     TARGET_COLUMN_NAME,
     TableType,
 )
-from kiara_modules.network_analysis.metadata_schemas import NetworkData
+from kiara_modules.network_analysis.metadata_models import NetworkData
 from kiara_modules.network_analysis.utils import NetworkDataTabularWrap
 
 value_types: KiaraEntryPointItem = (

@@ -9,7 +9,7 @@ from xml.dom import minidom
 from kiara.utils.output import DictTabularWrap, TabularWrap
 
 from kiara_modules.network_analysis.defaults import TableType
-from kiara_modules.network_analysis.metadata_schemas import NetworkData
+from kiara_modules.network_analysis.metadata_models import NetworkData
 
 
 class NetworkDataTabularWrap(TabularWrap):

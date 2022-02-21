@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 
-"""This module contains the metadata models that are used in the ``kiara_modules.network_analysis`` package.
+"""This module contains the metadata (and other) models that are used in the ``kiara_modules.network_analysis`` package.
 
-Metadata models are convenience wrappers that make it easier for *kiara* to find, create, manage and version metadata that
-is attached to data, as well as *kiara* modules. It is possible to register metadata using a JSON schema string, but
-it is recommended to create a metadata model, because it is much easier overall.
+Those models are convenience wrappers that make it easier for *kiara* to find, create, manage and version metadata -- but also
+other type of models -- that is attached to data, as well as *kiara* modules.
 
-Metadata models must be a sub-class of [kiara.metadata.MetadataModel][kiara.metadata.MetadataModel].
+Metadata models must be a sub-class of [kiara.metadata.MetadataModel][kiara.metadata.MetadataModel]. Other models usually
+sub-class a pydantic BaseModel or implement custom base classes.
 """
-
 import typing
 from pathlib import Path
 
 from kiara import KiaraEntryPointItem
 from kiara.metadata import MetadataModel
 from kiara.utils.class_loading import find_metadata_models_under
-from kiara_modules.core.metadata_schemas import KiaraDatabase
+from kiara_modules.core.metadata_models import KiaraDatabase
 from pydantic import Field, PrivateAttr
 
 from kiara_modules.network_analysis.defaults import (
@@ -31,6 +30,11 @@ if typing.TYPE_CHECKING:
     import networkx as nx
     from sqlalchemy import Metadata, Table  # noqa
 
+
+metadata_models: KiaraEntryPointItem = (
+    find_metadata_models_under,
+    ["kiara_modules.network_analysis.metadata_models"],
+)
 metadata_schemas: KiaraEntryPointItem = (
     find_metadata_models_under,
     ["kiara_modules.network_analysis.metadata_schemas"],

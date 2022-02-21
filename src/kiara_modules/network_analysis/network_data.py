@@ -21,7 +21,7 @@ from kiara_modules.network_analysis.defaults import (
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
 )
-from kiara_modules.network_analysis.metadata_schemas import NetworkData
+from kiara_modules.network_analysis.metadata_models import NetworkData
 
 if typing.TYPE_CHECKING:
     import pyarrow as pa
