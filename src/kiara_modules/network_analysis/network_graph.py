@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
-import copy
-import typing
 
-import networkx as nx
-from kiara import KiaraModule
-from kiara.data import ValueSet
-from kiara.data.values import Value, ValueSchema
-from kiara.exceptions import KiaraProcessingException
-from kiara.metadata import MetadataModel
-from kiara.module_config import ModuleTypeConfigSchema
-from kiara.operations.extract_metadata import ExtractMetadataModule
-from kiara_modules.core.metadata_models import KiaraFile
-from networkx import Graph
-from networkx.exception import NetworkXError
-from pydantic import BaseModel, Field, validator
-
-from kiara_modules.network_analysis.metadata_models import GraphTypesEnum
+# import networkx as nx
+# from kiara import KiaraModule
+# from kiara.data import ValueSet
+# from kiara.data.values import Value, ValueSchema
+# from kiara.exceptions import KiaraProcessingException
+# from kiara.metadata import MetadataModel
+# from kiara.module_config import ModuleTypeConfigSchema
+# from kiara.operations.extract_metadata import ExtractMetadataModule
+# from kiara_modules.core.metadata_models import KiaraFile
+# from networkx import Graph
+# from networkx.exception import NetworkXError
+# from pydantic import BaseModel, Field, validator
+#
+# from kiara_modules.network_analysis.metadata_models import GraphTypesEnum
 
 DEFAULT_SAVE_GRAPH_EDGES_TABLE_NAME = "edges.feather"
 DEFAULT_SAVE_GRAPH_NODES_TABLE_NAME = "nodes.feather"
@@ -112,264 +110,264 @@ DEFAULT_SAVE_GRAPH_NODES_TABLE_INDEX_COLUMN_NAME = "id"
 #         return load_config
 
 
-SUPPORTED_INPUT_FILE_TYPES = ["auto", "graphml"]
-
-
-class CreateGraphFromFileModule(KiaraModule):
-    """Create a graph object from a file."""
-
-    _module_type_name = "from_file"
-
-    def create_input_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        inputs: typing.Mapping[str, typing.Any] = {
-            "file": {
-                "type": "file",
-                "doc": "The file that contains the graph data.",
-                "optional": False,
-            },
-            "input_type": {
-                "type": "string",
-                "doc": f"The input file type, supported: {', '.join(SUPPORTED_INPUT_FILE_TYPES)}",
-                "default": "auto",
-            },
-        }
-        return inputs
-
-    def create_output_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        outputs: typing.Mapping[str, typing.Any] = {
-            "graph": {"type": "network_graph", "doc": "The network graph."}
-        }
-        return outputs
-
-    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
-
-        input_file_type = inputs.get_value_data("input_type")
-        input_file: KiaraFile = inputs.get_value_data("file")
-
-        if input_file_type == "auto":
-            if input_file.orig_filename.endswith(".graphml"):
-                input_file_type = "graphml"
-            else:
-                input_file_type = "graphml"
-                # raise NotImplementedError()
-
-        if input_file_type == "graphml":
-            graph = nx.read_graphml(input_file.path)
-        else:
-            raise KiaraProcessingException(
-                f"Invalid input type '{input_file_type}'. Supported: {', '.join(SUPPORTED_INPUT_FILE_TYPES)}"
-            )
-
-        outputs.set_value("graph", graph)
-
-
-class CreateGraphConfig(ModuleTypeConfigSchema):
-    class Config:
-        use_enum_values = True
-
-    graph_type: typing.Optional[str] = Field(
-        description="The type of the graph. If not specified, a 'graph_type' input field will be added which will default to 'directed'.",
-        default=None,
-    )
-
-    @validator("graph_type", allow_reuse=True)
-    def _validate_graph_type(cls, v):
-
-        try:
-            GraphTypesEnum[v]
-        except Exception:
-            raise ValueError("Invalid graph type name: {v}")
-
-        return v
-
-
-class CreateGraphFromEdgesTableModule(KiaraModule):
-    """Create a network graph object from table data.
-
-    The table data must have (at least) 2 columns, one that contains source items, and on for targets. Each row in that
-    table indicates an edge in the network graph that is created.
-    """
-
-    _config_cls = CreateGraphConfig
-    _module_type_name = "from_edges_table"
-
-    def create_input_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        inputs = {
-            "edges_table": {
-                "type": "table",
-                "doc": "The table to extract the edges from.",
-            },
-            "source_column": {
-                "type": "string",
-                "default": "source",
-                "doc": "The name of the edge source column.",
-            },
-            "target_column": {
-                "type": "string",
-                "default": "target",
-                "doc": "The name of the edge target column.",
-            },
-            "weight_column": {
-                "type": "string",
-                "default": "weight",
-                "doc": "The name of the weight column.",
-            },
-        }
-
-        if self.get_config_value("graph_type") is None:
-            inputs["graph_type"] = {
-                "type": "string",
-                "default": "undirected",
-                "doc": "The type of the graph.",
-            }
-        return inputs
-
-    def create_output_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        return {
-            "graph": {"type": "network_graph", "doc": "The (networkx) graph object."},
-        }
-
-    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
-
-        import pyarrow as pa
-
-        if self.get_config_value("graph_type") is not None:
-            _graph_type = self.get_config_value("graph_type")
-        else:
-            _graph_type = inputs.get_value_data("graph_type")
-        graph_type = GraphTypesEnum[_graph_type]
-
-        edges_table_value = inputs.get_value_obj("edges_table")
-        edges_table_obj: pa.Table = edges_table_value.get_value_data()
-
-        source_column = inputs.get_value_data("source_column")
-        target_column = inputs.get_value_data("target_column")
-        weight_column = inputs.get_value_data("weight_column")
-
-        errors = []
-        if source_column not in edges_table_obj.column_names:
-            errors.append(source_column)
-        if target_column not in edges_table_obj.column_names:
-            errors.append(target_column)
-        if weight_column not in edges_table_obj.column_names:
-            errors.append(weight_column)
-
-        if errors:
-            raise KiaraProcessingException(
-                f"Can't create network graph, source table missing column(s): {', '.join(errors)}. Available columns: {', '.join(edges_table_obj.column_names)}."
-            )
-
-        min_table = edges_table_obj.select(
-            (source_column, target_column, weight_column)
-        )
-        pandas_table = min_table.to_pandas()
-
-        if graph_type is GraphTypesEnum.undirected:
-            graph_cls = nx.Graph
-        elif graph_type is GraphTypesEnum.directed:
-            graph_cls = nx.DiGraph
-        elif graph_type is GraphTypesEnum.multi_directed:
-            graph_cls = nx.MultiDiGraph
-        elif graph_type is GraphTypesEnum.multi_undirected:
-            graph_cls = nx.MultiGraph
-
-        graph = nx.from_pandas_edgelist(
-            pandas_table,
-            source_column,
-            target_column,
-            edge_attr=True,
-            create_using=graph_cls,
-        )
-        outputs.set_value("graph", graph)
-
-
-class AugmentNetworkGraphModule(KiaraModule):
-    """Augment an existing graph with node attributes.
-
-    This module takes an existing graph object, and a table containing node attributes, and uses the latter to add attributes
-    to existing graph nodes using one colum as the index to match table rows to graph nodes.
-    """
-
-    _module_type_name = "augment"
-
-    def create_input_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-        return {
-            "graph": {"type": "network_graph", "doc": "The network graph."},
-            "node_attributes": {
-                "type": "table",
-                "doc": "The table containing node attributes.",
-                "optional": True,
-            },
-            "index_column_name": {
-                "type": "string",
-                "doc": "The name of the column that contains the node index in the node attributes table.",
-                "optional": True,
-            },
-        }
-
-    def create_output_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-        return {"graph": {"type": "network_graph", "doc": "The network graph."}}
-
-    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
-
-        import pyarrow as pa
-
-        nodes_table_value = inputs.get_value_obj("node_attributes")
-
-        if not nodes_table_value or nodes_table_value.is_none:
-            # we return the graph as is
-            # we are using the 'get_value_obj' method, because there is no need to retrieve the
-            # actual data at all
-            outputs.set_value("graph", inputs.get_value_obj("graph"))
-            return
-
-        input_graph: Graph = inputs.get_value_data("graph")
-        graph: Graph = copy.deepcopy(input_graph)
-
-        nodes_table_obj: pa.Table = nodes_table_value.get_value_data()
-        nodes_table_index = inputs.get_value_data("index_column_name")
-        if nodes_table_index not in nodes_table_obj.column_names:
-            raise KiaraProcessingException(
-                f"Node attribute table does not have a column with (index) name '{nodes_table_index}'. Available column names: {', '.join(nodes_table_obj.column_names)}"
-            )
-
-        attr_dict = (
-            nodes_table_obj.to_pandas()
-            .set_index(nodes_table_index)
-            .to_dict("index")
-            .items()
-        )
-        graph.add_nodes_from(attr_dict)
-
-        outputs.set_value("graph", graph)
+# SUPPORTED_INPUT_FILE_TYPES = ["auto", "graphml"]
+#
+#
+# class CreateGraphFromFileModule(KiaraModule):
+#     """Create a graph object from a file."""
+#
+#     _module_type_name = "from_file"
+#
+#     def create_input_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         inputs: typing.Mapping[str, typing.Any] = {
+#             "file": {
+#                 "type": "file",
+#                 "doc": "The file that contains the graph data.",
+#                 "optional": False,
+#             },
+#             "input_type": {
+#                 "type": "string",
+#                 "doc": f"The input file type, supported: {', '.join(SUPPORTED_INPUT_FILE_TYPES)}",
+#                 "default": "auto",
+#             },
+#         }
+#         return inputs
+#
+#     def create_output_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         outputs: typing.Mapping[str, typing.Any] = {
+#             "graph": {"type": "network_graph", "doc": "The network graph."}
+#         }
+#         return outputs
+#
+#     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+#
+#         input_file_type = inputs.get_value_data("input_type")
+#         input_file: KiaraFile = inputs.get_value_data("file")
+#
+#         if input_file_type == "auto":
+#             if input_file.orig_filename.endswith(".graphml"):
+#                 input_file_type = "graphml"
+#             else:
+#                 input_file_type = "graphml"
+#                 # raise NotImplementedError()
+#
+#         if input_file_type == "graphml":
+#             graph = nx.read_graphml(input_file.path)
+#         else:
+#             raise KiaraProcessingException(
+#                 f"Invalid input type '{input_file_type}'. Supported: {', '.join(SUPPORTED_INPUT_FILE_TYPES)}"
+#             )
+#
+#         outputs.set_value("graph", graph)
+#
+#
+# class CreateGraphConfig(ModuleTypeConfigSchema):
+#     class Config:
+#         use_enum_values = True
+#
+#     graph_type: typing.Optional[str] = Field(
+#         description="The type of the graph. If not specified, a 'graph_type' input field will be added which will default to 'directed'.",
+#         default=None,
+#     )
+#
+#     @validator("graph_type", allow_reuse=True)
+#     def _validate_graph_type(cls, v):
+#
+#         try:
+#             GraphTypesEnum[v]
+#         except Exception:
+#             raise ValueError("Invalid graph type name: {v}")
+#
+#         return v
+#
+#
+# class CreateGraphFromEdgesTableModule(KiaraModule):
+#     """Create a network graph object from table data.
+#
+#     The table data must have (at least) 2 columns, one that contains source items, and on for targets. Each row in that
+#     table indicates an edge in the network graph that is created.
+#     """
+#
+#     _config_cls = CreateGraphConfig
+#     _module_type_name = "from_edges_table"
+#
+#     def create_input_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         inputs = {
+#             "edges_table": {
+#                 "type": "table",
+#                 "doc": "The table to extract the edges from.",
+#             },
+#             "source_column": {
+#                 "type": "string",
+#                 "default": "source",
+#                 "doc": "The name of the edge source column.",
+#             },
+#             "target_column": {
+#                 "type": "string",
+#                 "default": "target",
+#                 "doc": "The name of the edge target column.",
+#             },
+#             "weight_column": {
+#                 "type": "string",
+#                 "default": "weight",
+#                 "doc": "The name of the weight column.",
+#             },
+#         }
+#
+#         if self.get_config_value("graph_type") is None:
+#             inputs["graph_type"] = {
+#                 "type": "string",
+#                 "default": "undirected",
+#                 "doc": "The type of the graph.",
+#             }
+#         return inputs
+#
+#     def create_output_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         return {
+#             "graph": {"type": "network_graph", "doc": "The (networkx) graph object."},
+#         }
+#
+#     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+#
+#         import pyarrow as pa
+#
+#         if self.get_config_value("graph_type") is not None:
+#             _graph_type = self.get_config_value("graph_type")
+#         else:
+#             _graph_type = inputs.get_value_data("graph_type")
+#         graph_type = GraphTypesEnum[_graph_type]
+#
+#         edges_table_value = inputs.get_value_obj("edges_table")
+#         edges_table_obj: pa.Table = edges_table_value.get_value_data()
+#
+#         source_column = inputs.get_value_data("source_column")
+#         target_column = inputs.get_value_data("target_column")
+#         weight_column = inputs.get_value_data("weight_column")
+#
+#         errors = []
+#         if source_column not in edges_table_obj.column_names:
+#             errors.append(source_column)
+#         if target_column not in edges_table_obj.column_names:
+#             errors.append(target_column)
+#         if weight_column not in edges_table_obj.column_names:
+#             errors.append(weight_column)
+#
+#         if errors:
+#             raise KiaraProcessingException(
+#                 f"Can't create network graph, source table missing column(s): {', '.join(errors)}. Available columns: {', '.join(edges_table_obj.column_names)}."
+#             )
+#
+#         min_table = edges_table_obj.select(
+#             (source_column, target_column, weight_column)
+#         )
+#         pandas_table = min_table.to_pandas()
+#
+#         if graph_type is GraphTypesEnum.undirected:
+#             graph_cls = nx.Graph
+#         elif graph_type is GraphTypesEnum.directed:
+#             graph_cls = nx.DiGraph
+#         elif graph_type is GraphTypesEnum.multi_directed:
+#             graph_cls = nx.MultiDiGraph
+#         elif graph_type is GraphTypesEnum.multi_undirected:
+#             graph_cls = nx.MultiGraph
+#
+#         graph = nx.from_pandas_edgelist(
+#             pandas_table,
+#             source_column,
+#             target_column,
+#             edge_attr=True,
+#             create_using=graph_cls,
+#         )
+#         outputs.set_value("graph", graph)
+#
+#
+# class AugmentNetworkGraphModule(KiaraModule):
+#     """Augment an existing graph with node attributes.
+#
+#     This module takes an existing graph object, and a table containing node attributes, and uses the latter to add attributes
+#     to existing graph nodes using one colum as the index to match table rows to graph nodes.
+#     """
+#
+#     _module_type_name = "augment"
+#
+#     def create_input_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#         return {
+#             "graph": {"type": "network_graph", "doc": "The network graph."},
+#             "node_attributes": {
+#                 "type": "table",
+#                 "doc": "The table containing node attributes.",
+#                 "optional": True,
+#             },
+#             "index_column_name": {
+#                 "type": "string",
+#                 "doc": "The name of the column that contains the node index in the node attributes table.",
+#                 "optional": True,
+#             },
+#         }
+#
+#     def create_output_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#         return {"graph": {"type": "network_graph", "doc": "The network graph."}}
+#
+#     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+#
+#         import pyarrow as pa
+#
+#         nodes_table_value = inputs.get_value_obj("node_attributes")
+#
+#         if not nodes_table_value or nodes_table_value.is_none:
+#             # we return the graph as is
+#             # we are using the 'get_value_obj' method, because there is no need to retrieve the
+#             # actual data at all
+#             outputs.set_value("graph", inputs.get_value_obj("graph"))
+#             return
+#
+#         input_graph: Graph = inputs.get_value_data("graph")
+#         graph: Graph = copy.deepcopy(input_graph)
+#
+#         nodes_table_obj: pa.Table = nodes_table_value.get_value_data()
+#         nodes_table_index = inputs.get_value_data("index_column_name")
+#         if nodes_table_index not in nodes_table_obj.column_names:
+#             raise KiaraProcessingException(
+#                 f"Node attribute table does not have a column with (index) name '{nodes_table_index}'. Available column names: {', '.join(nodes_table_obj.column_names)}"
+#             )
+#
+#         attr_dict = (
+#             nodes_table_obj.to_pandas()
+#             .set_index(nodes_table_index)
+#             .to_dict("index")
+#             .items()
+#         )
+#         graph.add_nodes_from(attr_dict)
+#
+#         outputs.set_value("graph", graph)
 
 
 # class AddNodesToNetworkGraphModule(KiaraModule):
@@ -434,414 +432,330 @@ class AugmentNetworkGraphModule(KiaraModule):
 #         outputs.set_value("graph", graph)
 
 
-class FindShortestPathModuleConfig(ModuleTypeConfigSchema):
-
-    mode: str = Field(
-        description="Whether to calculate one shortest path for only one pair ('single-pair'), or use two node lists as input and select one of the following strategies: shortest path for each pair ('one-to-one'), the shortest path to all targets ('one-to-many'), or a matrix of all possible combinations ('many-to-many').",
-        default="single-pair",
-    )
-
-    @validator("mode", allow_reuse=True)
-    def _validate_mode(cls, v):
-
-        allowed = ["single-pair", "one-to-one", "one-to-many", "many-to-many"]
-        if v not in allowed:
-            raise ValueError(f"'mode' must be one of: [{allowed}]")
-        return v
-
-
-class FindShortestPathModule(KiaraModule):
-    """Find the shortest path between two nodes in a network graph."""
-
-    _config_cls = FindShortestPathModuleConfig
-    _module_type_name = "find_shortest_path"
-
-    def create_input_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        mode = self.get_config_value("mode")
-        if mode == "single-pair":
-            return {
-                "graph": {"type": "network_graph", "doc": "The network graph"},
-                "source_node": {"type": "any", "doc": "The id of the source node."},
-                "target_node": {"type": "any", "doc": "The id of the target node."},
-            }
-        else:
-            return {
-                "graph": {"type": "network_graph", "doc": "The network graph"},
-                "source_nodes": {"type": "list", "doc": "The ids of the source nodes."},
-                "target_nodes": {"type": "list", "doc": "The ids of the target nodes."},
-            }
-
-    def create_output_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-        mode = self.get_config_value("mode")
-        if mode == "single-pair":
-            return {
-                "path": {"type": "array", "doc": "The shortest path between two nodes."}
-            }
-        else:
-            return {
-                "paths": {
-                    "type": "table",
-                    "doc": "A table with 'source', 'target' and 'path' column.",
-                }
-            }
-
-    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
-
-        mode = self.get_config_value("mode")
-        if mode != "single-pair":
-            raise NotImplementedError()
-
-        graph: Graph = inputs.get_value_data("graph")
-        source: typing.Any = inputs.get_value_data("source_node")
-        target: typing.Any = inputs.get_value_data("target_node")
-
-        if source not in graph.nodes:
-            raise KiaraProcessingException(
-                f"Can't process shortest path, source '{source}' not in graph."
-            )
-
-        if target not in graph.nodes:
-            raise KiaraProcessingException(
-                f"Can't process shortest path, target '{target}' not in graph."
-            )
-
-        shortest_path = nx.shortest_path(graph, source=source, target=target)
-        outputs.set_value("path", shortest_path)
-
-
-class ExtractGraphPropertiesModuleConfig(ModuleTypeConfigSchema):
-
-    number_of_nodes: bool = Field(
-        description="Count the number of nodes.", default=True
-    )
-    number_of_edges: bool = Field(description="Count the number of edges", default=True)
-    density: bool = Field(description="Calculate the graph density.", default=True)
-    degrees: bool = Field(
-        description="Calculate the graph degrees metrics.", default=True
-    )
-    shortest_path: bool = Field(
-        description="Calculate the graph shortest path.", default=True
-    )
-
-
-class ExtractGraphPropertiesModule(KiaraModule):
-    """Extract inherent properties of a network graph."""
-
-    _config_cls = ExtractGraphPropertiesModuleConfig
-    _module_type_name = "properties"
-
-    def create_input_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        return {"graph": {"type": "network_graph", "doc": "The network graph."}}
-
-    def create_output_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        result: typing.Dict[str, typing.Any] = {}
-
-        if self.get_config_value("number_of_nodes"):
-            result["number_of_nodes"] = {
-                "type": "integer",
-                "doc": "The number of nodes in the graph.",
-            }
-
-        if self.get_config_value("number_of_edges"):
-            result["number_of_edges"] = {
-                "type": "integer",
-                "doc": "The number of edges in the graph.",
-            }
-
-        if self.get_config_value("density"):
-            result["density"] = {"type": "float", "doc": "The density of the graph."}
-
-        if self.get_config_value("degrees"):
-            result["average_degree"] = {
-                "type": "float",
-                "optional": True,
-                "doc": "Average degree of the graph if it is not directed.",
-            }
-            result["average_in_degree"] = {
-                "type": "float",
-                "optional": True,
-                "doc": "Average in degree of the graph if it is directed.",
-            }
-            result["average_out_degree"] = {
-                "type": "float",
-                "optional": True,
-                "doc": "Average out degree of the graph if it is directed.",
-            }
-
-        if self.get_config_value("shortest_path"):
-            result["average_shortest_path_length"] = {
-                "type": "float",
-                "optional": True,
-                "doc": "Average shortest path length (only computed when graph is weekly connected).",
-            }
-
-        return result
-
-    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
-
-        graph: Graph = inputs.get_value_data("graph")
-
-        if self.get_config_value("number_of_nodes"):
-            outputs.set_values(number_of_nodes=len(graph.nodes))
-
-        if self.get_config_value("number_of_edges"):
-            outputs.set_values(number_of_edges=len(graph.edges))
-
-        if self.get_config_value("density"):
-            density = nx.density(graph)
-            outputs.set_values(density=density)
-
-        # TODO: rename config value to 'average_degrees'
-        if self.get_config_value("degrees"):
-
-            nodes_count: int = graph.number_of_nodes()
-
-            if nx.is_directed(graph):
-                if nodes_count > 0:
-                    digraph = typing.cast(nx.DiGraph, graph)
-                    outputs.set_values(
-                        average_in_degree=sum(d for _, d in digraph.in_degree())
-                        / float(nodes_count),
-                        average_out_degree=sum(d for _, d in digraph.out_degree())
-                        / float(nodes_count),
-                    )
-                else:
-                    outputs.set_values(average_in_degree=0, average_out_degree=0)
-            else:
-                if nodes_count:
-                    outputs.set_values(
-                        average_degree=sum(d for _, d in graph.degree())
-                        / float(nodes_count)
-                    )
-                else:
-                    outputs.set_values(average_degree=0)
-
-        if self.get_config_value("shortest_path"):
-            # TODO: double check why the 'if' was deemed necessary
-            # TODO: rename config option to 'average_shortest_path'
-            if nx.is_directed(graph):
-                if nx.is_weakly_connected(graph):
-                    outputs.set_values(
-                        average_shortest_path_length=nx.average_shortest_path_length(
-                            graph
-                        )
-                    )
-            elif nx.is_directed(graph) is not True:
-                if nx.is_connected(graph):
-                    outputs.set_values(
-                        average_shortest_path_length=nx.average_shortest_path_length(
-                            graph
-                        )
-                    )
-            else:
-                raise NetworkXError("Graph is disconnected.")
-
-
-class GraphMetadata(MetadataModel):
-
-    number_of_nodes: int = Field(description="The number of nodes in this graph.")
-    number_of_edges: int = Field(description="The number of edges in this graph.")
-    directed: bool = Field(description="Whether the graph is directed or not.")
-    density: float = Field(description="The density of the graph.")
-
-
-class GraphMetadataModule(ExtractMetadataModule):
-    """Extract metadata from a network graph object."""
-
-    _module_type_name = "metadata"
-
-    @classmethod
-    def _get_supported_types(cls) -> str:
-        return "network_graph"
-
-    @classmethod
-    def get_metadata_key(cls) -> str:
-        return "network_graph"
-
-    def _get_metadata_schema(
-        self, type: str
-    ) -> typing.Union[str, typing.Type[BaseModel]]:
-        return GraphMetadata
-
-    def extract_metadata(self, value: Value) -> typing.Mapping[str, typing.Any]:
-
-        graph: nx.Graph = value.get_value_data()
-
-        # TODO: check for other types
-        if isinstance(graph, nx.DiGraph):
-            graph_type = GraphTypesEnum.directed.value
-        else:
-            graph_type = GraphTypesEnum.undirected.value
-
-        return {
-            "graph_type": graph_type,
-            "number_of_nodes": len(graph.nodes),
-            "number_of_edges": len(graph.edges),
-            "density": nx.density(graph),
-        }
-
-
-class FindLargestComponentsModuleConfig(ModuleTypeConfigSchema):
-
-    find_largest_component: bool = Field(
-        description="Find the largest component of a graph.", default=True
-    )
-
-    number_of_components: bool = Field(
-        description="Count the number of components.", default=True
-    )
-
-
-class GrpahComponentsModule(KiaraModule):
-    """Extract component information from a graph.
-
-    In particular, this module can calculate the number of components of a graph, and extract the largest sub-component
-    from it.
-    """
-
-    _config_cls = FindLargestComponentsModuleConfig
-    _module_type_name = "components"
-
-    def create_input_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        return {"graph": {"type": "network_graph", "doc": "The network graph."}}
-
-    def create_output_schema(
-        self,
-    ) -> typing.Mapping[
-        str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
-    ]:
-
-        result = {}
-        if self.get_config_value("find_largest_component"):
-            result["largest_component"] = {
-                "type": "network_graph",
-                "doc": "The largest connected component of the graph, as a new graph.",
-            }
-
-        if self.get_config_value("number_of_components"):
-            result["number_of_components"] = {
-                "type": "integer",
-                "doc": "The number of components in the graph.",
-            }
-
-        return result
-
-    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
-
-        # TODO: check whether we need to deepcopy the graph first, but I don't think so
-
-        input_graph: Graph = inputs.get_value_data("graph")
-        if self.get_config_value("find_largest_component"):
-            undir_graph = nx.to_undirected(input_graph)
-            undir_components = nx.connected_components(undir_graph)
-            lg_component = max(undir_components, key=len)
-            subgraph = input_graph.subgraph(lg_component)
-            outputs.set_values(largest_component=subgraph)
-
-        if self.get_config_value("number_of_components"):
-            undir_graph = nx.to_undirected(input_graph)
-            number_of_components = nx.number_connected_components(undir_graph)
-
-            outputs.set_values(number_of_components=number_of_components)
-
-
-class AddCentralityCalculationsModule(KiaraModule):
-    """Add centrality properties to a graph."""
-
-    KIARA_METADATA = {
-        "authors": [{"name": "Roman Kalyakin", "email": "roman@kalyakin.com"}],
-    }
-
-    def create_input_schema(self) -> typing.Mapping[str, ValueSchema]:
-        return {
-            "graph": ValueSchema(type="network_graph"),
-            "degree_property_name": ValueSchema(type="string", default="degree"),
-            "indegree_property_name": ValueSchema(type="string", default="indegree"),
-            "outdegree_property_name": ValueSchema(type="string", default="outdegree"),
-            "isolated_property_name": ValueSchema(type="string", default="isolated"),
-            "betweenness_property_name": ValueSchema(
-                type="string", default="betweenness"
-            ),
-            "eigenvector_property_name": ValueSchema(
-                type="string", default="eigenvector"
-            ),
-        }
-
-    def create_output_schema(self) -> typing.Mapping[str, ValueSchema]:
-        return {
-            "graph": ValueSchema(type="network_graph"),
-        }
-
-    def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
-
-        graph: Graph = inputs.get_value_data("graph")
-        graph = copy.deepcopy(graph)
-
-        # degree
-        degree_dict = graph.degree()
-        nx.set_node_attributes(
-            graph, dict(degree_dict), inputs.get_value_data("degree_property_name")
-        )
-
-        # isolated
-        isolated_flag_dict = {id: True for id in nx.isolates(graph)}
-        nx.set_node_attributes(
-            graph, isolated_flag_dict, inputs.get_value_data("isolated_property_name")
-        )
-
-        if nx.is_directed(graph):
-            graph = typing.cast(nx.DiGraph, graph)
-
-            # indegree
-            indegree_dict = graph.in_degree()
-            nx.set_node_attributes(
-                graph,
-                dict(indegree_dict),
-                inputs.get_value_data("indegree_property_name"),
-            )
-
-            # outdegree
-            outdegree_dict = graph.out_degree()
-            nx.set_node_attributes(
-                graph,
-                dict(outdegree_dict),
-                inputs.get_value_data("outdegree_property_name"),
-            )
-
-        # eigenvector
-        # betweenness
-        betweenness_dict = nx.betweenness_centrality(graph)
-        eigenvector_dict = nx.eigenvector_centrality(graph)
-
-        nx.set_node_attributes(
-            graph, betweenness_dict, inputs.get_value_data("betweenness_property_name")
-        )
-        nx.set_node_attributes(
-            graph, eigenvector_dict, inputs.get_value_data("eigenvector_property_name")
-        )
-
-        outputs.set_value("graph", graph)
+# class ExtractGraphPropertiesModuleConfig(ModuleTypeConfigSchema):
+#
+#     number_of_nodes: bool = Field(
+#         description="Count the number of nodes.", default=True
+#     )
+#     number_of_edges: bool = Field(description="Count the number of edges", default=True)
+#     density: bool = Field(description="Calculate the graph density.", default=True)
+#     degrees: bool = Field(
+#         description="Calculate the graph degrees metrics.", default=True
+#     )
+#     shortest_path: bool = Field(
+#         description="Calculate the graph shortest path.", default=True
+#     )
+#
+#
+# class ExtractGraphPropertiesModule(KiaraModule):
+#     """Extract inherent properties of a network graph."""
+#
+#     _config_cls = ExtractGraphPropertiesModuleConfig
+#     _module_type_name = "properties"
+#
+#     def create_input_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         return {"graph": {"type": "network_graph", "doc": "The network graph."}}
+#
+#     def create_output_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         result: typing.Dict[str, typing.Any] = {}
+#
+#         if self.get_config_value("number_of_nodes"):
+#             result["number_of_nodes"] = {
+#                 "type": "integer",
+#                 "doc": "The number of nodes in the graph.",
+#             }
+#
+#         if self.get_config_value("number_of_edges"):
+#             result["number_of_edges"] = {
+#                 "type": "integer",
+#                 "doc": "The number of edges in the graph.",
+#             }
+#
+#         if self.get_config_value("density"):
+#             result["density"] = {"type": "float", "doc": "The density of the graph."}
+#
+#         if self.get_config_value("degrees"):
+#             result["average_degree"] = {
+#                 "type": "float",
+#                 "optional": True,
+#                 "doc": "Average degree of the graph if it is not directed.",
+#             }
+#             result["average_in_degree"] = {
+#                 "type": "float",
+#                 "optional": True,
+#                 "doc": "Average in degree of the graph if it is directed.",
+#             }
+#             result["average_out_degree"] = {
+#                 "type": "float",
+#                 "optional": True,
+#                 "doc": "Average out degree of the graph if it is directed.",
+#             }
+#
+#         if self.get_config_value("shortest_path"):
+#             result["average_shortest_path_length"] = {
+#                 "type": "float",
+#                 "optional": True,
+#                 "doc": "Average shortest path length (only computed when graph is weekly connected).",
+#             }
+#
+#         return result
+#
+#     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+#
+#         graph: Graph = inputs.get_value_data("graph")
+#
+#         if self.get_config_value("number_of_nodes"):
+#             outputs.set_values(number_of_nodes=len(graph.nodes))
+#
+#         if self.get_config_value("number_of_edges"):
+#             outputs.set_values(number_of_edges=len(graph.edges))
+#
+#         if self.get_config_value("density"):
+#             density = nx.density(graph)
+#             outputs.set_values(density=density)
+#
+#         # TODO: rename config value to 'average_degrees'
+#         if self.get_config_value("degrees"):
+#
+#             nodes_count: int = graph.number_of_nodes()
+#
+#             if nx.is_directed(graph):
+#                 if nodes_count > 0:
+#                     digraph = typing.cast(nx.DiGraph, graph)
+#                     outputs.set_values(
+#                         average_in_degree=sum(d for _, d in digraph.in_degree())
+#                         / float(nodes_count),
+#                         average_out_degree=sum(d for _, d in digraph.out_degree())
+#                         / float(nodes_count),
+#                     )
+#                 else:
+#                     outputs.set_values(average_in_degree=0, average_out_degree=0)
+#             else:
+#                 if nodes_count:
+#                     outputs.set_values(
+#                         average_degree=sum(d for _, d in graph.degree())
+#                         / float(nodes_count)
+#                     )
+#                 else:
+#                     outputs.set_values(average_degree=0)
+#
+#         if self.get_config_value("shortest_path"):
+#             # TODO: double check why the 'if' was deemed necessary
+#             # TODO: rename config option to 'average_shortest_path'
+#             if nx.is_directed(graph):
+#                 if nx.is_weakly_connected(graph):
+#                     outputs.set_values(
+#                         average_shortest_path_length=nx.average_shortest_path_length(
+#                             graph
+#                         )
+#                     )
+#             elif nx.is_directed(graph) is not True:
+#                 if nx.is_connected(graph):
+#                     outputs.set_values(
+#                         average_shortest_path_length=nx.average_shortest_path_length(
+#                             graph
+#                         )
+#                     )
+#             else:
+#                 raise NetworkXError("Graph is disconnected.")
+
+
+# class GraphMetadata(MetadataModel):
+#
+#     number_of_nodes: int = Field(description="The number of nodes in this graph.")
+#     number_of_edges: int = Field(description="The number of edges in this graph.")
+#     directed: bool = Field(description="Whether the graph is directed or not.")
+#     density: float = Field(description="The density of the graph.")
+#
+#
+# class GraphMetadataModule(ExtractMetadataModule):
+#     """Extract metadata from a network graph object."""
+#
+#     _module_type_name = "metadata"
+#
+#     @classmethod
+#     def _get_supported_types(cls) -> str:
+#         return "network_graph"
+#
+#     @classmethod
+#     def get_metadata_key(cls) -> str:
+#         return "network_graph"
+#
+#     def _get_metadata_schema(
+#         self, type: str
+#     ) -> typing.Union[str, typing.Type[BaseModel]]:
+#         return GraphMetadata
+#
+#     def extract_metadata(self, value: Value) -> typing.Mapping[str, typing.Any]:
+#
+#         graph: nx.Graph = value.get_value_data()
+#
+#         # TODO: check for other types
+#         if isinstance(graph, nx.DiGraph):
+#             graph_type = GraphTypesEnum.directed.value
+#         else:
+#             graph_type = GraphTypesEnum.undirected.value
+#
+#         return {
+#             "graph_type": graph_type,
+#             "number_of_nodes": len(graph.nodes),
+#             "number_of_edges": len(graph.edges),
+#             "density": nx.density(graph),
+#         }
+
+
+# class FindLargestComponentsModuleConfig(ModuleTypeConfigSchema):
+#
+#     find_largest_component: bool = Field(
+#         description="Find the largest component of a graph.", default=True
+#     )
+#
+#     number_of_components: bool = Field(
+#         description="Count the number of components.", default=True
+#     )
+#
+#
+# class GrpahComponentsModule(KiaraModule):
+#     """Extract component information from a graph.
+#
+#     In particular, this module can calculate the number of components of a graph, and extract the largest sub-component
+#     from it.
+#     """
+#
+#     _config_cls = FindLargestComponentsModuleConfig
+#     _module_type_name = "components"
+#
+#     def create_input_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         return {"graph": {"type": "network_graph", "doc": "The network graph."}}
+#
+#     def create_output_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         result = {}
+#         if self.get_config_value("find_largest_component"):
+#             result["largest_component"] = {
+#                 "type": "network_graph",
+#                 "doc": "The largest connected component of the graph, as a new graph.",
+#             }
+#
+#         if self.get_config_value("number_of_components"):
+#             result["number_of_components"] = {
+#                 "type": "integer",
+#                 "doc": "The number of components in the graph.",
+#             }
+#
+#         return result
+#
+#     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+#
+#         # TODO: check whether we need to deepcopy the graph first, but I don't think so
+#
+#         input_graph: Graph = inputs.get_value_data("graph")
+#         if self.get_config_value("find_largest_component"):
+#             undir_graph = nx.to_undirected(input_graph)
+#             undir_components = nx.connected_components(undir_graph)
+#             lg_component = max(undir_components, key=len)
+#             subgraph = input_graph.subgraph(lg_component)
+#             outputs.set_values(largest_component=subgraph)
+#
+#         if self.get_config_value("number_of_components"):
+#             undir_graph = nx.to_undirected(input_graph)
+#             number_of_components = nx.number_connected_components(undir_graph)
+#
+#             outputs.set_values(number_of_components=number_of_components)
+
+
+# class AddCentralityCalculationsModule(KiaraModule):
+#     """Add centrality properties to a graph."""
+#
+#     KIARA_METADATA = {
+#         "authors": [{"name": "Roman Kalyakin", "email": "roman@kalyakin.com"}],
+#     }
+#
+#     def create_input_schema(self) -> typing.Mapping[str, ValueSchema]:
+#         return {
+#             "graph": ValueSchema(type="network_graph"),
+#             "degree_property_name": ValueSchema(type="string", default="degree"),
+#             "indegree_property_name": ValueSchema(type="string", default="indegree"),
+#             "outdegree_property_name": ValueSchema(type="string", default="outdegree"),
+#             "isolated_property_name": ValueSchema(type="string", default="isolated"),
+#             "betweenness_property_name": ValueSchema(
+#                 type="string", default="betweenness"
+#             ),
+#             "eigenvector_property_name": ValueSchema(
+#                 type="string", default="eigenvector"
+#             ),
+#         }
+#
+#     def create_output_schema(self) -> typing.Mapping[str, ValueSchema]:
+#         return {
+#             "graph": ValueSchema(type="network_graph"),
+#         }
+#
+#     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+#
+#         graph: Graph = inputs.get_value_data("graph")
+#         graph = copy.deepcopy(graph)
+#
+#         # degree
+#         degree_dict = graph.degree()
+#         nx.set_node_attributes(
+#             graph, dict(degree_dict), inputs.get_value_data("degree_property_name")
+#         )
+#
+#         # isolated
+#         isolated_flag_dict = {id: True for id in nx.isolates(graph)}
+#         nx.set_node_attributes(
+#             graph, isolated_flag_dict, inputs.get_value_data("isolated_property_name")
+#         )
+#
+#         if nx.is_directed(graph):
+#             graph = typing.cast(nx.DiGraph, graph)
+#
+#             # indegree
+#             indegree_dict = graph.in_degree()
+#             nx.set_node_attributes(
+#                 graph,
+#                 dict(indegree_dict),
+#                 inputs.get_value_data("indegree_property_name"),
+#             )
+#
+#             # outdegree
+#             outdegree_dict = graph.out_degree()
+#             nx.set_node_attributes(
+#                 graph,
+#                 dict(outdegree_dict),
+#                 inputs.get_value_data("outdegree_property_name"),
+#             )
+#
+#         # eigenvector
+#         # betweenness
+#         betweenness_dict = nx.betweenness_centrality(graph)
+#         eigenvector_dict = nx.eigenvector_centrality(graph)
+#
+#         nx.set_node_attributes(
+#             graph, betweenness_dict, inputs.get_value_data("betweenness_property_name")
+#         )
+#         nx.set_node_attributes(
+#             graph, eigenvector_dict, inputs.get_value_data("eigenvector_property_name")
+#         )
+#
+#         outputs.set_value("graph", graph)

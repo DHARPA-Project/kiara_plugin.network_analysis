@@ -3,10 +3,6 @@
 """Top-level package for kiara_modules.network_analysis."""
 
 __all__ = [
-    "AugmentNetworkGraphModule",
-    "CreateGraphFromEdgesTableModule",
-    "ExtractGraphPropertiesModule",
-    "FindShortestPathModule",
     "get_version",
 ]
 
@@ -15,13 +11,6 @@ import logging
 import os
 
 from kiara import KiaraEntryPointItem, find_kiara_modules_under
-
-from kiara_modules.network_analysis.network_graph import (
-    AugmentNetworkGraphModule,
-    CreateGraphFromEdgesTableModule,
-    ExtractGraphPropertiesModule,
-    FindShortestPathModule,
-)
 
 __author__ = """Lena Jaskov"""
 __email__ = "helena.jaskov@uni.lu"

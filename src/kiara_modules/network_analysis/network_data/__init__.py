@@ -37,6 +37,11 @@ if typing.TYPE_CHECKING:
     import pyarrow as pa
 
 
+KIARA_METADATA = {
+    "authors": [{"name": "Markus Binsteiner", "email": "markus@frkl.io"}],
+}
+
+
 class GraphType(Enum):
     """All possible graph types."""
 

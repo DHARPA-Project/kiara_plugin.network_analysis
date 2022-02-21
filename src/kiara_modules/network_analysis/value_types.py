@@ -4,12 +4,8 @@
 """
 import typing
 
-import networkx
-import networkx as nx
 from kiara import KiaraEntryPointItem
 from kiara.data import Value
-from kiara.data.types import ValueType
-from kiara.data.types.core import AnyType
 from kiara.utils.class_loading import find_value_types_under
 from kiara_modules.core.metadata_models import KiaraDatabase
 from kiara_modules.core.value_types import DatabaseType
@@ -29,31 +25,31 @@ value_types: KiaraEntryPointItem = (
 )
 
 
-class NetworkGraphType(AnyType):
-    """A network graph object.
-
-    Internally, this is backed by a ``Graph`` object of the [networkx](https://networkx.org/) Python library.
-    """
-
-    _value_type_name = "network_graph"
-
-    @classmethod
-    def check_data(cls, data: typing.Any) -> typing.Optional["ValueType"]:
-
-        if isinstance(data, nx.Graph):
-            return NetworkGraphType()
-        else:
-            return None
-
-    @classmethod
-    def candidate_python_types(cls) -> typing.Optional[typing.Iterable[typing.Type]]:
-        return [nx.Graph]
-
-    def validate(cls, value: typing.Any) -> typing.Any:
-
-        if not isinstance(value, networkx.Graph):
-            raise ValueError(f"Invalid type '{type(value)}' for graph: {value}")
-        return value
+# class NetworkGraphType(AnyType):
+#     """A network graph object.
+#
+#     Internally, this is backed by a ``Graph`` object of the [networkx](https://networkx.org/) Python library.
+#     """
+#
+#     _value_type_name = "network_graph"
+#
+#     @classmethod
+#     def check_data(cls, data: typing.Any) -> typing.Optional["ValueType"]:
+#
+#         if isinstance(data, nx.Graph):
+#             return NetworkGraphType()
+#         else:
+#             return None
+#
+#     @classmethod
+#     def candidate_python_types(cls) -> typing.Optional[typing.Iterable[typing.Type]]:
+#         return [nx.Graph]
+#
+#     def validate(cls, value: typing.Any) -> typing.Any:
+#
+#         if not isinstance(value, networkx.Graph):
+#             raise ValueError(f"Invalid type '{type(value)}' for graph: {value}")
+#         return value
 
 
 class NetworkDataType(DatabaseType):
