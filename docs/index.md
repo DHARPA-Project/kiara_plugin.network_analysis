@@ -24,7 +24,7 @@ TODO
 
 ### Metadata schemas
 
-{{ get_metadata_schemas_for_package('kiara_modules.network_analysis') }}
+{{ get_metadata_models_for_package('kiara_modules.network_analysis') }}
 
 ## Links
 
