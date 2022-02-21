@@ -11,7 +11,7 @@ from kiara.data import Value
 from kiara.data.types import ValueType
 from kiara.data.types.core import AnyType
 from kiara.utils.class_loading import find_value_types_under
-from kiara_modules.core.metadata_schemas import KiaraDatabase
+from kiara_modules.core.metadata_models import KiaraDatabase
 from kiara_modules.core.value_types import DatabaseType
 
 from kiara_modules.network_analysis.defaults import (

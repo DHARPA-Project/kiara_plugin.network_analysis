@@ -11,7 +11,7 @@ from kiara.data.values import Value, ValueSchema
 from kiara.exceptions import KiaraProcessingException
 from kiara.operations.create_value import CreateValueModule
 from kiara.operations.extract_metadata import ExtractMetadataModule
-from kiara_modules.core.metadata_schemas import KiaraFile
+from kiara_modules.core.metadata_models import KiaraFile
 from kiara_modules.core.table.utils import create_sqlite_schema_data_from_arrow_table
 from pydantic import BaseModel, Field
 

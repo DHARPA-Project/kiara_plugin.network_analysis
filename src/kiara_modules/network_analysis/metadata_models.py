@@ -35,10 +35,6 @@ metadata_models: KiaraEntryPointItem = (
     find_metadata_models_under,
     ["kiara_modules.network_analysis.metadata_models"],
 )
-metadata_schemas: KiaraEntryPointItem = (
-    find_metadata_models_under,
-    ["kiara_modules.network_analysis.metadata_schemas"],
-)
 
 
 class GraphMetadata(MetadataModel):

@@ -9,7 +9,7 @@ from kiara.data.values import Value, ValueSchema
 from kiara.exceptions import KiaraProcessingException
 from kiara.module_config import ModuleTypeConfigSchema
 from kiara.operations.extract_metadata import ExtractMetadataModule
-from kiara_modules.core.metadata_schemas import KiaraFile
+from kiara_modules.core.metadata_models import KiaraFile
 from networkx import Graph
 from networkx.exception import NetworkXError
 from pydantic import BaseModel, Field, validator
