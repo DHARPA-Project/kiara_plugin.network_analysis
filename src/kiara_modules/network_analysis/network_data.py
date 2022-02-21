@@ -2,6 +2,8 @@
 #  Copyright (c) 2022, Markus Binsteiner
 #
 #  Mozilla Public License, version 2.0 (see LICENSE or https://www.mozilla.org/en-US/MPL/2.0/)
+import os
+import shutil
 import typing
 from enum import Enum
 
@@ -10,6 +12,7 @@ from kiara.data import ValueSet
 from kiara.data.values import Value, ValueSchema
 from kiara.exceptions import KiaraProcessingException
 from kiara.operations.create_value import CreateValueModule
+from kiara.operations.data_export import DataExportModule
 from kiara.operations.extract_metadata import ExtractMetadataModule
 from kiara_modules.core.defaults import DEFAULT_DB_CHUNK_SIZE
 from kiara_modules.core.metadata_models import KiaraFile
@@ -298,6 +301,31 @@ class CreateGraphFromTablesModule(KiaraModule):
         outputs.set_value("network_data", network_data)
 
 
+class ExportNetworkDataModule(DataExportModule):
+    @classmethod
+    def get_source_value_type(cls) -> str:
+        return "network_data"
+
+    def export_as__graphml_file(self, value: NetworkData, base_path: str, name: str):
+
+        import networkx as nx
+
+        target_path = os.path.join(base_path, f"{name}.graphml")
+
+        # TODO: can't just assume digraph
+        graph: nx.Graph = value.as_networkx_graph(nx.DiGraph)
+        nx.write_graphml(graph, target_path)
+
+        return {"files": target_path}
+
+    def export_as__sqlite_db(self, value: NetworkData, base_path: str, name: str):
+
+        target_path = os.path.abspath(os.path.join(base_path, f"{name}.sqlite"))
+        shutil.copy2(value.db_file_path, target_path)
+
+        return {"files": target_path}
+
+
 class CreateNetworkDataModule(CreateValueModule):
     @classmethod
     def get_target_value_type(cls) -> str:
@@ -314,57 +342,39 @@ class CreateNetworkDataModule(CreateValueModule):
         network_data = NetworkData.create_from_networkx_graph(graph)
         return network_data
 
-        # graph, edge_props, node_props = parse_graphml_file(input_file.path)
-        #
-        # label_match: typing.Optional[str] = None
-        # for column_name in node_props.keys():
-        #     if column_name.lower() == LABEL_COLUMN_NAME.lower():
-        #         label_match = column_name
-        #         break
-        #
-        # if label_match:
-        #     temp = node_props.pop(label_match)
-        #     node_props[LABEL_COLUMN_NAME] = temp
-        # else:
-        #     node_props[LABEL_COLUMN_NAME] = {"type": "TEXT"}
-        #
-        # nd_schema = NetworkDataSchema(
-        #     edges_schema={"columns": edge_props}, nodes_schema={"columns": node_props}
-        # )
-        # init_sql = nd_schema.create_init_sql()
-        #
-        # network_data = NetworkData.create_in_temp_dir(init_sql=init_sql)
-        #
-        # nodes = []
-        # node_ids = []
-        # for node in graph.nodes():
-        #     data = {}
-        #     for v in node.attr.values():
-        #         if label_match and label_match == v.name:
-        #             data[LABEL_COLUMN_NAME] = v.value
-        #         else:
-        #             data[v.name] = v.value
-        #     if LABEL_COLUMN_NAME not in data.keys() or not data[LABEL_COLUMN_NAME]:
-        #         data[LABEL_COLUMN_NAME] = str(node.id)
-        #     data[ID_COLUMN_NAME] = node.id
-        #     node_ids.append(node.id)
-        #     nodes.append(data)
-        #
-        # network_data.insert_nodes(*nodes)
-        #
-        # edges = []
-        # for edge in graph.edges():
-        #     data = {}
-        #     for v in edge.attr.values():
-        #         data[v.name] = v.value
-        #
-        #     data[SOURCE_COLUMN_NAME] = edge.node1.id
-        #     data[TARGET_COLUMN_NAME] = edge.node2.id
-        #     edges.append(data)
-        #
-        # network_data.insert_edges(*edges, existing_node_ids=node_ids)
-        #
-        # return network_data
+    def from_gexf_file(self, value: Value):
+
+        import networkx as nx
+
+        input_file: KiaraFile = value.get_value_data()
+
+        graph = nx.read_gexf(input_file.path)
+        graph = nx.relabel_gexf_graph(graph)
+
+        network_data = NetworkData.create_from_networkx_graph(graph)
+        return network_data
+
+    def from_shp_file(self, value: Value):
+
+        import networkx as nx
+
+        input_file: KiaraFile = value.get_value_data()
+
+        graph = nx.read_shp(input_file.path)
+
+        network_data = NetworkData.create_from_networkx_graph(graph)
+        return network_data
+
+    def from_gml_file(self, value: Value):
+
+        import networkx as nx
+
+        input_file: KiaraFile = value.get_value_data()
+
+        graph = nx.read_gml(input_file.path)
+
+        network_data = NetworkData.create_from_networkx_graph(graph)
+        return network_data
 
 
 # class NetworkDataTest(KiaraModule):
