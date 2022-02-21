@@ -52,6 +52,11 @@ class GraphTypesEnum(Enum):
 
 
 class NetworkDataSchema(BaseModel):
+    """A model containing basic information for a network data instance.
+
+    This is mostly used internally to make sure the network_data object to be created and underlying database adhere to
+    some expected format. Most notably, that it contains two tables ('edges', 'nodes'), as well as a few required columns in each table.
+    """
 
     edges_schema: typing.Optional[SqliteTableSchema] = Field(
         description="The schema information for the edges table."
@@ -180,6 +185,7 @@ class NetworkDataSchema(BaseModel):
         self._id_type_final = id_type_final
 
     def create_edges_init_sql(self, schema_template_str: typing.Optional[str] = None):
+        """Create sql that will initialize the edges table in a new database."""
 
         edges_sql = create_table_init_sql(
             table_name=TableType.EDGES.value,
@@ -189,6 +195,7 @@ class NetworkDataSchema(BaseModel):
         return edges_sql
 
     def create_nodes_init_sql(self, schema_template_str: typing.Optional[str] = None):
+        """Create sql that will initialize the nodes table in a new database."""
 
         nodes_sql = create_table_init_sql(
             table_name=TableType.NODES.value,
@@ -198,6 +205,7 @@ class NetworkDataSchema(BaseModel):
         return nodes_sql
 
     def create_init_sql(self) -> str:
+        """Create sql that will initialize both edges and nodes table in a new database."""
 
         if self.extra_schema is None:
             extra_schema = []
@@ -235,6 +243,13 @@ class NetworkDataSchema(BaseModel):
 
 
 class NetworkData(KiaraDatabase):
+    """A helper class to access and query network datasets.
+
+    This class provides different ways to access the underlying network data, most notably via sql and as networkx Graph object.
+
+    Internally, network data is stored in a sqlite database with the edges stored in a table called 'edges' and the nodes, well,
+    in a table aptly called 'nodes'.
+    """
 
     _metadata_key: typing.ClassVar[str] = "network_data"
 
@@ -246,6 +261,7 @@ class NetworkData(KiaraDatabase):
 
     @classmethod
     def create_from_networkx_graph(cls, graph: "nx.Graph") -> "NetworkData":
+        """Create a `NetworkData` instance from a networkx Graph object."""
 
         edges_table = extract_edges_as_table(graph)
         edges_schema = create_sqlite_schema_data_from_arrow_table(edges_table)
@@ -271,6 +287,11 @@ class NetworkData(KiaraDatabase):
         return network_data
 
     def get_sqlalchemy_metadata(self) -> "Metadata":
+        """Return the sqlalchemy Metadtaa object for the underlying database.
+
+        This is used internally, you typically don't need to access this attribute.
+
+        """
 
         if self._metadata_obj is None:
             from sqlalchemy import MetaData
@@ -279,6 +300,7 @@ class NetworkData(KiaraDatabase):
         return self._metadata_obj
 
     def get_sqlalchemy_nodes_table(self) -> "Table":
+        """Return the sqlalchemy nodes table instance for this network datab."""
 
         if self._nodes_table_obj is not None:
             return self._nodes_table_obj
@@ -293,6 +315,7 @@ class NetworkData(KiaraDatabase):
         return self._nodes_table_obj
 
     def get_sqlalchemy_edges_table(self) -> "Table":
+        """Return the sqlalchemy edges table instance for this network datab."""
 
         if self._edges_table_obj is not None:
             return self._edges_table_obj
@@ -364,6 +387,11 @@ class NetworkData(KiaraDatabase):
         return required_node_ids
 
     def as_networkx_graph(self, graph_type: typing.Type["nx.Graph"]) -> "nx.Graph":
+        """Return the network data as a networkx graph object.
+
+        Arguments:
+            graph_type: the networkx Graph class to use
+        """
 
         if graph_type in self._nx_graph.keys():
             return self._nx_graph[graph_type]
