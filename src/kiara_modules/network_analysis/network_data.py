@@ -2,10 +2,12 @@
 #  Copyright (c) 2022, Markus Binsteiner
 #
 #  Mozilla Public License, version 2.0 (see LICENSE or https://www.mozilla.org/en-US/MPL/2.0/)
+import csv
 import os
 import shutil
 import typing
 from enum import Enum
+from pathlib import Path
 
 from kiara import KiaraModule
 from kiara.data import ValueSet
@@ -324,6 +326,44 @@ class ExportNetworkDataModule(DataExportModule):
         shutil.copy2(value.db_file_path, target_path)
 
         return {"files": target_path}
+
+    def export_as__sql_dump(self, value: NetworkData, base_path: str, name: str):
+
+        import sqlite_utils
+
+        db = sqlite_utils.Database(value.db_file_path)
+        target_path = Path(os.path.join(base_path, f"{name}.sql"))
+        with target_path.open("wt") as f:
+            for line in db.conn.iterdump():
+                f.write(line + "\n")
+
+        return {"files": target_path}
+
+    def export_as__csv_files(self, value: NetworkData, base_path: str, name: str):
+
+        import sqlite3
+
+        files = []
+
+        for table_name in value.table_names:
+            target_path = os.path.join(base_path, name, f"{table_name}.csv")
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+
+            # copied from: https://stackoverflow.com/questions/2952366/dump-csv-from-sqlalchemy
+            con = sqlite3.connect(value.db_file_path)
+            outfile = open(target_path, "wt")
+            outcsv = csv.writer(outfile)
+
+            cursor = con.execute(f"select * from {table_name}")
+            # dump column titles (optional)
+            outcsv.writerow(x[0] for x in cursor.description)
+            # dump rows
+            outcsv.writerows(cursor.fetchall())
+
+            outfile.close()
+            files.append(target_path)
+
+        return {"files": files}
 
 
 class CreateNetworkDataModule(CreateValueModule):
