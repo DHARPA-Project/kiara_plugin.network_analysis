@@ -3,7 +3,6 @@
 #
 #  Mozilla Public License, version 2.0 (see LICENSE or https://www.mozilla.org/en-US/MPL/2.0/)
 import typing
-from xml.dom import minidom
 
 from kiara.utils.output import DictTabularWrap, TabularWrap
 from kiara_modules.core.database import SqliteTableSchema
@@ -111,89 +110,6 @@ def convert_graphml_type_to_sqlite(data_type: str) -> str:
     return type_map[data_type]
 
 
-def parse_graphml_file(path):
-    """Adapted from the pygrahml Python library.
-
-    Authors:
-      - Hadrien Mary hadrien.mary@gmail.com
-      - Nick Hamilton n.hamilton@imb.uq.edu.au
-
-    Copyright (c) 2011, Hadrien Mary
-    License: BSD 3-Clause
-
-    """
-
-    g = None
-    with open(path, "r") as f:
-        dom = minidom.parse(f)
-        root = dom.getElementsByTagName("graphml")[0]
-        graph = root.getElementsByTagName("graph")[0]
-        name = graph.getAttribute("id")
-
-        from pygraphml import Graph
-
-        g = Graph(name)
-
-        # Get attributes
-        edge_map = {}
-        node_map = {}
-
-        edge_props = {}
-        node_props = {}
-        for attr in root.getElementsByTagName("key"):
-            n_id = attr.getAttribute("id")
-            name = attr.getAttribute("attr.name")
-            for_type = attr.getAttribute("for")
-            attr_type = attr.getAttribute("attr.type")
-            if for_type == "edge":
-                edge_map[n_id] = name
-                edge_props[name] = {
-                    "data_type": convert_graphml_type_to_sqlite(attr_type)
-                }
-            else:
-                node_map[n_id] = name
-                node_props[name] = {
-                    "data_type": convert_graphml_type_to_sqlite(attr_type)
-                }
-
-        node_props_sorted = {}
-        for key in sorted(node_map.keys()):
-            node_props_sorted[node_map[key]] = node_props[node_map[key]]
-        edge_props_sorted = {}
-        for key in sorted(edge_map.keys()):
-            edge_props_sorted[edge_map[key]] = edge_props[edge_map[key]]
-
-        # Get nodes
-        for node in graph.getElementsByTagName("node"):
-            n = g.add_node(id=node.getAttribute("id"))
-
-            for attr in node.getElementsByTagName("data"):
-                key = attr.getAttribute("key")
-                mapped = node_map[key]
-                if attr.firstChild:
-                    n[mapped] = attr.firstChild.data
-                else:
-                    n[mapped] = ""
-
-        # Get edges
-        for edge in graph.getElementsByTagName("edge"):
-            source = edge.getAttribute("source")
-            dest = edge.getAttribute("target")
-
-            # source/target attributes refer to IDs: http://graphml.graphdrawing.org/xmlns/1.1/graphml-structure.xsd
-            e = g.add_edge_by_id(source, dest)
-
-            for attr in edge.getElementsByTagName("data"):
-                key = attr.getAttribute("key")
-                mapped = edge_map[key]
-                if attr.firstChild:
-                    e[mapped] = attr.firstChild.data
-                else:
-                    e[mapped] = ""
-
-    return (g, edge_props_sorted, node_props_sorted)
-
-
 def insert_table_data_into_network_graph(
     network_data: "NetworkData",
     edges_table: "pa.Table",
@@ -214,17 +130,22 @@ def insert_table_data_into_network_graph(
             else:
                 column_map = {}
 
-            for k, v in column_map.items():
-                if k in batch_dict.keys():
-                    if k == ID_COLUMN_NAME and v == LABEL_COLUMN_NAME:
-                        _data = batch_dict.get(k)
-                    else:
-                        _data = batch_dict.pop(k)
-                        if v in batch_dict.keys():
-                            raise Exception(
-                                "Duplicate nodes column name after mapping: {v}"
-                            )
-                    batch_dict[v] = _data
+            if column_map:
+                for k, v in column_map.items():
+                    if k in batch_dict.keys():
+                        if k == ID_COLUMN_NAME and v == LABEL_COLUMN_NAME:
+                            _data = batch_dict.get(k)
+                        else:
+                            _data = batch_dict.pop(k)
+                            if v in batch_dict.keys():
+                                raise Exception(
+                                    "Duplicate nodes column name after mapping: {v}"
+                                )
+                        batch_dict[v] = _data
+            if LABEL_COLUMN_NAME not in batch_dict.keys():
+                batch_dict[LABEL_COLUMN_NAME] = (
+                    str(x) for x in batch_dict[ID_COLUMN_NAME]
+                )
 
             ids = batch_dict[ID_COLUMN_NAME]
             data = [dict(zip(batch_dict, t)) for t in zip(*batch_dict.values())]

@@ -305,63 +305,66 @@ class CreateNetworkDataModule(CreateValueModule):
 
     def from_graphml_file(self, value: Value):
 
-        # TODO: this assumes a specific graphml file format, which will probably not work in all cases
+        import networkx as nx
 
         input_file: KiaraFile = value.get_value_data()
 
-        from kiara_modules.network_analysis.utils import parse_graphml_file
+        graph = nx.read_graphml(input_file.path)
 
-        graph, edge_props, node_props = parse_graphml_file(input_file.path)
-
-        label_match: typing.Optional[str] = None
-        for column_name in node_props.keys():
-            if column_name.lower() == LABEL_COLUMN_NAME.lower():
-                label_match = column_name
-                break
-
-        if label_match:
-            temp = node_props.pop(label_match)
-            node_props[LABEL_COLUMN_NAME] = temp
-        else:
-            node_props[LABEL_COLUMN_NAME] = {"type": "TEXT"}
-
-        nd_schema = NetworkDataSchema(
-            edges_schema={"columns": edge_props}, nodes_schema={"columns": node_props}
-        )
-        init_sql = nd_schema.create_init_sql()
-
-        network_data = NetworkData.create_in_temp_dir(init_sql=init_sql)
-
-        nodes = []
-        node_ids = []
-        for node in graph.nodes():
-            data = {}
-            for v in node.attr.values():
-                if label_match and label_match == v.name:
-                    data[LABEL_COLUMN_NAME] = v.value
-                else:
-                    data[v.name] = v.value
-            if LABEL_COLUMN_NAME not in data.keys() or not data[LABEL_COLUMN_NAME]:
-                data[LABEL_COLUMN_NAME] = str(node.id)
-            data[ID_COLUMN_NAME] = node.id
-            node_ids.append(node.id)
-            nodes.append(data)
-
-        network_data.insert_nodes(*nodes)
-
-        edges = []
-        for edge in graph.edges():
-            data = {}
-            for v in edge.attr.values():
-                data[v.name] = v.value
-
-            data[SOURCE_COLUMN_NAME] = edge.node1.id
-            data[TARGET_COLUMN_NAME] = edge.node2.id
-            edges.append(data)
-
-        network_data.insert_edges(*edges, existing_node_ids=node_ids)
-
+        network_data = NetworkData.create_from_networkx_graph(graph)
         return network_data
+
+        # graph, edge_props, node_props = parse_graphml_file(input_file.path)
+        #
+        # label_match: typing.Optional[str] = None
+        # for column_name in node_props.keys():
+        #     if column_name.lower() == LABEL_COLUMN_NAME.lower():
+        #         label_match = column_name
+        #         break
+        #
+        # if label_match:
+        #     temp = node_props.pop(label_match)
+        #     node_props[LABEL_COLUMN_NAME] = temp
+        # else:
+        #     node_props[LABEL_COLUMN_NAME] = {"type": "TEXT"}
+        #
+        # nd_schema = NetworkDataSchema(
+        #     edges_schema={"columns": edge_props}, nodes_schema={"columns": node_props}
+        # )
+        # init_sql = nd_schema.create_init_sql()
+        #
+        # network_data = NetworkData.create_in_temp_dir(init_sql=init_sql)
+        #
+        # nodes = []
+        # node_ids = []
+        # for node in graph.nodes():
+        #     data = {}
+        #     for v in node.attr.values():
+        #         if label_match and label_match == v.name:
+        #             data[LABEL_COLUMN_NAME] = v.value
+        #         else:
+        #             data[v.name] = v.value
+        #     if LABEL_COLUMN_NAME not in data.keys() or not data[LABEL_COLUMN_NAME]:
+        #         data[LABEL_COLUMN_NAME] = str(node.id)
+        #     data[ID_COLUMN_NAME] = node.id
+        #     node_ids.append(node.id)
+        #     nodes.append(data)
+        #
+        # network_data.insert_nodes(*nodes)
+        #
+        # edges = []
+        # for edge in graph.edges():
+        #     data = {}
+        #     for v in edge.attr.values():
+        #         data[v.name] = v.value
+        #
+        #     data[SOURCE_COLUMN_NAME] = edge.node1.id
+        #     data[TARGET_COLUMN_NAME] = edge.node2.id
+        #     edges.append(data)
+        #
+        # network_data.insert_edges(*edges, existing_node_ids=node_ids)
+        #
+        # return network_data
 
 
 # class NetworkDataTest(KiaraModule):
