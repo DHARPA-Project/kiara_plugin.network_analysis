@@ -130,7 +130,7 @@ class ExtractNetworkPropertiesMetadataModule(ExtractMetadataModule):
 
 
 class CreateGraphFromTablesModule(KiaraModule):
-    """Create a graph object from a file."""
+    """Create a graph object from one or two Arrow tables."""
 
     _module_type_name = "from_tables"
 
@@ -309,6 +309,8 @@ class CreateGraphFromTablesModule(KiaraModule):
 
 
 class ExportNetworkDataModule(DataExportModule):
+    """Export network data items."""
+
     @classmethod
     def get_source_value_type(cls) -> str:
         return "network_data"
@@ -372,6 +374,8 @@ class ExportNetworkDataModule(DataExportModule):
 
 
 class CreateNetworkDataModule(CreateValueModule):
+    """Create network data from different sources."""
+
     @classmethod
     def get_target_value_type(cls) -> str:
         return "network_data"
