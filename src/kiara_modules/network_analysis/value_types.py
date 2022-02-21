@@ -65,8 +65,20 @@ class NetworkDataType(DatabaseType):
     _value_type_name = "network_data"
 
     @classmethod
+    def backing_model_type(self) -> typing.Type[KiaraDatabase]:
+        return NetworkData
+
+    @classmethod
     def candidate_python_types(cls) -> typing.Optional[typing.Iterable[typing.Type]]:
         return [str, KiaraDatabase, NetworkData]
+
+    def parse_value(self, value: typing.Any) -> typing.Any:
+
+        if isinstance(value, str):
+            # TODO: check path exists
+            return NetworkData(db_file_path=value)
+
+        return value
 
     def validate(cls, value: typing.Any) -> typing.Any:
 

@@ -9,21 +9,27 @@ Metadata models must be a sub-class of [kiara.metadata.MetadataModel][kiara.meta
 sub-class a pydantic BaseModel or implement custom base classes.
 """
 import typing
-from pathlib import Path
+from enum import Enum
 
 from kiara import KiaraEntryPointItem
-from kiara.metadata import MetadataModel
 from kiara.utils.class_loading import find_metadata_models_under
+from kiara_modules.core.database import SqliteTableSchema, create_table_init_sql
+from kiara_modules.core.defaults import DEFAULT_DB_CHUNK_SIZE
 from kiara_modules.core.metadata_models import KiaraDatabase
-from pydantic import Field, PrivateAttr
+from kiara_modules.core.table.utils import create_sqlite_schema_data_from_arrow_table
+from pydantic import BaseModel, Field, PrivateAttr
 
 from kiara_modules.network_analysis.defaults import (
     ID_COLUMN_NAME,
     LABEL_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
-    TEMPLATES_FOLDER,
     TableType,
+)
+from kiara_modules.network_analysis.utils import (
+    extract_edges_as_table,
+    extract_nodes_as_table,
+    insert_table_data_into_network_graph,
 )
 
 if typing.TYPE_CHECKING:
@@ -37,138 +43,83 @@ metadata_models: KiaraEntryPointItem = (
 )
 
 
-class GraphMetadata(MetadataModel):
+class GraphTypesEnum(Enum):
 
-    number_of_nodes: int = Field(description="The number of nodes in this graph.")
-    number_of_edges: int = Field(description="The number of edges in this graph.")
-    directed: bool = Field(description="Whether the graph is directed or not.")
-    density: float = Field(description="The density of the graph.")
+    undirected = "undirected"
+    directed = "directed"
+    multi_directed = "multi_directed"
+    multi_undirected = "multi_undirected"
 
 
-class NetworkData(KiaraDatabase):
+class NetworkDataSchema(BaseModel):
 
-    _metadata_key: typing.ClassVar[str] = "network_data"
+    edges_schema: typing.Optional[SqliteTableSchema] = Field(
+        description="The schema information for the edges table."
+    )
+    nodes_schema: typing.Optional[SqliteTableSchema] = Field(
+        description="The schema information for the nodes table."
+    )
 
-    _nodes_table_obj = PrivateAttr(default=None)
-    _edges_table_obj = PrivateAttr(default=None)
-    _metadata_obj = PrivateAttr(default=None)
+    id_type: typing.Optional[str] = Field(
+        description="The type of the node 'id' column (as well as edge 'source' & 'target'), if 'None', this method will try to figure it out and fall back to 'TEXT' if it can't.",
+        default=None,
+    )
+    extra_schema: typing.List[str] = Field(
+        description="Any extra schema creation code that should be appended to the created sql script.",
+        default_factory=list,
+    )
 
-    _nx_graph = PrivateAttr(default={})
+    _edges_schema_final = PrivateAttr(default=None)
+    _nodes_schema_final = PrivateAttr(default=None)
+    _id_type_final = PrivateAttr(default=None)
 
-    @classmethod
-    def create_from_networkx_graph(
-        cls, graph: "nx.Graph", edge_types: typing.Optional[typing.Mapping[str, str]]
-    ) -> "NetworkData":
-
-        # adapted from networx code
-        # License: 3-clause BSD license
-        # Copyright (C) 2004-2022, NetworkX Developers
-
-        # edgelist = graph.edges(data=True)
-        # source_nodes = [s for s, _, _ in edgelist]
-        # target_nodes = [t for _, t, _ in edgelist]
-        raise NotImplementedError()
-
-        # all_attrs: typing.Set[str] = set().union(*(d.keys() for _, _, d in edgelist))
-        #
-        # if SOURCE_COLUMN_NAME in all_attrs:
-        #     raise nx.NetworkXError(
-        #         f"Source name {SOURCE_COLUMN_NAME} is an edge attr name"
-        #     )
-        # if SOURCE_COLUMN_NAME in all_attrs:
-        #     raise nx.NetworkXError(
-        #         f"Target name {SOURCE_COLUMN_NAME} is an edge attr name"
-        #     )
-        #
-        # nan = float("nan")
-        # edge_attr = {k: [d.get(k, nan) for _, _, d in edgelist] for k in all_attrs}
-        #
-        # edgelistdict = {
-        #     SOURCE_COLUMN_NAME: source_nodes,
-        #     TARGET_COLUMN_NAME: target_nodes,
-        # }
-        #
-        # edgelistdict.update(edge_attr)
-
-        # edge_list_df = nx.to_pandas_edgelist(
-        #     graph, source=SOURCE_COLUMN_NAME, target=TARGET_COLUMN_NAME
-        # )
-        #
-        # print(edge_list_df)
-        # print(edge_list_df.dtypes["source"].__dict__)
-        #
-        # print("----")
-        # network_data = cls.create_in_temp_dir()
-        #
-        # print(graph)
-        # print("---")
-        # nodes = graph.nodes
-        #
-        # network_data.insert_nodes(nodes)
-
-    @classmethod
-    def create_network_data_init_sql(
-        cls,
-        edge_attrs: typing.Optional[
-            typing.Mapping[str, typing.Mapping[str, str]]
-        ] = None,
-        node_attrs: typing.Optional[
-            typing.Mapping[str, typing.Mapping[str, str]]
-        ] = None,
-        id_type: typing.Optional[str] = None,
-        extra_schema: typing.Optional[typing.Iterable[str]] = None,
-        schema_template_str: typing.Optional[str] = None,
-    ) -> str:
-        """Create an sql script to initialize the edges and nodes tables.
-
-        Arguments:
-            edge_attrs: a map with the column name as key, and column details ('type', 'extra_column_info', 'create_index') as values
-            node_attrs: a map with the column name as key, and column details ('type', 'extra_column_info', 'create_index') as values
-            id_type: the type of the node 'id' column (as well as edge 'source' & 'target'), if 'None', this method will try to figure it out and fall back to 'TEXT' if it can't
-        """
-
-        if schema_template_str is None:
-            template_path = Path(TEMPLATES_FOLDER) / "sqlite_schama.sql.j2"
-            schema_template_str = template_path.read_text()
+    def _calculate_final_schemas(self):
+        """Utility method to calculate the final schema, that will adhere to what the NetworkData class expects to find."""
 
         edges: typing.Dict[str, typing.Dict[str, typing.Any]] = {}
-        if edge_attrs:
+        if self.edges_schema:
             edges[SOURCE_COLUMN_NAME] = (
                 {}
-                if edge_attrs.get(SOURCE_COLUMN_NAME, None) is None
-                else dict(edge_attrs[SOURCE_COLUMN_NAME])
+                if self.edges_schema.columns.get(SOURCE_COLUMN_NAME, None) is None
+                else dict(self.edges_schema.columns[SOURCE_COLUMN_NAME])
             )
             edges[TARGET_COLUMN_NAME] = (
                 {}
-                if edge_attrs.get(TARGET_COLUMN_NAME, None) is None
-                else dict(edge_attrs[TARGET_COLUMN_NAME])
+                if self.edges_schema.columns.get(TARGET_COLUMN_NAME, None) is None
+                else dict(self.edges_schema.columns[TARGET_COLUMN_NAME])
             )
-            for k, v in edge_attrs.items():
+            for k, v in self.edges_schema.columns.items():
                 if k in [SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME]:
                     continue
                 edges[k] = dict(v)
+        else:
+            if self.edges_schema.extra_schema:
+                raise NotImplementedError()
 
         nodes: typing.Dict[str, typing.Dict[str, typing.Any]] = {}
-        if node_attrs is not None:
+        if self.nodes_schema is not None:
+            if self.nodes_schema.extra_schema:
+                raise NotImplementedError()
+
             nodes[ID_COLUMN_NAME] = (
                 {}
-                if node_attrs.get(ID_COLUMN_NAME, None) is None
-                else dict(node_attrs[ID_COLUMN_NAME])
+                if self.nodes_schema.columns.get(ID_COLUMN_NAME, None) is None
+                else dict(self.nodes_schema.columns[ID_COLUMN_NAME])
             )
             nodes[LABEL_COLUMN_NAME] = (
                 {}
-                if node_attrs.get(LABEL_COLUMN_NAME, None) is None
-                else dict(node_attrs[LABEL_COLUMN_NAME])
+                if self.nodes_schema.columns.get(LABEL_COLUMN_NAME, None) is None
+                else dict(self.nodes_schema.columns[LABEL_COLUMN_NAME])
             )
-            for k, v in node_attrs.items():
+            for k, v in self.nodes_schema.columns.items():
                 if k in [ID_COLUMN_NAME, LABEL_COLUMN_NAME]:
                     continue
                 nodes[k] = dict(v)
 
-        if not id_type:
-            _id_type = nodes.get(ID_COLUMN_NAME, {}).get("type", None)
-            _source_type = edges.get(SOURCE_COLUMN_NAME, {}).get("type", None)
-            _target_type = edges.get(TARGET_COLUMN_NAME, {}).get("type", None)
+        if not self.id_type:
+            _id_type = nodes.get(ID_COLUMN_NAME, {}).get("data_type", None)
+            _source_type = edges.get(SOURCE_COLUMN_NAME, {}).get("data_type", None)
+            _target_type = edges.get(TARGET_COLUMN_NAME, {}).get("data_type", None)
 
             if _source_type is None:
                 if _target_type:
@@ -192,51 +143,132 @@ class NetworkData(KiaraDatabase):
                 )
 
             if _source_type is None:
-                id_type = "TEXT"
+                id_type_final = "TEXT"
             else:
-                id_type = _source_type
+                id_type_final = _source_type
+        else:
+            id_type_final = self.id_type
 
         edges.setdefault(SOURCE_COLUMN_NAME, {})["create_index"] = True
-        edges[SOURCE_COLUMN_NAME]["type"] = id_type
+        edges[SOURCE_COLUMN_NAME]["data_type"] = id_type_final
         edges.setdefault(TARGET_COLUMN_NAME, {})["create_index"] = True
-        edges[TARGET_COLUMN_NAME]["type"] = id_type
+        edges[TARGET_COLUMN_NAME]["data_type"] = id_type_final
 
         FOREIGN_KEYS_STR = [
             f"    FOREIGN KEY({SOURCE_COLUMN_NAME}) REFERENCES nodes({ID_COLUMN_NAME})",
             f"    FOREIGN KEY({TARGET_COLUMN_NAME}) REFERENCES nodes({ID_COLUMN_NAME})",
         ]
-        edge_sql = cls.create_table_init_sql(
-            table_name=TableType.EDGES.value,
-            column_attrs=edges,
-            extra_schema=FOREIGN_KEYS_STR,
-            schema_template_str=schema_template_str,
+        edges_schema_final = SqliteTableSchema(
+            columns=edges, extra_schema=FOREIGN_KEYS_STR
         )
 
         nodes.setdefault(ID_COLUMN_NAME, {})["create_index"] = True
-        nodes[ID_COLUMN_NAME]["type"] = id_type
+        nodes[ID_COLUMN_NAME]["data_type"] = id_type_final
         if "extra_column_info" not in nodes[ID_COLUMN_NAME].keys():
-            nodes[ID_COLUMN_NAME][
-                "extra_column_info"
-            ] = "NOT NULL UNIQUE"  # TODO: maybe also PRIMARY KEY?
+            nodes[ID_COLUMN_NAME]["extra_column_info"] = [
+                "NOT NULL",
+                "UNIQUE",
+            ]  # TODO: maybe also PRIMARY KEY?
 
         # TODO: check if already set to something else and fail?
-        nodes.setdefault(LABEL_COLUMN_NAME, {})["type"] = "TEXT"
+        nodes.setdefault(LABEL_COLUMN_NAME, {})["data_type"] = "TEXT"
 
-        node_sql = cls.create_table_init_sql(
-            table_name=TableType.NODES.value,
-            column_attrs=nodes,
+        nodes_schema_final = SqliteTableSchema(columns=nodes)
+
+        self._edges_schema_final = edges_schema_final
+        self._nodes_schema_final = nodes_schema_final
+        self._id_type_final = id_type_final
+
+    def create_edges_init_sql(self, schema_template_str: typing.Optional[str] = None):
+
+        edges_sql = create_table_init_sql(
+            table_name=TableType.EDGES.value,
+            table_schema=self.edges_schema_final,
             schema_template_str=schema_template_str,
         )
+        return edges_sql
 
-        if extra_schema is None:
+    def create_nodes_init_sql(self, schema_template_str: typing.Optional[str] = None):
+
+        nodes_sql = create_table_init_sql(
+            table_name=TableType.NODES.value,
+            table_schema=self.nodes_schema_final,
+            schema_template_str=schema_template_str,
+        )
+        return nodes_sql
+
+    def create_init_sql(self) -> str:
+
+        if self.extra_schema is None:
             extra_schema = []
         else:
-            extra_schema = list(extra_schema)
+            extra_schema = list(self.extra_schema)
 
         extra_schema_str = "\n".join(extra_schema)
 
-        init_sql = f"{edge_sql}\n{node_sql}\n{extra_schema_str}\n"
+        init_sql = f"{self.create_nodes_init_sql()}\n{self.create_edges_init_sql()}\n{extra_schema_str}\n"
         return init_sql
+
+    @property
+    def edges_schema_final(self):
+        if self._edges_schema_final is None:
+            self._calculate_final_schemas()
+        return self._edges_schema_final  # type: ignore
+
+    @property
+    def nodes_schema_final(self):
+        if self._nodes_schema_final is None:
+            self._calculate_final_schemas()
+        return self._nodes_schema_final  # type: ignore
+
+    @property
+    def id_type_final(self):
+        if self._id_type_final is None:
+            self._calculate_final_schemas()
+        return self._id_type_final  # type: ignore
+
+    def invalidate(self):
+
+        self._nodes_schema_final = None
+        self._edges_schema_final = None
+        self._id_type_final = None
+
+
+class NetworkData(KiaraDatabase):
+
+    _metadata_key: typing.ClassVar[str] = "network_data"
+
+    _nodes_table_obj = PrivateAttr(default=None)
+    _edges_table_obj = PrivateAttr(default=None)
+    _metadata_obj = PrivateAttr(default=None)
+
+    _nx_graph = PrivateAttr(default={})
+
+    @classmethod
+    def create_from_networkx_graph(cls, graph: "nx.Graph") -> "NetworkData":
+
+        edges_table = extract_edges_as_table(graph)
+        edges_schema = create_sqlite_schema_data_from_arrow_table(edges_table)
+
+        nodes_table = extract_nodes_as_table(graph)
+        nodes_schema = create_sqlite_schema_data_from_arrow_table(nodes_table)
+
+        nd_schema = NetworkDataSchema(
+            edges_schema=edges_schema, nodes_schema=nodes_schema
+        )
+        init_sql = nd_schema.create_init_sql()
+
+        network_data = NetworkData.create_in_temp_dir(init_sql=init_sql)
+        insert_table_data_into_network_graph(
+            network_data=network_data,
+            edges_table=edges_table,
+            edges_schema=edges_schema,
+            nodes_table=nodes_table,
+            nodes_schema=nodes_schema,
+            chunk_size=DEFAULT_DB_CHUNK_SIZE,
+        )
+
+        return network_data
 
     def get_sqlalchemy_metadata(self) -> "Metadata":
 

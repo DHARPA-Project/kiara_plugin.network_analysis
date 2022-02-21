@@ -11,6 +11,7 @@ from kiara.data.values import Value, ValueSchema
 from kiara.exceptions import KiaraProcessingException
 from kiara.operations.create_value import CreateValueModule
 from kiara.operations.extract_metadata import ExtractMetadataModule
+from kiara_modules.core.defaults import DEFAULT_DB_CHUNK_SIZE
 from kiara_modules.core.metadata_models import KiaraFile
 from kiara_modules.core.table.utils import create_sqlite_schema_data_from_arrow_table
 from pydantic import BaseModel, Field
@@ -21,7 +22,11 @@ from kiara_modules.network_analysis.defaults import (
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
 )
-from kiara_modules.network_analysis.metadata_models import NetworkData
+from kiara_modules.network_analysis.metadata_models import (
+    NetworkData,
+    NetworkDataSchema,
+)
+from kiara_modules.network_analysis.utils import insert_table_data_into_network_graph
 
 if typing.TYPE_CHECKING:
     import pyarrow as pa
@@ -134,12 +139,12 @@ class CreateGraphFromTablesModule(KiaraModule):
             "edges_source_column_name": {
                 "type": "string",
                 "doc": "The name of the source column name in the edges table.",
-                "default": "source",
+                "default": SOURCE_COLUMN_NAME,
             },
             "edges_target_column_name": {
                 "type": "string",
                 "doc": "The name of the target column name in the edges table.",
-                "default": "target",
+                "default": TARGET_COLUMN_NAME,
             },
             "edges_column_map": {
                 "type": "dict",
@@ -154,7 +159,7 @@ class CreateGraphFromTablesModule(KiaraModule):
             "id_column_name": {
                 "type": "string",
                 "doc": "The name (before any potential column mapping) of the node-table column that contains the node identifier (used in the edges table).",
-                "default": "id",
+                "default": ID_COLUMN_NAME,
             },
             "label_column_name": {
                 "type": "string",
@@ -198,9 +203,6 @@ class CreateGraphFromTablesModule(KiaraModule):
 
         nodes = inputs.get_value_obj("nodes")
 
-        DEFAULT_DB_CHUNK_SIZE = 1024
-
-        added_node_ids = set()
         edges_table: pa.Table = edges.get_value_data()
 
         id_column_name = inputs.get_value_data("id_column_name")
@@ -274,61 +276,24 @@ class CreateGraphFromTablesModule(KiaraModule):
                 table=nodes_table,
                 index_columns=[ID_COLUMN_NAME],
                 column_map=nodes_column_map,
-                extra_column_info={ID_COLUMN_NAME: "NOT NULL UNIQUE"},
+                extra_column_info={ID_COLUMN_NAME: ["NOT NULL", "UNIQUE"]},
             )
 
         else:
             nodes_data = None
 
-        init_sql = NetworkData.create_network_data_init_sql(
-            edge_attrs=edges_data, node_attrs=nodes_data
-        )
+        nd_schema = NetworkDataSchema(edges_schema=edges_data, nodes_schema=nodes_data)
+        init_sql = nd_schema.create_init_sql()
+
         network_data = NetworkData.create_in_temp_dir(init_sql=init_sql)
-
-        # =============================================
-        # import data
-
-        if nodes_table is not None:
-            for batch in nodes_table.to_batches(DEFAULT_DB_CHUNK_SIZE):
-                batch_dict = batch.to_pydict()
-
-                for k, v in nodes_column_map.items():
-                    if k in batch_dict.keys():
-                        if k == ID_COLUMN_NAME and v == LABEL_COLUMN_NAME:
-                            _data = batch_dict.get(k)
-                        else:
-                            _data = batch_dict.pop(k)
-                            if v in batch_dict.keys():
-                                raise Exception(
-                                    "Duplicate nodes column name after mapping: {v}"
-                                )
-                        batch_dict[v] = _data
-
-                ids = batch_dict[ID_COLUMN_NAME]
-                data = [dict(zip(batch_dict, t)) for t in zip(*batch_dict.values())]
-                network_data.insert_nodes(*data)
-
-                added_node_ids.update(ids)
-
-        for batch in edges_table.to_batches(DEFAULT_DB_CHUNK_SIZE):
-
-            batch_dict = batch.to_pydict()
-            for k, v in edges_column_map.items():
-                if k in batch_dict.keys():
-                    _data = batch_dict.pop(k)
-                    if v in batch_dict.keys():
-                        raise Exception(
-                            "Duplicate edges column name after mapping: {v}"
-                        )
-                    batch_dict[v] = _data
-
-            data = [dict(zip(batch_dict, t)) for t in zip(*batch_dict.values())]
-
-            all_node_ids = network_data.insert_edges(
-                *data,
-                existing_node_ids=added_node_ids,
-            )
-            added_node_ids.update(all_node_ids)
+        insert_table_data_into_network_graph(
+            network_data=network_data,
+            edges_table=edges_table,
+            edges_schema=edges_data,
+            nodes_table=nodes_table,
+            nodes_schema=nodes_data,
+            chunk_size=DEFAULT_DB_CHUNK_SIZE,
+        )
 
         outputs.set_value("network_data", network_data)
 
@@ -339,6 +304,8 @@ class CreateNetworkDataModule(CreateValueModule):
         return "network_data"
 
     def from_graphml_file(self, value: Value):
+
+        # TODO: this assumes a specific graphml file format, which will probably not work in all cases
 
         input_file: KiaraFile = value.get_value_data()
 
@@ -358,9 +325,11 @@ class CreateNetworkDataModule(CreateValueModule):
         else:
             node_props[LABEL_COLUMN_NAME] = {"type": "TEXT"}
 
-        init_sql = NetworkData.create_network_data_init_sql(
-            edge_attrs=edge_props, node_attrs=node_props
+        nd_schema = NetworkDataSchema(
+            edges_schema={"columns": edge_props}, nodes_schema={"columns": node_props}
         )
+        init_sql = nd_schema.create_init_sql()
+
         network_data = NetworkData.create_in_temp_dir(init_sql=init_sql)
 
         nodes = []
@@ -394,7 +363,43 @@ class CreateNetworkDataModule(CreateValueModule):
 
         return network_data
 
-        # graph = nx.read_graphml(input_file.path)
-        # network_data = NetworkData.create_from_networkx_graph(graph=graph)
-        #
-        # print("XXXXXXXXXXXXX")
+
+# class NetworkDataTest(KiaraModule):
+#
+#     _module_type_name = "test"
+#
+#     def create_input_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         return {
+#             "network_data": {
+#                 "type": "network_data"
+#             }
+#         }
+#
+#     def create_output_schema(
+#         self,
+#     ) -> typing.Mapping[
+#         str, typing.Union[ValueSchema, typing.Mapping[str, typing.Any]]
+#     ]:
+#
+#         return {
+#             "network_data": {
+#                 "type": "network_data"
+#             }
+#         }
+#
+#
+#     def process(self, inputs: ValueSet, outputs: ValueSet) -> None:
+#
+#         network_data_value = inputs.get_value_obj("network_data")
+#         network_data: NetworkData = network_data_value.get_value_data()
+#
+#         graph = network_data.as_networkx_graph(nx.DiGraph)
+#
+#         n2 = NetworkData.create_from_networkx_graph(graph=graph)
+#
+#         outputs.set_value("network_data", n2)

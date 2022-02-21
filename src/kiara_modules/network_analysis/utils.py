@@ -3,17 +3,30 @@
 #
 #  Mozilla Public License, version 2.0 (see LICENSE or https://www.mozilla.org/en-US/MPL/2.0/)
 import typing
-from enum import Enum
 from xml.dom import minidom
 
 from kiara.utils.output import DictTabularWrap, TabularWrap
+from kiara_modules.core.database import SqliteTableSchema
+from kiara_modules.core.defaults import DEFAULT_DB_CHUNK_SIZE
 
-from kiara_modules.network_analysis.defaults import TableType
-from kiara_modules.network_analysis.metadata_models import NetworkData
+from kiara_modules.network_analysis.defaults import (
+    ID_COLUMN_NAME,
+    LABEL_COLUMN_NAME,
+    SOURCE_COLUMN_NAME,
+    TARGET_COLUMN_NAME,
+    TableType,
+)
+
+if typing.TYPE_CHECKING:
+    import networkx as nx
+    import pyarrow as pa
+    from sqlalchemy import Metadata, Table  # noqa
+
+    from kiara_modules.network_analysis.metadata_models import NetworkData
 
 
 class NetworkDataTabularWrap(TabularWrap):
-    def __init__(self, db: NetworkData, table_type: TableType):
+    def __init__(self, db: "NetworkData", table_type: TableType):
         self._db: NetworkData = db
         self._table_type: TableType = table_type
         super().__init__()
@@ -84,14 +97,6 @@ class NetworkDataTabularWrap(TabularWrap):
         return result_dict
 
 
-class GraphTypesEnum(Enum):
-
-    undirected = "undirected"
-    directed = "directed"
-    multi_directed = "multi_directed"
-    multi_undirected = "multi_undirected"
-
-
 def convert_graphml_type_to_sqlite(data_type: str) -> str:
 
     type_map = {
@@ -142,10 +147,14 @@ def parse_graphml_file(path):
             attr_type = attr.getAttribute("attr.type")
             if for_type == "edge":
                 edge_map[n_id] = name
-                edge_props[name] = {"type": convert_graphml_type_to_sqlite(attr_type)}
+                edge_props[name] = {
+                    "data_type": convert_graphml_type_to_sqlite(attr_type)
+                }
             else:
                 node_map[n_id] = name
-                node_props[name] = {"type": convert_graphml_type_to_sqlite(attr_type)}
+                node_props[name] = {
+                    "data_type": convert_graphml_type_to_sqlite(attr_type)
+                }
 
         node_props_sorted = {}
         for key in sorted(node_map.keys()):
@@ -183,3 +192,135 @@ def parse_graphml_file(path):
                     e[mapped] = ""
 
     return (g, edge_props_sorted, node_props_sorted)
+
+
+def insert_table_data_into_network_graph(
+    network_data: "NetworkData",
+    edges_table: "pa.Table",
+    edges_schema: SqliteTableSchema,
+    nodes_table: typing.Optional["pa.Table"] = None,
+    nodes_schema: typing.Optional[SqliteTableSchema] = None,
+    chunk_size: int = DEFAULT_DB_CHUNK_SIZE,
+):
+
+    added_node_ids = set()
+
+    if nodes_table is not None:
+        for batch in nodes_table.to_batches(chunk_size):
+            batch_dict = batch.to_pydict()
+
+            if nodes_schema:
+                column_map = nodes_schema.column_map
+            else:
+                column_map = {}
+
+            for k, v in column_map.items():
+                if k in batch_dict.keys():
+                    if k == ID_COLUMN_NAME and v == LABEL_COLUMN_NAME:
+                        _data = batch_dict.get(k)
+                    else:
+                        _data = batch_dict.pop(k)
+                        if v in batch_dict.keys():
+                            raise Exception(
+                                "Duplicate nodes column name after mapping: {v}"
+                            )
+                    batch_dict[v] = _data
+
+            ids = batch_dict[ID_COLUMN_NAME]
+            data = [dict(zip(batch_dict, t)) for t in zip(*batch_dict.values())]
+            network_data.insert_nodes(*data)
+
+            added_node_ids.update(ids)
+
+    for batch in edges_table.to_batches(chunk_size):
+
+        batch_dict = batch.to_pydict()
+        if edges_schema:
+            column_map = edges_schema.column_map
+        else:
+            column_map = {}
+        for k, v in column_map.items():
+            if k in batch_dict.keys():
+                _data = batch_dict.pop(k)
+                if v in batch_dict.keys():
+                    raise Exception("Duplicate edges column name after mapping: {v}")
+                batch_dict[v] = _data
+
+        data = [dict(zip(batch_dict, t)) for t in zip(*batch_dict.values())]
+
+        all_node_ids = network_data.insert_edges(
+            *data,
+            existing_node_ids=added_node_ids,
+        )
+        added_node_ids.update(all_node_ids)
+
+
+def extract_edges_as_table(graph: "nx.Graph"):
+
+    # adapted from networx code
+    # License: 3-clause BSD license
+    # Copyright (C) 2004-2022, NetworkX Developers
+
+    import networkx as nx
+    import pyarrow as pa
+
+    edgelist = graph.edges(data=True)
+    source_nodes = [s for s, _, _ in edgelist]
+    target_nodes = [t for _, t, _ in edgelist]
+
+    all_attrs: typing.Set[str] = set().union(*(d.keys() for _, _, d in edgelist))  # type: ignore
+
+    if SOURCE_COLUMN_NAME in all_attrs:
+        raise nx.NetworkXError(
+            f"Source name {SOURCE_COLUMN_NAME} is an edge attribute name"
+        )
+    if SOURCE_COLUMN_NAME in all_attrs:
+        raise nx.NetworkXError(
+            f"Target name {SOURCE_COLUMN_NAME} is an edge attribute name"
+        )
+
+    nan = float("nan")
+    edge_attr = {k: [d.get(k, nan) for _, _, d in edgelist] for k in all_attrs}
+
+    edge_lists = {
+        SOURCE_COLUMN_NAME: source_nodes,
+        TARGET_COLUMN_NAME: target_nodes,
+    }
+
+    edge_lists.update(edge_attr)
+    edges_table = pa.Table.from_pydict(mapping=edge_lists)
+
+    return edges_table
+
+
+def extract_nodes_as_table(graph: "nx.Graph"):
+
+    # adapted from networx code
+    # License: 3-clause BSD license
+    # Copyright (C) 2004-2022, NetworkX Developers
+
+    import networkx as nx
+    import pyarrow as pa
+
+    nodelist = graph.nodes(data=True)
+
+    node_ids = [n for n, _ in nodelist]
+
+    all_attrs: typing.Set[str] = set().union(*(d.keys() for _, d in nodelist))  # type: ignore
+
+    if ID_COLUMN_NAME in all_attrs:
+        raise nx.NetworkXError(
+            f"Id column name {ID_COLUMN_NAME} is an node attribute name"
+        )
+    if SOURCE_COLUMN_NAME in all_attrs:
+        raise nx.NetworkXError(
+            f"Target name {SOURCE_COLUMN_NAME} is an edge attribute name"
+        )
+
+    nan = float("nan")
+    node_attr = {k: [d.get(k, nan) for _, d in nodelist] for k in all_attrs}
+
+    node_attr[ID_COLUMN_NAME] = node_ids
+    nodes_table = pa.Table.from_pydict(mapping=node_attr)
+
+    return nodes_table

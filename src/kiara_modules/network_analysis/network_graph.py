@@ -7,6 +7,7 @@ from kiara import KiaraModule
 from kiara.data import ValueSet
 from kiara.data.values import Value, ValueSchema
 from kiara.exceptions import KiaraProcessingException
+from kiara.metadata import MetadataModel
 from kiara.module_config import ModuleTypeConfigSchema
 from kiara.operations.extract_metadata import ExtractMetadataModule
 from kiara_modules.core.metadata_models import KiaraFile
@@ -14,8 +15,7 @@ from networkx import Graph
 from networkx.exception import NetworkXError
 from pydantic import BaseModel, Field, validator
 
-from kiara_modules.network_analysis.metadata_models import GraphMetadata
-from kiara_modules.network_analysis.utils import GraphTypesEnum
+from kiara_modules.network_analysis.metadata_models import GraphTypesEnum
 
 DEFAULT_SAVE_GRAPH_EDGES_TABLE_NAME = "edges.feather"
 DEFAULT_SAVE_GRAPH_NODES_TABLE_NAME = "nodes.feather"
@@ -654,6 +654,14 @@ class ExtractGraphPropertiesModule(KiaraModule):
                     )
             else:
                 raise NetworkXError("Graph is disconnected.")
+
+
+class GraphMetadata(MetadataModel):
+
+    number_of_nodes: int = Field(description="The number of nodes in this graph.")
+    number_of_edges: int = Field(description="The number of edges in this graph.")
+    directed: bool = Field(description="Whether the graph is directed or not.")
+    density: float = Field(description="The density of the graph.")
 
 
 class GraphMetadataModule(ExtractMetadataModule):
