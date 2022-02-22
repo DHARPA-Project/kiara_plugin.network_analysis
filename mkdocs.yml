@@ -29,6 +29,7 @@ nav:
 - Development: development.md
 - Included modules: modules_list.md
 - Included pipelines: pipelines_list.md
+- Code Reference: reference/
 
 extra:
   version:
@@ -39,20 +40,19 @@ plugins:
 - mknotebooks
 - mkdocstrings:
     default_handler: python
-    handlers:
-        python:
-          selection:
-            docstring_style: google
     watch:
       - "src"
     enable_inventory: true
-- frkl-docgen:
-    main_module: "kiara_modules.network_analysis"
+- gen-files:
+    scripts:
+      - scripts/documentation/gen_ref_pages.py
+      - scripts/documentation/gen_module_doc.py
+- literate-nav:
+    nav_file: SUMMARY.md
 - macros:
    modules:
      - kiara.doc.mkdocs_macros_cli
      - kiara.doc.mkdocs_macros_kiara
 
-- gen-files:
-    scripts:
-      - scripts/documentation/gen_module_doc.py
+#- frkl-docgen:
+#    main_module: "kiara_modules.network_analysis"
