@@ -10,6 +10,9 @@ theme:
     - navigation.instant
     - navigation.tracking
 
+extra_css:
+  - stylesheets/extra.css
+
 markdown_extensions:
 - attr_list
 - admonition
@@ -23,6 +26,7 @@ markdown_extensions:
 nav:
 - Home: index.md
 - Usage: usage.md
+- Development: development.md
 - Included modules: modules_list.md
 - Included pipelines: pipelines_list.md
 
@@ -35,8 +39,13 @@ plugins:
 - mknotebooks
 - mkdocstrings:
     default_handler: python
+    handlers:
+        python:
+          selection:
+            docstring_style: google
     watch:
       - "src"
+    enable_inventory: true
 - frkl-docgen:
     main_module: "kiara_modules.network_analysis"
 - macros:
