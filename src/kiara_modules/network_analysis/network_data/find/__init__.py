@@ -52,7 +52,7 @@ class GrpahComponentsModule(KiaraModule):
         result = {}
         if self.get_config_value("find_largest_component"):
             result["largest_component"] = {
-                "type": "network_graph",
+                "type": "network_data",
                 "doc": "The largest connected component of the graph, as a new graph.",
             }
 
@@ -76,7 +76,8 @@ class GrpahComponentsModule(KiaraModule):
             undir_components = nx.connected_components(undir_graph)
             lg_component = max(undir_components, key=len)
             subgraph = input_graph.subgraph(lg_component)
-            outputs.set_values(largest_component=subgraph)
+            nd = NetworkData.create_from_networkx_graph(subgraph)
+            outputs.set_values(largest_component=nd)
 
         if self.get_config_value("number_of_components"):
             undir_graph = nx.to_undirected(input_graph)
