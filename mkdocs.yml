@@ -40,6 +40,7 @@ plugins:
           docstring_style: google
         import:
         - https://dharpa.org/kiara/latest/objects.inv
+        - https://dharpa.org/kiara_modules.core/latest/objects.inv
     watch:
       - "src"
     enable_inventory: true
