@@ -22,14 +22,8 @@ markdown_extensions:
     permalink: true
 - pymdownx.snippets:
     base_path: docs
-
-nav:
-- Home: index.md
-- Usage: usage.md
-- Development: development.md
-- Included modules: modules_list.md
-- Included pipelines: pipelines_list.md
-- Code Reference: reference/
+- pymdownx.highlight
+- pymdownx.superfences
 
 extra:
   version:
@@ -40,13 +34,20 @@ plugins:
 - mknotebooks
 - mkdocstrings:
     default_handler: python
+    handlers:
+      python:
+        selection:
+          docstring_style: google
+        import:
+        - https://dharpa.org/kiara/latest/objects.inv
     watch:
       - "src"
     enable_inventory: true
 - gen-files:
     scripts:
-      - scripts/documentation/gen_ref_pages.py
-      - scripts/documentation/gen_module_doc.py
+      - scripts/documentation/gen_info_pages.py
+      - scripts/documentation/gen_api_doc_pages.py
+
 - literate-nav:
     nav_file: SUMMARY.md
 - macros:
@@ -54,5 +55,6 @@ plugins:
      - kiara.doc.mkdocs_macros_cli
      - kiara.doc.mkdocs_macros_kiara
 
-#- frkl-docgen:
-#    main_module: "kiara_modules.network_analysis"
+- literate-nav:
+    nav_file: SUMMARY.md
+- section-index
