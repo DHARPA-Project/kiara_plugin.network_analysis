@@ -3,9 +3,20 @@ import mkdocs_gen_files
 from kiara import Kiara
 from kiara.doc.gen_info_pages import generate_pages_and_summary_for_types
 
+pkg_name = "kiara_modules.network_analysis"
 kiara = Kiara.instance()
 
-types = ["value_type", "module", "operation_type"]
+value_types = kiara.type_mgmt.find_value_types_for_package(pkg_name)
+modules = kiara.module_mgmt.find_modules_for_package(pkg_name)
+operation_types = kiara.operation_mgmt.find_operation_types_for_package(pkg_name)
+
+types = []
+if value_types:
+    types.append("value_type")
+if modules:
+    types.append("module")
+if operation_types:
+    types.append("operation_type")
 
 type_details = generate_pages_and_summary_for_types(
     kiara=kiara, types=types, limit_to_package="kiara_modules.network_analysis"
