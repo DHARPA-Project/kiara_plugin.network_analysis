@@ -9,7 +9,7 @@ TODO
 
 ## Package content
 
-{% for info_category, details in get_info_for_categories('metadata.value_type','metadata.module', 'metadata.operation_type', limit_to_package='kiara_modules.network_analysis').items() %}
+{% for info_category, details in get_info_for_categories('metadata.value_type','metadata.module', 'metadata.pipeline','metadata.operation_type', limit_to_package='kiara_modules.network_analysis').items() %}
 ### {{ details['title'] }}
 {% for item, desc in details['items'].items() %}- [{{ item }}][]: {{ desc }}
 {% endfor %}
