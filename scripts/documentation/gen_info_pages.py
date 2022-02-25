@@ -21,7 +21,7 @@ if value_types:
 if modules:
     types.append("module")
 if pipelines:
-    types.append("pipelines")
+    types.append("pipeline")
 if operation_types:
     types.append("operation_type")
 
