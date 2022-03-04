@@ -420,7 +420,11 @@ class CreateNetworkDataModule(CreateValueModule):
 
         input_file: KiaraFile = value.get_value_data()
 
-        graph = nx.read_gml(input_file.path)
+        try:
+            graph = nx.read_gml(input_file.path)
+        except KeyError as e:
+            print(f"That didn't work: {e}")
+            graph = nx.read_gml(input_file.path, label="id")
 
         network_data = NetworkData.create_from_networkx_graph(graph)
         return network_data
