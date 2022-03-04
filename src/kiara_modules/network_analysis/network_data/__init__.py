@@ -422,7 +422,7 @@ class CreateNetworkDataModule(CreateValueModule):
 
         try:
             graph = nx.read_gml(input_file.path)
-        except KeyError as e:
+        except Exception as e:
             print(f"That didn't work: {e}")
             graph = nx.read_gml(input_file.path, label="id")
 
