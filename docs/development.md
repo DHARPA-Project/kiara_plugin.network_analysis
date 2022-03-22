@@ -10,7 +10,7 @@ conda create -n kiara-dev python=3.9
 conda activate kiara-dev
 conda install -c conda-forge mamba   # this is optional, but makes everything install related much faster, if you don't use it, replace 'mamba' with 'conda' below
 mamba install -c conda-forge -c dharpa kiara kiara_modules.core
-mamba install -c conda-forge sqlalchemy sqlite-utils    # this will go away later, just some dependencies I forgot to specify in the kiara conda packages
+mamba install -c conda-forge sqlalchemy sqlite-utils rich-click   # this will go away later, just some dependencies I forgot to specify in the kiara conda packages
 ```
 
 ### Using Python venv
