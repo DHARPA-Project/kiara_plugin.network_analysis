@@ -1,0 +1,21 @@
+{
+  "template": "https://github.com/DHARPA-Project/kiara_plugin.project_template.git",
+  "commit": "1872cdb2a1dd264762d3eec50423b7180e5023e4",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Markus Binsteiner",
+      "email": "markus@frkl.io",
+      "project_name": "network_analysis",
+      "project_slug": "network_analysis",
+      "project_short_description": "kiara modules and datatypes for network analysis.",
+      "github_user": "DHARPA-Project",
+      "anaconda_user": "dharpa",
+      "_extensions": [
+        "cookiecutter.extensions.JsonifyExtension"
+      ],
+      "_template": "https://github.com/DHARPA-Project/kiara_plugin.project_template.git"
+    }
+  },
+  "directory": null
+}

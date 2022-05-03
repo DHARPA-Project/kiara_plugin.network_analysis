@@ -1,0 +1,39 @@
+{% set name = "kiara_plugin.network_analysis" %}
+{% set version = "__VERSION__" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+
+source:
+  git_rev: "{{ version }}"
+  git_url: https://github.com/DHARPA-Project/kiara_plugin.network_analysis.git
+
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install --no-deps . -vv"
+
+requirements:
+  host:
+    - pip
+    - python
+    - setuptools_scm
+    - setuptools_scm_git_archive
+  run:
+    - python
+    - kiara
+    - kiara_plugin.core_types
+about:
+  home: https://github.com/DHARPA-Project/kiara_plugin.network_analysis
+  license: "Mozilla Public 2.0 (MPL 2.0)"
+  license_family: MOZILLA
+  license_file:
+  summary: "A set of modules (and pipelines) for kiara."
+  doc_url: https://DHARPA-Project.github.io/kiara_plugin.network_analysis
+  dev_url: https://github.com/DHARPA-Project/kiara_plugin.network_analysis
+
+extra:
+  recipe-maintainers:
+    - makkus
