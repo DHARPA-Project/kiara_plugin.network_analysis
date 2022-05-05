@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, Mapping, Optional
 
 from kiara.exceptions import KiaraProcessingException
 from kiara.models.values.value import ValueMap
@@ -128,6 +128,7 @@ class CreateGraphFromTablesModule(KiaraModule):
             column_map=edges_column_map,
         )
 
+        nodes_table: Optional[KiaraTable] = None
         if nodes.is_set:
             if (
                 id_column_name in nodes_column_map.keys()
@@ -139,7 +140,7 @@ class CreateGraphFromTablesModule(KiaraModule):
 
             nodes_column_map[id_column_name] = ID_COLUMN_NAME
 
-            nodes_table: KiaraTable = nodes.data
+            nodes_table = nodes.data
 
             extra_schema = []
             if label_column_name is None:
@@ -191,7 +192,7 @@ class CreateGraphFromTablesModule(KiaraModule):
             network_data=network_data,
             edges_table=edges_table.arrow_table,
             edges_column_map=edges_column_map,
-            nodes_table=nodes_table.arrow_table,
+            nodes_table=None if nodes_table is None else nodes_table.arrow_table,
             nodes_column_map=nodes_column_map,
             chunk_size=DEFAULT_NETWORK_DATA_CHUNK_SIZE,
         )
