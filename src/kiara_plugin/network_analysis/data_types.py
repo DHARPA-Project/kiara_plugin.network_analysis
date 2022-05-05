@@ -66,24 +66,24 @@ class NetworkDataType(DatabaseType):
                 "Invalid 'network_data' value: database does not contain table 'nodes'"
             )
 
-        schema = network_data.get_schema_for_table("edges")
-        if SOURCE_COLUMN_NAME not in schema.keys():
+        edges_columns = network_data.edges_schema.columns
+        if SOURCE_COLUMN_NAME not in edges_columns.keys():
             raise Exception(
-                f"Invalid 'network_data' value: 'edges' table does not contain a '{SOURCE_COLUMN_NAME}' column. Available columns: {', '.join(schema.keys())}."
+                f"Invalid 'network_data' value: 'edges' table does not contain a '{SOURCE_COLUMN_NAME}' column. Available columns: {', '.join(edges_columns.keys())}."
             )
-        if TARGET_COLUMN_NAME not in schema.keys():
+        if TARGET_COLUMN_NAME not in edges_columns.keys():
             raise Exception(
-                f"Invalid 'network_data' value: 'edges' table does not contain a '{TARGET_COLUMN_NAME}' column. Available columns: {', '.join(schema.keys())}."
+                f"Invalid 'network_data' value: 'edges' table does not contain a '{TARGET_COLUMN_NAME}' column. Available columns: {', '.join(edges_columns.keys())}."
             )
 
-        schema = network_data.get_schema_for_table("nodes")
-        if ID_COLUMN_NAME not in schema.keys():
+        nodes_columns = network_data.nodes_schema.columns
+        if ID_COLUMN_NAME not in nodes_columns.keys():
             raise Exception(
-                f"Invalid 'network_data' value: 'nodes' table does not contain a '{ID_COLUMN_NAME}' column. Available columns: {', '.join(schema.keys())}."
+                f"Invalid 'network_data' value: 'nodes' table does not contain a '{ID_COLUMN_NAME}' column. Available columns: {', '.join(nodes_columns.keys())}."
             )
-        if LABEL_COLUMN_NAME not in schema.keys():
+        if LABEL_COLUMN_NAME not in nodes_columns.keys():
             raise Exception(
-                f"Invalid 'network_data' value: 'nodes' table does not contain a '{LABEL_COLUMN_NAME}' column. Available columns: {', '.join(schema.keys())}."
+                f"Invalid 'network_data' value: 'nodes' table does not contain a '{LABEL_COLUMN_NAME}' column. Available columns: {', '.join(nodes_columns.keys())}."
             )
 
     def render_as__terminal_renderable(

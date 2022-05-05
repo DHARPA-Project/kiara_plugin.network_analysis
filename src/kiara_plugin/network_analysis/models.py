@@ -13,12 +13,24 @@ import os
 import shutil
 import tempfile
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, Optional, Set, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Type,
+    Union,
+)
 
+from kiara.models.values.value import Value
+from kiara.models.values.value_metadata import ValueMetadata
 from kiara_plugin.tabular.models.db import KiaraDatabase, SqliteTableSchema
 from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
-from pydantic import Field, PrivateAttr, root_validator
-from sqlalchemy import MetaData, Table
+from pydantic import BaseModel, Field, PrivateAttr, root_validator
+from sqlalchemy import Table
 
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
@@ -206,26 +218,13 @@ class NetworkData(KiaraDatabase):
 
     _nodes_table_obj: Optional[Table] = PrivateAttr(default=None)
     _edges_table_obj: Optional[Table] = PrivateAttr(default=None)
-    _metadata_obj: Optional[MetaData] = PrivateAttr(default=None)
 
     _nx_graph = PrivateAttr(default={})
 
     def _invalidate_other(self):
 
-        self._metadata_obj = None
         self._nodes_table_obj = None
         self._edges_table_obj = None
-
-    def get_sqlalchemy_metadata(self) -> MetaData:
-        """Return the sqlalchemy Metadtaa object for the underlying database.
-
-        This is used internally, you typically don't need to access this attribute.
-
-        """
-
-        if self._metadata_obj is None:
-            self._metadata_obj = MetaData()
-        return self._metadata_obj
 
     def get_sqlalchemy_nodes_table(self) -> Table:
         """Return the sqlalchemy nodes table instance for this network datab."""
@@ -343,3 +342,78 @@ class NetworkData(KiaraDatabase):
 
         self._nx_graph[graph_type] = graph
         return self._nx_graph[graph_type]
+
+
+class GraphType(Enum):
+    """All possible graph types."""
+
+    UNDIRECTED = "undirected"
+    DIRECTED = "directed"
+    UNDIRECTED_MULTI = "undirected-multi"
+    DIRECTED_MULTI = "directed-multi"
+
+
+class PropertiesByGraphType(BaseModel):
+    """Properties of graph data, if interpreted as a specific graph type."""
+
+    graph_type: GraphType = Field(description="The graph type name.")
+    number_of_edges: int = Field(description="The number of edges.")
+
+
+class NetworkGraphProperties(ValueMetadata):
+    """File stats."""
+
+    _metadata_key = "graph_properties"
+
+    number_of_nodes: int = Field(description="Number of nodes in the network graph.")
+    properties_by_graph_type: List[PropertiesByGraphType] = Field(
+        description="Properties of the network data, by graph type."
+    )
+
+    @classmethod
+    def retrieve_supported_data_types(cls) -> Iterable[str]:
+        return ["network_data"]
+
+    @classmethod
+    def create_value_metadata(cls, value: Value) -> "NetworkGraphProperties":
+
+        from sqlalchemy import text
+
+        network_data: NetworkData = value.data
+
+        with network_data.get_sqlalchemy_engine().connect() as con:
+            result = con.execute(text("SELECT count(*) from nodes"))
+            num_rows = result.fetchone()[0]
+            result = con.execute(text("SELECT count(*) from edges"))
+            num_rows_eges = result.fetchone()[0]
+            result = con.execute(
+                text("SELECT COUNT(*) FROM (SELECT DISTINCT source, target FROM edges)")
+            )
+            num_edges_directed = result.fetchone()[0]
+            query = "SELECT COUNT(*) FROM edges WHERE rowid in (SELECT DISTINCT MIN(rowid) FROM (SELECT rowid, source, target from edges UNION ALL SELECT rowid, target, source from edges) GROUP BY source, target)"
+
+            result = con.execute(text(query))
+            num_edges_undirected = result.fetchone()[0]
+
+        directed = PropertiesByGraphType(
+            graph_type=GraphType.DIRECTED, number_of_edges=num_edges_directed
+        )
+        undirected = PropertiesByGraphType(
+            graph_type=GraphType.UNDIRECTED, number_of_edges=num_edges_undirected
+        )
+        directed_multi = PropertiesByGraphType(
+            graph_type=GraphType.DIRECTED_MULTI, number_of_edges=num_rows_eges
+        )
+        undirected_multi = PropertiesByGraphType(
+            graph_type=GraphType.UNDIRECTED_MULTI, number_of_edges=num_rows_eges
+        )
+
+        return cls(
+            number_of_nodes=num_rows,
+            properties_by_graph_type=[
+                directed,
+                undirected,
+                directed_multi,
+                undirected_multi,
+            ],
+        )
