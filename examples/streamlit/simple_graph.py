@@ -8,12 +8,17 @@ import os
 import tempfile
 from typing import Iterable, List, Tuple
 
+import networkx as nx
 import streamlit as st
+import streamlit.components.v1 as components
 from kiara import Kiara
 from kiara.interfaces.python_api.operation import KiaraOperation
 from kiara.models.values.value import Value
 from kiara_plugin.tabular.models.table import KiaraTableMetadata
+from pyvis.network import Network
 from streamlit.uploaded_file_manager import UploadedFile
+
+from kiara_plugin.network_analysis.models import NetworkData
 
 st.title("Kiara/streamlit experiment - create a network graph")
 
@@ -209,6 +214,33 @@ def create_graph(kiara: Kiara):
         with st.expander(prop):
             data = graph.get_property_data(prop)
             st.write(data.dict())
+
+    network_data: NetworkData = graph.data
+    vis_graph = Network(height="465px", bgcolor="#222222", font_color="white")
+    vis_graph.from_nx(network_data.as_networkx_graph(graph_type=nx.DiGraph))
+    # Generate network with specific layout settings
+    vis_graph.repulsion(
+        node_distance=420,
+        central_gravity=0.33,
+        spring_length=110,
+        spring_strength=0.10,
+        damping=0.95,
+    )
+
+    # Save and read graph as HTML file (on Streamlit Sharing)
+    try:
+        path = "/tmp"
+        vis_graph.save_graph(f"{path}/pyvis_graph.html")
+        HtmlFile = open(f"{path}/pyvis_graph.html", "r", encoding="utf-8")
+
+    # Save and read graph as HTML file (locally)
+    except Exception:
+        path = "/html_files"
+        vis_graph.save_graph(f"{path}/pyvis_graph.html")
+        HtmlFile = open(f"{path}/pyvis_graph.html", "r", encoding="utf-8")
+
+    # Load HTML file in HTML component for display on Streamlit page
+    components.html(HtmlFile.read(), height=800, width=800)
 
 
 table_mgmt(kiara=kiara_obj)
