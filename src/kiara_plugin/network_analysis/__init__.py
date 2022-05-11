@@ -8,9 +8,9 @@ import os
 from kiara.utils.class_loading import (
     KiaraEntryPointItem,
     find_data_types_under,
+    find_kiara_model_classes_under,
     find_kiara_modules_under,
     find_pipeline_base_path_for_module,
-    find_value_metadata_models_under,
 )
 
 __author__ = """Markus Binsteiner"""
@@ -38,10 +38,7 @@ find_modules: KiaraEntryPointItem = (
     find_kiara_modules_under,
     "kiara_plugin.network_analysis.network_analysis",
 )
-find_value_metadata: KiaraEntryPointItem = (
-    find_value_metadata_models_under,
-    "kiara_plugin.network_analysis.models",
-)
+find_model_classes: KiaraEntryPointItem = find_kiara_model_classes_under
 find_data_types: KiaraEntryPointItem = (
     find_data_types_under,
     "kiara_plugin.network_analysis.data_types",

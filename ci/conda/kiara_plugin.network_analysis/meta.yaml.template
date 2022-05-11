@@ -23,9 +23,9 @@ requirements:
     - setuptools_scm_git_archive
   run:
     - python
-    - kiara>=0.4.1
-    - kiara_plugin.core_types>=0.4.0
-    - kiara_plugin.tabular>=0.4.1
+    - kiara>=0.4.4
+    - kiara_plugin.core_types>=0.4.2
+    - kiara_plugin.tabular>=0.4.4
 
 about:
   home: https://github.com/DHARPA-Project/kiara_plugin.network_analysis
