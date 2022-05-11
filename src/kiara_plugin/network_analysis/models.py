@@ -68,6 +68,8 @@ class NetworkData(KiaraDatabase):
 
     """
 
+    _kiara_model_id = "instance.network_data"
+
     @classmethod
     def create_from_networkx_graph(cls, graph: "nx.Graph") -> "NetworkData":
         """Create a `NetworkData` instance from a networkx Graph object."""

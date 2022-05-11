@@ -38,7 +38,10 @@ find_modules: KiaraEntryPointItem = (
     find_kiara_modules_under,
     "kiara_plugin.network_analysis.network_analysis",
 )
-find_model_classes: KiaraEntryPointItem = find_kiara_model_classes_under
+find_model_classes: KiaraEntryPointItem = (
+    find_kiara_model_classes_under,
+    "kiara_plugin.network_analysis.models",
+)
 find_data_types: KiaraEntryPointItem = (
     find_data_types_under,
     "kiara_plugin.network_analysis.data_types",
