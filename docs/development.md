@@ -24,7 +24,7 @@ First, fork the [kiara_plugin.network_analysis](https://github.com/DHARPA-Projec
 Then, use the resulting url (in my case: https://github.com/makkus/kiara_modules.network_analysis.git) to clone the repository locally:
 
 ```
-https://github.com/DHARPA-Project/kiara_plugin.network_analysis
+https://github.com/<fork_github_id>/kiara_plugin.network_analysis
 ```
 
 ## Install the kiara modules package into it
