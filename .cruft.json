@@ -1,7 +1,6 @@
 {
-  "template": "https://github.com/DHARPA-Project/kiara_plugin.project_template.git",
-  "commit": "0f8ca1a7f719818863de8cf4c17312acf9c9766e",
-  "checkout": null,
+  "template": "https://github.com/DHARPA-Project/kiara_plugin.develop.git",
+  "commit": "696288da68f5522aa97bffd025f3239236e773d5",
   "context": {
     "cookiecutter": {
       "full_name": "Markus Binsteiner",
@@ -14,7 +13,7 @@
       "_extensions": [
         "cookiecutter.extensions.JsonifyExtension"
       ],
-      "_template": "https://github.com/DHARPA-Project/kiara_plugin.project_template.git"
+      "_template": "https://github.com/DHARPA-Project/kiara_plugin.develop.git"
     }
   },
   "directory": null
