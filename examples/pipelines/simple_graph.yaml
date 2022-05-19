@@ -1,0 +1,41 @@
+pipeline_name: simple_graph
+doc: Onboard network data
+steps:
+  - module_type: import.file
+    step_id: import_text_corpus
+  - module_type: create.table.from.text_file_bundle
+    step_id: create_text_corpus
+    input_links:
+      text_file_bundle: import_text_corpus.file_bundle
+  - module_type: table.cut_column
+    step_id: extract_texts_column
+    input_links:
+      table: create_text_corpus.table
+  - module_type: tokenize.texts_array
+    step_id: tokenize_content
+    input_links:
+      texts_array: extract_texts_column.array
+  - module_type: generate.LDA.for.tokens_array
+    step_id: generate_lda
+    input_links:
+      tokens_array: tokenize_content.tokens_array
+
+input_aliases:
+  extract_texts_column.column_name: content_column_name
+  import_text_corpus.path: text_corpus_folder_path
+  tokenize_content.tokenize_by_word: tokenize_by_word
+  generate_lda.num_topics_min: num_topics_min
+  generate_lda.num_topics_max: num_topics_max
+  generate_lda.compute_coherence: compute_coherence
+  generate_lda.words_per_topic: words_per_topic
+
+output_aliases:
+  import_text_corpus.file_bundle: text_corpus_file_bundle
+  create_text_corpus.table: text_corpus_table
+  extract_texts_column.array: content_array
+  tokenize_content.tokens_array: tokens_array
+  generate_lda.topic_models: topic_models
+
+inputs:
+  content_column_name: "content"
+  text_corpus_folder_path: examples/data/text_corpus

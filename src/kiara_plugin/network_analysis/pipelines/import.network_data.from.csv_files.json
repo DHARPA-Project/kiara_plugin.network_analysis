@@ -1,0 +1,35 @@
+{
+  "pipeline_name": "import.network_data.from.csv_files",
+  "doc": "Load the edges table from a csv file.",
+  "steps": [
+    {
+      "module_type": "import.file",
+      "step_id": "import_edges_file"
+    },
+    {
+      "module_type": "create.table.from.csv_file",
+      "step_id": "create_edges_table_from_csv_file",
+      "input_links": {
+        "csv_file": "import_edges_file.file"
+      }
+    },
+    {
+      "module_type": "import.file",
+      "step_id": "import_nodes_file"
+    },
+    {
+      "module_type": "create.table.from.csv_file",
+      "step_id": "create_nodes_table_from_csv_file",
+      "input_links": {
+        "csv_file": "import_nodes_file.file"
+      }
+    }
+  ],
+  "input_aliases": {
+    "import_edges_file.path": "path"
+  },
+  "output_aliases": {
+    "import_edges_file.file": "imported_edges_file",
+    "create_edges_table_from_csv_file.table": "edges_table"
+  }
+}
