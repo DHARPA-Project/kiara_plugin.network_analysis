@@ -216,8 +216,14 @@ def create_graph(kiara: Kiara):
             st.write(data.dict())
 
     network_data: NetworkData = graph.data
-    vis_graph = Network(height="465px", bgcolor="#222222", font_color="white")
+    vis_graph = Network(
+        height="465px", bgcolor="#222222", font_color="white", directed=True
+    )
+    # add or remove "directed=True" above for displaying a directed graph with directed edges (with arrows)
     vis_graph.from_nx(network_data.as_networkx_graph(graph_type=nx.DiGraph))
+    # change networkX graph type above to "Graph", "DiGraph", "MultiGraph", "MultiDiGraph" according to graph type
+    # add this line "vis_graph.set_edge_smooth('dynamic')" to display parallel edges, otherwise they will be stacked upon each other and thus be invisible
+
     # Generate network with specific layout settings
     vis_graph.repulsion(
         node_distance=420,
