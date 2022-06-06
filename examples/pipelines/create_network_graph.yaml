@@ -1,0 +1,41 @@
+pipeline_name: create_network_graph
+doc: Onboard network data
+steps:
+  - module_type: import.file
+    step_id: import_edges_file
+  - module_type: create.table.from.csv_file
+    step_id: create_edges_table
+    input_links:
+      csv_file: import_edges_file.file
+  - module_type: import.file
+    step_id: import_nodes_file
+  - module_type: create.table.from.csv_file
+    step_id: create_nodes_table
+    input_links:
+      csv_file: import_nodes_file.file
+  - module_type: create.network_data.from.tables
+    step_id: assemble_network_data
+    input_links:
+      edges: create_edges_table.table
+      nodes: create_nodes_table.table
+
+input_aliases:
+  import_edges_file.path: edges_file
+  import_nodes_file.path: nodes_file
+  assemble_network_data.source_column_name: source_column_name
+  assemble_network_data.target_column_name: target_column_name
+  assemble_network_data.edges_column_map: edges_column_map
+  assemble_network_data.id_column_name: id_column_name
+  assemble_network_data.label_column_name: label_column_name
+  assemble_network_data.nodes_column_map: nodes_column_name
+
+output_aliases:
+  assemble_network_data.network_data: network_data
+
+defaults:
+  edges_file: "${pipeline_dir}/../data/journals/JournalEdges1902.csv"
+  nodes_file: "${pipeline_dir}/../data/journals/JournalNodes1902.csv"
+  source_column_name: Source
+  target_column_name: Target
+  id_column_name: Id
+  label_column_name: Label
