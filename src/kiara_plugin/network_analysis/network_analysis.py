@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
+import csv
+import os
+import shutil
+from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
 from kiara.exceptions import KiaraProcessingException
 from kiara.models.values.value import ValueMap
 from kiara.modules import KiaraModule, ValueSetSchema
+from kiara.modules.included_core_modules.export_as import DataExportModule
 from kiara_plugin.tabular.models.table import KiaraTable
 from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
 
@@ -200,3 +205,76 @@ class CreateGraphFromTablesModule(KiaraModule):
         network_data._lock_db()
 
         outputs.set_value("network_data", network_data)
+
+
+class ExportNetworkDataModule(DataExportModule):
+    """Export network data items."""
+
+    _module_type_name = "export.network_data"
+
+    @classmethod
+    def get_source_value_type(cls) -> str:
+        return "network_data"
+
+    def export_as__graphml_file(self, value: NetworkData, base_path: str, name: str):
+
+        import networkx as nx
+
+        target_path = os.path.join(base_path, f"{name}.graphml")
+
+        # TODO: can't just assume digraph
+        graph: nx.Graph = value.as_networkx_graph(nx.DiGraph)
+        nx.write_graphml(graph, target_path)
+
+        return {"files": target_path}
+
+    def export__network_data__as__sqlite_db(
+        self, value: NetworkData, base_path: str, name: str
+    ):
+
+        target_path = os.path.abspath(os.path.join(base_path, f"{name}.sqlite"))
+        shutil.copy2(value.db_file_path, target_path)
+
+        return {"files": target_path}
+
+    def export__network_data__as__sql_dump(
+        self, value: NetworkData, base_path: str, name: str
+    ):
+
+        import sqlite_utils
+
+        db = sqlite_utils.Database(value.db_file_path)
+        target_path = Path(os.path.join(base_path, f"{name}.sql"))
+        with target_path.open("wt") as f:
+            for line in db.conn.iterdump():
+                f.write(line + "\n")
+
+        return {"files": target_path}
+
+    def export__network_data__as__csv_files(
+        self, value: NetworkData, base_path: str, name: str
+    ):
+
+        import sqlite3
+
+        files = []
+
+        for table_name in value.table_names:
+            target_path = os.path.join(base_path, f"{name}__{table_name}.csv")
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+
+            # copied from: https://stackoverflow.com/questions/2952366/dump-csv-from-sqlalchemy
+            con = sqlite3.connect(value.db_file_path)
+            outfile = open(target_path, "wt")
+            outcsv = csv.writer(outfile)
+
+            cursor = con.execute(f"select * from {table_name}")
+            # dump column titles (optional)
+            outcsv.writerow(x[0] for x in cursor.description)
+            # dump rows
+            outcsv.writerows(cursor.fetchall())
+
+            outfile.close()
+            files.append(target_path)
+
+        return {"files": files}

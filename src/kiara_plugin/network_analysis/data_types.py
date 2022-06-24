@@ -7,6 +7,7 @@ from typing import Any, List, Mapping, Optional, Type
 from kiara.defaults import DEFAULT_PRETTY_PRINT_CONFIG
 from kiara.models.values.value import Value
 from kiara_plugin.tabular.data_types.db import DatabaseType
+from kiara_plugin.tabular.models.db import KiaraDatabase
 from rich.console import Group
 
 from kiara_plugin.network_analysis.defaults import (
@@ -41,6 +42,9 @@ class NetworkDataType(DatabaseType):
         return data
 
     def _validate(cls, value: Any) -> None:
+
+        if isinstance(value, KiaraDatabase):
+            value = NetworkData(db_file_path=value.db_file_path)
 
         if not isinstance(value, NetworkData):
             raise ValueError(
