@@ -212,10 +212,6 @@ class ExportNetworkDataModule(DataExportModule):
 
     _module_type_name = "export.network_data"
 
-    @classmethod
-    def get_source_value_type(cls) -> str:
-        return "network_data"
-
     def export_as__graphml_file(self, value: NetworkData, base_path: str, name: str):
 
         import networkx as nx
