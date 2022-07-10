@@ -255,6 +255,9 @@ class ExportNetworkDataModule(DataExportModule):
 
         files = []
 
+        print(value)
+        print(type(value))
+
         for table_name in value.table_names:
             target_path = os.path.join(base_path, f"{name}__{table_name}.csv")
             os.makedirs(os.path.dirname(target_path), exist_ok=True)
