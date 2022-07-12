@@ -24,7 +24,8 @@ from kiara_plugin.network_analysis.utils import NetworkDataTabularWrap
 class NetworkDataType(DatabaseType):
     """Data that can be assembled into a graph.
 
-    Internally, this is backed by a sqlite database, using https://github.com/dpapathanasiou/simple-graph .
+    This data type extends the 'database' type from the [kiara_plugin.tabular](https://github.com/DHARPA-Project/kiara_plugin.tabular) plugin, restricting the allowed tables to one called 'edges',
+    and one called 'nodes'.
     """
 
     _data_type_name = "network_data"

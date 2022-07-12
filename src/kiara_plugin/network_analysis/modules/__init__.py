@@ -24,7 +24,12 @@ from kiara_plugin.network_analysis.utils import insert_table_data_into_network_g
 
 
 class CreateGraphFromTablesModule(KiaraModule):
-    """Create a graph object from one or two tables."""
+    """Create a graph object from one or two tables.
+
+    This module needs at least one table as input, providing the edges of the resulting network data set.
+    If no further table is created, basic node information will be automatically created by using unique values from
+    the edges source and target columns.
+    """
 
     _module_type_name = "create.network_data.from.tables"
 
@@ -213,6 +218,7 @@ class ExportNetworkDataModule(DataExportModule):
     _module_type_name = "export.network_data"
 
     def export_as__graphml_file(self, value: NetworkData, base_path: str, name: str):
+        """Export network data as graphml file."""
 
         import networkx as nx
 
@@ -227,6 +233,7 @@ class ExportNetworkDataModule(DataExportModule):
     def export__network_data__as__sqlite_db(
         self, value: NetworkData, base_path: str, name: str
     ):
+        """Export network data as a sqlite database file."""
 
         target_path = os.path.abspath(os.path.join(base_path, f"{name}.sqlite"))
         shutil.copy2(value.db_file_path, target_path)
@@ -236,6 +243,7 @@ class ExportNetworkDataModule(DataExportModule):
     def export__network_data__as__sql_dump(
         self, value: NetworkData, base_path: str, name: str
     ):
+        """Export network data as a sql dump file."""
 
         import sqlite_utils
 
@@ -250,6 +258,7 @@ class ExportNetworkDataModule(DataExportModule):
     def export__network_data__as__csv_files(
         self, value: NetworkData, base_path: str, name: str
     ):
+        """Export network data as 2 csv files (one for edges, one for nodes."""
 
         import sqlite3
 
