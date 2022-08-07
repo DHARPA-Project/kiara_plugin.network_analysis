@@ -217,7 +217,9 @@ class ExportNetworkDataModule(DataExportModule):
 
     _module_type_name = "export.network_data"
 
-    def export_as__graphml_file(self, value: NetworkData, base_path: str, name: str):
+    def export__network_data__as__graphml_file(
+        self, value: NetworkData, base_path: str, name: str
+    ):
         """Export network data as graphml file."""
 
         import networkx as nx
