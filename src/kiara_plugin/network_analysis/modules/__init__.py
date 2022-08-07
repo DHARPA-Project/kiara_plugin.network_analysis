@@ -5,9 +5,8 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
+from kiara import KiaraModule, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraProcessingException
-from kiara.models.values.value import ValueMap
-from kiara.modules import KiaraModule, ValueSetSchema
 from kiara.modules.included_core_modules.export_as import DataExportModule
 from kiara_plugin.tabular.models.table import KiaraTable
 from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
@@ -35,7 +34,7 @@ class CreateGraphFromTablesModule(KiaraModule):
 
     def create_inputs_schema(
         self,
-    ) -> ValueSetSchema:
+    ) -> ValueMapSchema:
 
         inputs: Mapping[str, Any] = {
             "edges": {
@@ -83,7 +82,7 @@ class CreateGraphFromTablesModule(KiaraModule):
 
     def create_outputs_schema(
         self,
-    ) -> ValueSetSchema:
+    ) -> ValueMapSchema:
 
         outputs: Mapping[str, Any] = {
             "network_data": {"type": "network_data", "doc": "The network/graph data."}
@@ -265,9 +264,6 @@ class ExportNetworkDataModule(DataExportModule):
         import sqlite3
 
         files = []
-
-        print(value)
-        print(type(value))
 
         for table_name in value.table_names:
             target_path = os.path.join(base_path, f"{name}__{table_name}.csv")
