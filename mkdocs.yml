@@ -31,7 +31,6 @@ extra:
 
 plugins:
 - search
-- mknotebooks
 - autorefs
 - mkdocstrings:
     default_handler: python
