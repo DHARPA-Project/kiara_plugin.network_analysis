@@ -5,10 +5,12 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
-from kiara import KiaraModule, ValueMap, ValueMapSchema
+from kiara import KiaraModule, Value, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraProcessingException
+from kiara.models.rendering import RenderValueResult
 from kiara.modules.included_core_modules.export_as import DataExportModule
 from kiara_plugin.tabular.models.table import KiaraTable
+from kiara_plugin.tabular.modules.db import RenderDatabaseModuleBase
 from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
 
 from kiara_plugin.network_analysis.defaults import (
@@ -284,3 +286,33 @@ class ExportNetworkDataModule(DataExportModule):
             files.append(target_path)
 
         return {"files": files}
+
+
+class RenderNetworkModule(RenderDatabaseModuleBase):
+    _module_type_name = "render.network_data.for.web"
+
+    def render__network_data__as__html(
+        self, value: Value, render_config: Mapping[str, Any]
+    ):
+
+        input_number_of_rows = render_config.get("number_of_rows", 20)
+        input_row_offset = render_config.get("row_offset", 0)
+
+        table_name = render_config.get("table_name", None)
+
+        wrap, data_related_scenes = self.preprocess_database(
+            value=value,
+            table_name=table_name,
+            input_number_of_rows=input_number_of_rows,
+            input_row_offset=input_row_offset,
+        )
+        pretty = wrap.as_html(max_row_height=1)
+
+        result = RenderValueResult(
+            value_id=value.value_id,
+            render_config=render_config,
+            render_manifest=self.manifest.manifest_hash,
+            rendered=pretty,
+            related_scenes=data_related_scenes,
+        )
+        return result

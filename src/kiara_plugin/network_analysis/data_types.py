@@ -39,13 +39,12 @@ class NetworkDataType(DatabaseType):
         if isinstance(data, str):
             # TODO: check path exists
             return NetworkData(db_file_path=data)
+        elif isinstance(data, KiaraDatabase):
+            return NetworkData(db_file_path=data.db_file_path)
 
         return data
 
     def _validate(cls, value: Any) -> None:
-
-        if isinstance(value, KiaraDatabase):
-            value = NetworkData(db_file_path=value.db_file_path)
 
         if not isinstance(value, NetworkData):
             raise ValueError(
