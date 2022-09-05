@@ -156,7 +156,7 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags') != true }}
     strategy:
       matrix:
-        python_version: ["3.8", "3.9"]   # '3.10' currently does not work, missing vaex conda packages
+        python_version: ["3.8", "3.9", "3.10"]   # '3.10' currently does not work, missing vaex conda packages
     steps:
       - uses: actions/checkout@v1
       - uses: conda-incubator/setup-miniconda@v2
@@ -171,7 +171,7 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags') }}
     strategy:
       matrix:
-        python_version: ["3.8", "3.9"]   # '3.10' currently does not work, missing vaex conda packages
+        python_version: ["3.8", "3.9", "3.10"]   # '3.10' currently does not work, missing vaex conda packages
     env:
       ANACONDA_PUSH_TOKEN: ${{ secrets.ANACONDA_PUSH_TOKEN }}
     needs:
