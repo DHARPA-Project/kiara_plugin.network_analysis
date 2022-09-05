@@ -27,7 +27,7 @@ input_aliases:
   assemble_network_data.edges_column_map: edges_column_map
   assemble_network_data.id_column_name: id_column_name
   assemble_network_data.label_column_name: label_column_name
-  assemble_network_data.nodes_column_map: nodes_column_name
+  assemble_network_data.nodes_column_map: nodes_column_map
 
 output_aliases:
   assemble_network_data.network_data: network_data
