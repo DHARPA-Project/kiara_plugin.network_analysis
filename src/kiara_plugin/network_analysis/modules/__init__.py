@@ -93,8 +93,6 @@ class CreateGraphFromTablesModule(KiaraModule):
 
     def process(self, inputs: ValueMap, outputs: ValueMap) -> None:
 
-        pass
-
         edges = inputs.get_value_obj("edges")
         edges_table: KiaraTable = edges.data
         edges_source_column_name = inputs.get_value_data("source_column_name")
