@@ -1,10 +1,59 @@
 [build-system]
 requires = [
-    "setuptools",
-    "setuptools_scm",
-    "wheel",
+    "setuptools>=63",
+    "setuptools_scm[toml]>7.0.0",
+    "wheel"
 ]
-build-backend = 'setuptools.build_meta'
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kiara_plugin.network_analysis"
+description = "kiara modules and datatypes for network analysis."
+authors = [
+    {name = "Markus Binsteiner", email = "markus@frkl.io"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["kiara"]
+license = {text = "MPL-2.0"}
+classifiers = [
+    "Framework :: Django",
+    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11"
+]
+dependencies = [
+    "kiara>=0.4.22",
+    "kiara_plugin.core_types>=0.4.12",
+    "kiara-plugin.tabular>=0.4.15"
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev_documentation = [
+    "kiara[dev_documentation]"
+]
+dev_testing = [
+    "kiara[dev_testing]"
+]
+dev_utils = [
+    "kiara[dev_utils]"
+]
+dev_all = [
+    "kiara[dev_all]"
+]
+
+[project.urls]
+homepage = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
+documentation = "https://DHARPA-Project.github.io/kiara_plugin.network_analysis"
+repository = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
 
 [tool.black]
 include = '\.pyi?$'
@@ -23,5 +72,5 @@ exclude = '''
 )/
 '''
 
-[tool.dephell.main]
-from = {format = "setuppy", path = "setup.py"}
+[tool.setuptools_scm]
+write_to = "src/kiara_plugin/network_analysis/version.txt"
