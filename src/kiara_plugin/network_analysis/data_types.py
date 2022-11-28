@@ -2,9 +2,10 @@
 
 """This module contains the value type classes that are used in the ``kiara_plugin.network_analysis`` package.
 """
-from typing import Any, List, Mapping, Optional, Type
+from typing import Any, List, Mapping, Type, Union
 
 from kiara.defaults import DEFAULT_PRETTY_PRINT_CONFIG
+from kiara.models.module.manifest import Manifest
 from kiara.models.values.value import Value
 from kiara_plugin.tabular.data_types.db import DatabaseType
 from kiara_plugin.tabular.models.db import KiaraDatabase
@@ -38,9 +39,9 @@ class NetworkDataType(DatabaseType):
 
         if isinstance(data, str):
             # TODO: check path exists
-            return NetworkData(db_file_path=data)
+            return NetworkData(db_file_path=data)  # type: ignore
         elif isinstance(data, KiaraDatabase):
-            return NetworkData(db_file_path=data.db_file_path)
+            return NetworkData(db_file_path=data.db_file_path)  # type: ignore
 
         return data
 
@@ -91,7 +92,7 @@ class NetworkDataType(DatabaseType):
             )
 
     def render_as__terminal_renderable(
-        self, value: Value, render_config: Mapping[str, Any]
+        self, value: Value, render_config: Mapping[str, Any], manifest: Manifest
     ) -> Any:
 
         max_rows = render_config.get(
@@ -104,7 +105,7 @@ class NetworkDataType(DatabaseType):
             "max_cell_length", DEFAULT_PRETTY_PRINT_CONFIG["max_cell_length"]
         )
 
-        half_lines: Optional[int] = None
+        half_lines: Union[int, None] = None
         if max_rows:
             half_lines = int(max_rows / 2)
 
@@ -112,7 +113,7 @@ class NetworkDataType(DatabaseType):
 
         result: List[Any] = [""]
         atw = NetworkDataTabularWrap(db=db, table_type=NetworkDataTableType.EDGES)
-        pretty = atw.pretty_print(
+        pretty = atw.as_terminal_renderable(
             rows_head=half_lines,
             rows_tail=half_lines,
             max_row_height=max_row_height,
@@ -122,7 +123,7 @@ class NetworkDataType(DatabaseType):
         result.append(pretty)
 
         atw = NetworkDataTabularWrap(db=db, table_type=NetworkDataTableType.NODES)
-        pretty = atw.pretty_print(
+        pretty = atw.as_terminal_renderable(
             rows_head=half_lines,
             rows_tail=half_lines,
             max_row_height=max_row_height,

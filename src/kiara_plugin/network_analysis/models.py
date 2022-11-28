@@ -13,17 +13,7 @@ import os
 import shutil
 import tempfile
 from enum import Enum
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Set,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Iterable, List, Mapping, Set, Type, Union
 
 from kiara.models.values.value import Value
 from kiara.models.values.value_metadata import ValueMetadata
@@ -80,7 +70,7 @@ class NetworkData(KiaraDatabase):
         nodes_table = extract_nodes_as_table(graph)
         nodes_schema = create_sqlite_schema_data_from_arrow_table(nodes_table)
 
-        network_data = NetworkData.create_in_temp_dir(
+        network_data = NetworkData.create_network_data_in_temp_dir(
             edges_schema=edges_schema, nodes_schema=nodes_schema, keep_unlocked=True
         )
         insert_table_data_into_network_graph(
@@ -94,7 +84,7 @@ class NetworkData(KiaraDatabase):
         return network_data
 
     @classmethod
-    def create_in_temp_dir(
+    def create_network_data_in_temp_dir(
         cls,
         edges_schema: Union[None, SqliteTableSchema, Mapping] = None,
         nodes_schema: Union[None, SqliteTableSchema, Mapping] = None,
@@ -139,87 +129,113 @@ class NetworkData(KiaraDatabase):
 
         _edges_schema = values.get("edges_schema", None)
         _nodes_schema = values.get("nodes_schema", None)
-        if _edges_schema is None:
-
-            suggested_id_type = "TEXT"
-            if _nodes_schema is not None:
-                if isinstance(_nodes_schema, Mapping):
-                    suggested_id_type = _nodes_schema.get(ID_COLUMN_NAME, "TEXT")
-                elif isinstance(_nodes_schema, SqliteTableSchema):
-                    suggested_id_type = _nodes_schema.columns.get(
-                        ID_COLUMN_NAME, "TEXT"
-                    )
-
-            edges_schema = SqliteTableSchema.construct(
-                columns={
-                    SOURCE_COLUMN_NAME: suggested_id_type,
-                    TARGET_COLUMN_NAME: suggested_id_type,
-                }
-            )
-        else:
-            if isinstance(_edges_schema, Mapping):
-                edges_schema = SqliteTableSchema(**_edges_schema)
-            elif not isinstance(_edges_schema, SqliteTableSchema):
+        _path = values.get("db_file_path", None)
+        if _path is not None:
+            db = KiaraDatabase(db_file_path=_path)
+            if _edges_schema is not None:
                 raise ValueError(
-                    f"Invalid data type for edges schema: {type(_edges_schema)}"
+                    "Can't initialize network data with both 'db_file_path' and 'edges_schema'."
+                )
+            if _nodes_schema is not None:
+                raise ValueError(
+                    "Can't initialize network data with both 'db_file_path' and 'nodes_schema'."
+                )
+
+            md = db.create_metadata()
+            edges_col_schema = md.tables.get(
+                NetworkDataTableType.EDGES.value
+            ).column_schema
+            nodes_col_schema = md.tables.get(
+                NetworkDataTableType.NODES.value
+            ).column_schema
+            edges_schema = SqliteTableSchema(**edges_col_schema)
+            nodes_schema = SqliteTableSchema(**nodes_col_schema)
+
+            values["edges_schema"] = edges_schema
+            values["nodes_schema"] = nodes_schema
+        else:
+
+            if _edges_schema is None:
+
+                suggested_id_type = "TEXT"
+                if _nodes_schema is not None:
+                    if isinstance(_nodes_schema, Mapping):
+                        suggested_id_type = _nodes_schema.get(ID_COLUMN_NAME, "TEXT")
+                    elif isinstance(_nodes_schema, SqliteTableSchema):
+                        suggested_id_type = _nodes_schema.columns.get(
+                            ID_COLUMN_NAME, "TEXT"
+                        )
+
+                edges_schema = SqliteTableSchema.construct(
+                    columns={
+                        SOURCE_COLUMN_NAME: suggested_id_type,
+                        TARGET_COLUMN_NAME: suggested_id_type,
+                    }
                 )
             else:
-                edges_schema = _edges_schema
+                if isinstance(_edges_schema, Mapping):
+                    edges_schema = SqliteTableSchema(**_edges_schema)
+                elif not isinstance(_edges_schema, SqliteTableSchema):
+                    raise ValueError(
+                        f"Invalid data type for edges schema: {type(_edges_schema)}"
+                    )
+                else:
+                    edges_schema = _edges_schema
 
-        if (
-            edges_schema.columns[SOURCE_COLUMN_NAME]
-            != edges_schema.columns[TARGET_COLUMN_NAME]
-        ):
-            raise ValueError(
-                f"Invalid edges schema, source and edges columns have different type: {edges_schema[SOURCE_COLUMN_NAME]} != {edges_schema[TARGET_COLUMN_NAME]}"
-            )
-
-        if _nodes_schema is None:
-
-            _nodes_schema = SqliteTableSchema.construct(
-                columns={
-                    ID_COLUMN_NAME: edges_schema.columns[SOURCE_COLUMN_NAME],
-                    LABEL_COLUMN_NAME: "TEXT",
-                }
-            )
-
-        if isinstance(_nodes_schema, Mapping):
-            nodes_schema = SqliteTableSchema(**_nodes_schema)
-        elif isinstance(_nodes_schema, SqliteTableSchema):
-            nodes_schema = _nodes_schema
-        else:
-            raise ValueError(
-                f"Invalid data type for nodes schema: {type(_edges_schema)}"
-            )
-
-        if ID_COLUMN_NAME not in nodes_schema.columns.keys():
-            raise ValueError(
-                f"Invalid nodes schema: missing '{ID_COLUMN_NAME}' column."
-            )
-
-        if LABEL_COLUMN_NAME not in nodes_schema.columns.keys():
-            nodes_schema.columns[LABEL_COLUMN_NAME] = "TEXT"
-        else:
-            if nodes_schema.columns[LABEL_COLUMN_NAME] != "TEXT":
+            if (
+                edges_schema.columns[SOURCE_COLUMN_NAME]
+                != edges_schema.columns[TARGET_COLUMN_NAME]
+            ):
                 raise ValueError(
-                    f"Invalid nodes schema, '{LABEL_COLUMN_NAME}' column must be of type 'TEXT', not '{nodes_schema.columns[LABEL_COLUMN_NAME]}'."
+                    f"Invalid edges schema, source and edges columns have different type: {edges_schema[SOURCE_COLUMN_NAME]} != {edges_schema[TARGET_COLUMN_NAME]}"
                 )
 
-        if (
-            nodes_schema.columns[ID_COLUMN_NAME]
-            != edges_schema.columns[SOURCE_COLUMN_NAME]
-        ):
-            raise ValueError(
-                f"Invalid nodes schema, id column has different type to edges source/target columns: {nodes_schema.columns[ID_COLUMN_NAME]} != {edges_schema.columns[SOURCE_COLUMN_NAME]}"
-            )
+            if _nodes_schema is None:
 
-        values["edges_schema"] = edges_schema
-        values["nodes_schema"] = nodes_schema
+                _nodes_schema = SqliteTableSchema.construct(
+                    columns={
+                        ID_COLUMN_NAME: edges_schema.columns[SOURCE_COLUMN_NAME],
+                        LABEL_COLUMN_NAME: "TEXT",
+                    }
+                )
+
+            if isinstance(_nodes_schema, Mapping):
+                nodes_schema = SqliteTableSchema(**_nodes_schema)
+            elif isinstance(_nodes_schema, SqliteTableSchema):
+                nodes_schema = _nodes_schema
+            else:
+                raise ValueError(
+                    f"Invalid data type for nodes schema: {type(_edges_schema)}"
+                )
+
+            if ID_COLUMN_NAME not in nodes_schema.columns.keys():
+                raise ValueError(
+                    f"Invalid nodes schema: missing '{ID_COLUMN_NAME}' column."
+                )
+
+            if LABEL_COLUMN_NAME not in nodes_schema.columns.keys():
+                nodes_schema.columns[LABEL_COLUMN_NAME] = "TEXT"
+            else:
+                if nodes_schema.columns[LABEL_COLUMN_NAME] != "TEXT":
+                    raise ValueError(
+                        f"Invalid nodes schema, '{LABEL_COLUMN_NAME}' column must be of type 'TEXT', not '{nodes_schema.columns[LABEL_COLUMN_NAME]}'."
+                    )
+
+            if (
+                nodes_schema.columns[ID_COLUMN_NAME]
+                != edges_schema.columns[SOURCE_COLUMN_NAME]
+            ):
+                raise ValueError(
+                    f"Invalid nodes schema, id column has different type to edges source/target columns: {nodes_schema.columns[ID_COLUMN_NAME]} != {edges_schema.columns[SOURCE_COLUMN_NAME]}"
+                )
+
+            values["edges_schema"] = edges_schema
+            values["nodes_schema"] = nodes_schema
 
         return values
 
-    _nodes_table_obj: Optional[Table] = PrivateAttr(default=None)
-    _edges_table_obj: Optional[Table] = PrivateAttr(default=None)
+    # _nodes_table_obj: Optional[Table] = PrivateAttr(default=None)
+    # _edges_table_obj: Optional[Table] = PrivateAttr(default=None)
 
     _nx_graph = PrivateAttr(default={})
 
@@ -271,7 +287,7 @@ class NetworkData(KiaraDatabase):
     def insert_edges(
         self,
         *edges: Mapping[str, Any],
-        existing_node_ids: Iterable[int] = None,
+        existing_node_ids: Union[Iterable[int], None] = None,
     ) -> Set[int]:
         """Add edges to a network data item.
 

@@ -3,7 +3,7 @@ import csv
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping, Union
 
 from kiara import KiaraModule, Value, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraProcessingException
@@ -137,7 +137,7 @@ class CreateGraphFromTablesModule(KiaraModule):
             column_map=edges_column_map,
         )
 
-        nodes_table: Optional[KiaraTable] = None
+        nodes_table: Union[KiaraTable, None] = None
         if nodes.is_set:
             if (
                 id_column_name in nodes_column_map.keys()
@@ -150,6 +150,8 @@ class CreateGraphFromTablesModule(KiaraModule):
             nodes_column_map[id_column_name] = ID_COLUMN_NAME
 
             nodes_table = nodes.data
+
+            assert nodes_table is not None
 
             extra_schema = []
             if label_column_name is None:
@@ -191,7 +193,7 @@ class CreateGraphFromTablesModule(KiaraModule):
         else:
             nodes_data_schema = None
 
-        network_data = NetworkData.create_in_temp_dir(
+        network_data = NetworkData.create_network_data_in_temp_dir(
             edges_schema=edges_data_schema,
             nodes_schema=nodes_data_schema,
             keep_unlocked=True,
