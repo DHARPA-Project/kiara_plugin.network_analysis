@@ -194,8 +194,8 @@ class CreateGraphFromTablesModule(KiaraModule):
             nodes_data_schema = None
 
         network_data = NetworkData.create_network_data_in_temp_dir(
-            edges_schema=edges_data_schema,
-            nodes_schema=nodes_data_schema,
+            schema_edges=edges_data_schema,
+            schema_nodes=nodes_data_schema,
             keep_unlocked=True,
         )
 

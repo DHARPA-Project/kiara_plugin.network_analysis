@@ -39,9 +39,9 @@ class NetworkDataType(DatabaseType):
 
         if isinstance(data, str):
             # TODO: check path exists
-            return NetworkData(db_file_path=data)  # type: ignore
+            return NetworkData.create_network_data_from_sqlite(db_file_path=data)
         elif isinstance(data, KiaraDatabase):
-            return NetworkData(db_file_path=data.db_file_path)  # type: ignore
+            return NetworkData.create_network_data_from_database(db=data)
 
         return data
 
