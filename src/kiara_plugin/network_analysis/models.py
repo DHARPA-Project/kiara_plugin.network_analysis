@@ -100,7 +100,7 @@ class NetworkData(KiaraDatabase):
         edg_nullables = []
         for c in e_cols:
             d_type = str(c["type"])
-            edges_columns[c["name"]] = d_type
+            edges_columns[c["name"]] = d_type  # type: ignore
             if c["nullable"]:
                 edg_nullables.append(c["name"])
 
@@ -113,7 +113,7 @@ class NetworkData(KiaraDatabase):
         nd_nullables = []
         for c in n_cols:
             d_type = str(c["type"])
-            node_columns[c["name"]] = d_type
+            node_columns[c["name"]] = d_type  # type: ignore
             if c["nullable"]:
                 nd_nullables.append(c["name"])
 
@@ -157,8 +157,8 @@ class NetworkData(KiaraDatabase):
 
             edges_schema = SqliteTableSchema.construct(
                 columns={
-                    SOURCE_COLUMN_NAME: suggested_id_type,
-                    TARGET_COLUMN_NAME: suggested_id_type,
+                    SOURCE_COLUMN_NAME: suggested_id_type,  # type: ignore
+                    TARGET_COLUMN_NAME: suggested_id_type,  # type: ignore
                 }
             )
         else:
@@ -176,7 +176,7 @@ class NetworkData(KiaraDatabase):
             != edges_schema.columns[TARGET_COLUMN_NAME]
         ):
             raise ValueError(
-                f"Invalid edges schema, source and edges columns have different type: {edges_schema[SOURCE_COLUMN_NAME]} != {edges_schema[TARGET_COLUMN_NAME]}"
+                f"Invalid edges schema, source and edges columns have different type: {edges_schema.columns[SOURCE_COLUMN_NAME]} != {edges_schema.columns[TARGET_COLUMN_NAME]}"
             )
 
         if schema_nodes is None:
