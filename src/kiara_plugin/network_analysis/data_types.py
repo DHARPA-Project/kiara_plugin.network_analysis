@@ -2,24 +2,18 @@
 
 """This module contains the value type classes that are used in the ``kiara_plugin.network_analysis`` package.
 """
-from typing import Any, List, Mapping, Type, Union
+from typing import Any, Type
 
-from kiara.defaults import DEFAULT_PRETTY_PRINT_CONFIG
-from kiara.models.module.manifest import Manifest
-from kiara.models.values.value import Value
 from kiara_plugin.tabular.data_types.db import DatabaseType
 from kiara_plugin.tabular.models.db import KiaraDatabase
-from rich.console import Group
 
 from kiara_plugin.network_analysis.defaults import (
     ID_COLUMN_NAME,
     LABEL_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
-    NetworkDataTableType,
 )
 from kiara_plugin.network_analysis.models import NetworkData
-from kiara_plugin.network_analysis.utils import NetworkDataTabularWrap
 
 
 class NetworkDataType(DatabaseType):
@@ -91,44 +85,44 @@ class NetworkDataType(DatabaseType):
                 f"Invalid 'network_data' value: 'nodes' table does not contain a '{LABEL_COLUMN_NAME}' column. Available columns: {', '.join(nodes_columns.keys())}."
             )
 
-    def render_as__terminal_renderable(
-        self, value: Value, render_config: Mapping[str, Any], manifest: Manifest
-    ) -> Any:
-
-        max_rows = render_config.get(
-            "max_no_rows", DEFAULT_PRETTY_PRINT_CONFIG["max_no_rows"]
-        )
-        max_row_height = render_config.get(
-            "max_row_height", DEFAULT_PRETTY_PRINT_CONFIG["max_row_height"]
-        )
-        max_cell_length = render_config.get(
-            "max_cell_length", DEFAULT_PRETTY_PRINT_CONFIG["max_cell_length"]
-        )
-
-        half_lines: Union[int, None] = None
-        if max_rows:
-            half_lines = int(max_rows / 2)
-
-        db: NetworkData = value.data
-
-        result: List[Any] = [""]
-        atw = NetworkDataTabularWrap(db=db, table_type=NetworkDataTableType.EDGES)
-        pretty = atw.as_terminal_renderable(
-            rows_head=half_lines,
-            rows_tail=half_lines,
-            max_row_height=max_row_height,
-            max_cell_length=max_cell_length,
-        )
-        result.append(f"[b]Table[/b]: [i]{NetworkDataTableType.EDGES.value}[/i]")
-        result.append(pretty)
-
-        atw = NetworkDataTabularWrap(db=db, table_type=NetworkDataTableType.NODES)
-        pretty = atw.as_terminal_renderable(
-            rows_head=half_lines,
-            rows_tail=half_lines,
-            max_row_height=max_row_height,
-            max_cell_length=max_cell_length,
-        )
-        result.append(f"[b]Table[/b]: [i]{NetworkDataTableType.NODES.value}[/i]")
-        result.append(pretty)
-        return Group(*result)
+    # def render_as__terminal_renderable(
+    #     self, value: Value, render_config: Mapping[str, Any], manifest: Manifest
+    # ) -> Any:
+    #
+    #     max_rows = render_config.get(
+    #         "max_no_rows", DEFAULT_PRETTY_PRINT_CONFIG["max_no_rows"]
+    #     )
+    #     max_row_height = render_config.get(
+    #         "max_row_height", DEFAULT_PRETTY_PRINT_CONFIG["max_row_height"]
+    #     )
+    #     max_cell_length = render_config.get(
+    #         "max_cell_length", DEFAULT_PRETTY_PRINT_CONFIG["max_cell_length"]
+    #     )
+    #
+    #     half_lines: Union[int, None] = None
+    #     if max_rows:
+    #         half_lines = int(max_rows / 2)
+    #
+    #     db: NetworkData = value.data
+    #
+    #     result: List[Any] = [""]
+    #     atw = NetworkDataTabularWrap(db=db, table_type=NetworkDataTableType.EDGES)
+    #     pretty = atw.as_terminal_renderable(
+    #         rows_head=half_lines,
+    #         rows_tail=half_lines,
+    #         max_row_height=max_row_height,
+    #         max_cell_length=max_cell_length,
+    #     )
+    #     result.append(f"[b]Table[/b]: [i]{NetworkDataTableType.EDGES.value}[/i]")
+    #     result.append(pretty)
+    #
+    #     atw = NetworkDataTabularWrap(db=db, table_type=NetworkDataTableType.NODES)
+    #     pretty = atw.as_terminal_renderable(
+    #         rows_head=half_lines,
+    #         rows_tail=half_lines,
+    #         max_row_height=max_row_height,
+    #         max_cell_length=max_cell_length,
+    #     )
+    #     result.append(f"[b]Table[/b]: [i]{NetworkDataTableType.NODES.value}[/i]")
+    #     result.append(pretty)
+    #     return Group(*result)
