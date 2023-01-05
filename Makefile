@@ -35,7 +35,7 @@ init: clean ## initialize a development environment (to be run in virtualenv)
 	git init
 	git checkout -b develop || true
 	pip install -U pip
-	pip install --extra-index-url https://pypi.fury.io/dharpa/ -U -e '.[all_dev]'
+	pip install --extra-index-url https://pypi.fury.io/dharpa/ -U -e '.[dev_utils]'
 	pre-commit install
 	pre-commit install --hook-type commit-msg
 	setup-cfg-fmt setup.cfg || true
