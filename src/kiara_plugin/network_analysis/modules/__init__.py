@@ -105,7 +105,7 @@ class CreateGraphFromTablesModule(KiaraModule):
             )
         if edges_target_column_name not in edges_columns:
             raise KiaraProcessingException(
-                f"Edges table does not contain target column '{edges_source_column_name}'. Choose one of: {', '.join(edges_columns)}."
+                f"Edges table does not contain target column '{edges_target_column_name}'. Choose one of: {', '.join(edges_columns)}."
             )
 
         nodes = inputs.get_value_obj("nodes")
