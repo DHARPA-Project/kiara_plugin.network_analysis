@@ -1,0 +1,35 @@
+{
+  "pipeline_name": "create.network_data.from.files",
+  "doc": "Create table values from files containing edges and node data, then assemble those to the network_data result.",
+  "steps": [
+    {
+      "module_type": "create.table.from.file",
+      "step_id": "create_edges_table"
+    },
+    {
+      "module_type": "create.table.from.file",
+      "step_id": "create_nodes_table"
+    },
+    {
+      "module_type": "create.network_data.from.tables",
+      "step_id": "assemble_network_data",
+      "input_links": {
+        "edges": "create_edges_table.table",
+        "nodes": "create_nodes_table.table"
+      }
+    }
+  ],
+  "input_aliases": {
+    "create_edges_table.file": "edges_file",
+    "create_nodes_table.file": "nodes_file",
+    "assemble_network_data.source_column_name": "source_column_name",
+    "assemble_network_data.target_column_name": "target_column_name",
+    "assemble_network_data.id_column_name": "id_column_name",
+    "assemble_network_data.label_column_name": "label_column_name",
+    "assemble_network_data.edges_column_map": "edges_column_map",
+    "assemble_network_data.nodes_column_map": "nodes_column_map"
+  },
+  "output_aliases": {
+    "assemble_network_data.network_data": "network_data"
+  }
+}
