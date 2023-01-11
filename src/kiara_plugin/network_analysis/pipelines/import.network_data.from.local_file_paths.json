@@ -1,5 +1,5 @@
 {
-  "pipeline_name": "import.network_data.from.local_files",
+  "pipeline_name": "import.network_data.from.local_file_paths",
   "doc": "Onboard the edges and nodes from local files, create table values from them, then assemble those to the network_data result.",
   "steps": [
     {
