@@ -5,15 +5,15 @@ from kiara.utils.cli import terminal_print_model
 workflow = Workflow.create("network_analysis")
 
 workflow.add_step(operation="import.file", step_id="import_edges")
-workflow.add_step(operation="create.table.from.csv_file", step_id="create_edges_table")
+workflow.add_step(operation="create.table.from.file", step_id="create_edges_table")
 workflow.add_step(operation="import.file", step_id="import_nodes")
-workflow.add_step(operation="create.table.from.csv_file", step_id="create_nodes_table")
+workflow.add_step(operation="create.table.from.file", step_id="create_nodes_table")
 workflow.add_step(
     operation="create.network_data.from.tables", step_id="assemble_network_data"
 )
 
-workflow.connect_steps("import_edges", "file", "create_edges_table", "csv_file")
-workflow.connect_steps("import_nodes", "file", "create_nodes_table", "csv_file")
+workflow.connect_steps("import_edges", "file", "create_edges_table", "file")
+workflow.connect_steps("import_nodes", "file", "create_nodes_table", "file")
 workflow.connect_steps("create_edges_table", "table", "assemble_network_data", "edges")
 workflow.connect_steps("create_nodes_table", "table", "assemble_network_data", "nodes")
 

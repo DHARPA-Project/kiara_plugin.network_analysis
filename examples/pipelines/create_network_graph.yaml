@@ -3,16 +3,16 @@ doc: Onboard network data
 steps:
   - module_type: import.file
     step_id: import_edges_file
-  - module_type: create.table.from.csv_file
+  - module_type: create.table.from.file
     step_id: create_edges_table
     input_links:
-      csv_file: import_edges_file.file
+      file: import_edges_file.file
   - module_type: import.file
     step_id: import_nodes_file
-  - module_type: create.table.from.csv_file
+  - module_type: create.table.from.file
     step_id: create_nodes_table
     input_links:
-      csv_file: import_nodes_file.file
+      file: import_nodes_file.file
   - module_type: create.network_data.from.tables
     step_id: assemble_network_data
     input_links:

@@ -32,8 +32,8 @@ def import_bytes(kiara: Kiara, uploaded_file: UploadedFile):
         with open(path, "wb") as f:
             f.write(uploaded_file.getbuffer())
 
-        op = KiaraOperation(kiara=kiara, operation_name="create.table.from.csv_file")
-        inputs = {"csv_file": path}
+        op = KiaraOperation(kiara=kiara, operation_name="create.table.from.file")
+        inputs = {"file": path}
         job_id = op.queue_job(**inputs)
 
         op.save_result(
