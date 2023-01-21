@@ -3,7 +3,7 @@
   "doc": "Onboard the edges and nodes from local files, create table values from them, then assemble those to the network_data result.",
   "steps": [
     {
-      "module_type": "import.file",
+      "module_type": "import.local.file",
       "step_id": "import_edges_file"
     },
     {
@@ -14,7 +14,7 @@
       }
     },
     {
-      "module_type": "import.file",
+      "module_type": "import.local.file",
       "step_id": "import_nodes_file"
     },
     {

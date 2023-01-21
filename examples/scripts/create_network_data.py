@@ -4,9 +4,9 @@ from kiara.utils.cli import terminal_print_model
 
 workflow = Workflow.create("network_analysis")
 
-workflow.add_step(operation="import.file", step_id="import_edges")
+workflow.add_step(operation="import.local.file", step_id="import_edges")
 workflow.add_step(operation="create.table.from.file", step_id="create_edges_table")
-workflow.add_step(operation="import.file", step_id="import_nodes")
+workflow.add_step(operation="import.local.file", step_id="import_nodes")
 workflow.add_step(operation="create.table.from.file", step_id="create_nodes_table")
 workflow.add_step(
     operation="create.network_data.from.tables", step_id="assemble_network_data"
