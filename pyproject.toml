@@ -51,6 +51,22 @@ dev_all = [
     "kiara[dev_all]"
 ]
 
+[project.entry-points."kiara.plugin"]
+network_analysis = "kiara_plugin.network_analysis"
+
+[project.entry-points."kiara.data_types"]
+network_analysis = "kiara_plugin.network_analysis:find_data_types"
+
+[project.entry-points."kiara.model_classes"]
+network_analysis = "kiara_plugin.network_analysis:find_model_classes"
+
+[project.entry-points."kiara.modules"]
+network_analysis = "kiara_plugin.network_analysis:find_modules"
+
+[project.entry-points."kiara.pipelines"]
+network_analysis = "kiara_plugin.network_analysis:find_pipelines"
+
+
 [project.urls]
 homepage = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
 documentation = "https://DHARPA-Project.github.io/kiara_plugin.network_analysis"
