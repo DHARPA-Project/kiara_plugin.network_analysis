@@ -30,8 +30,8 @@ classifiers = [
     "Programming Language :: Python :: 3.11"
 ]
 dependencies = [
-    "kiara>=0.4.26",
-    "kiara-plugin.tabular>=0.4.19"
+    "kiara>=0.4.29",
+    "kiara-plugin.tabular>=0.4.20"
 ]
 dynamic = ["version"]
 
