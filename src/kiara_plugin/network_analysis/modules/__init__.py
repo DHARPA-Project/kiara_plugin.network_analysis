@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, Mapping, Union
 
-from kiara import KiaraModule, Value, ValueMap, ValueMapSchema
+from kiara.api import KiaraModule, Value, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraProcessingException
 from kiara.models.rendering import RenderValueResult
 from kiara.modules.included_core_modules.export_as import DataExportModule

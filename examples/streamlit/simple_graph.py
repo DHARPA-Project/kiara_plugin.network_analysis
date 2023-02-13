@@ -11,7 +11,7 @@
 # import networkx as nx
 # import streamlit as st
 # import streamlit.components.v1 as components
-# from kiara import Kiara
+# from kiara.api import Kiara
 # from kiara.models.values.value import Value
 # from kiara_plugin.tabular.models.table import KiaraTableMetadata
 # from pyvis.network import Network
