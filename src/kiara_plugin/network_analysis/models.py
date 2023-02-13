@@ -388,13 +388,13 @@ class NetworkData(KiaraDatabase):
             with conn.begin():
                 result = conn.execute(nodes.select())
                 for r in result:
-                    row = dict(r)
+                    row = dict(r._mapping)
                     node_id = row.pop(ID_COLUMN_NAME)
                     graph.add_node(node_id, **row)
 
                 result = conn.execute(edges.select())
                 for r in result:
-                    row = dict(r)
+                    row = dict(r._mapping)
                     source = row.pop(SOURCE_COLUMN_NAME)
                     target = row.pop(TARGET_COLUMN_NAME)
                     graph.add_edge(source, target, **row)
