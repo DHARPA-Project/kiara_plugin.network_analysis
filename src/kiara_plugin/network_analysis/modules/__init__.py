@@ -23,6 +23,13 @@ from kiara_plugin.tabular.models.table import KiaraTable
 from kiara_plugin.tabular.modules.db import RenderDatabaseModuleBase
 from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
 
+KIARA_METADATA = {
+    "authors": [
+        {"name": "Lena Jaskov", "email": "helena.jaskov@uni.lu"},
+    ],
+    "description": "Kiara modules for: network_analysis",
+}
+
 
 class CreateGraphFromTablesModule(KiaraModule):
     """Create a graph object from one or two tables.

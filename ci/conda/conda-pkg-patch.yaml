@@ -16,4 +16,4 @@ test:
     - examples
   commands:
     - kiara module list
-#    - kiara run examples/pipelines/create_network_graph.yaml
+    - kiara run examples/pipelines/create_network_graph.yaml
