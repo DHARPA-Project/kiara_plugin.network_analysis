@@ -256,7 +256,7 @@ class ExportNetworkDataModule(DataExportModule):
             for line in db.conn.iterdump():
                 f.write(line + "\n")
 
-        return {"files": target_path}
+        return {"files": target_path.as_posix()}
 
     def export__network_data__as__csv_files(
         self, value: NetworkData, base_path: str, name: str
@@ -316,3 +316,62 @@ class RenderNetworkModule(RenderDatabaseModuleBase):
             related_scenes=data_related_scenes,
         )
         return result
+
+
+class NetworkClustersModule(KiaraModule):
+
+    _module_type_name = "network_data.check_clusters"
+
+    def create_inputs_schema(
+        self,
+    ) -> ValueMapSchema:
+
+        result = {
+            "network_data": {
+                "type": "network_data",
+                "doc": "The network data to analyze.",
+            }
+        }
+        return result
+
+    def create_outputs_schema(
+        self,
+    ) -> ValueMapSchema:
+
+        result = {}
+
+        result["largest_component"] = {
+            "type": "network_data",
+            "doc": "A sub-graph of the largest component of the graph.",
+        }
+
+        result["number_of_components"] = {
+            "type": "integer",
+            "doc": "The number of components in the graph.",
+        }
+
+        result["is_connected"] = {
+            "type": "boolean",
+            "doc": "Whether the graph is connected or not.",
+        }
+        return result
+
+    def process(self, inputs: ValueMap, outputs: ValueMap):
+
+        import networkx as nx
+
+        network_data: NetworkData = inputs.get_value_data("network_data")
+
+        undir_graph = network_data.as_networkx_graph(nx.Graph)
+        undir_components = nx.connected_components(undir_graph)
+        lg_component = max(undir_components, key=len)
+        subgraph = undir_graph.subgraph(lg_component)
+
+        subgraph_data = NetworkData.create_from_networkx_graph(subgraph)
+        outputs.set_values(largest_component=subgraph_data)
+
+        number_of_components = nx.number_connected_components(undir_graph)
+        outputs.set_values(number_of_components=number_of_components)
+
+        is_connected = number_of_components == 1
+        outputs.set_values(is_connected=is_connected)

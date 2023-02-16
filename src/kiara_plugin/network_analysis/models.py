@@ -428,6 +428,10 @@ class NetworkGraphProperties(ValueMetadata):
     properties_by_graph_type: List[PropertiesByGraphType] = Field(
         description="Properties of the network data, by graph type."
     )
+    number_of_self_loops: int = Field(
+        description="Number of edges where source and target point to the same node."
+    )
+    number_of_parallel_edges: int = Field(description="Number of parallel edges.")
 
     @classmethod
     def retrieve_supported_data_types(cls) -> Iterable[str]:
@@ -454,6 +458,18 @@ class NetworkGraphProperties(ValueMetadata):
             result = con.execute(text(query))
             num_edges_undirected = result.fetchone()[0]
 
+            query = (
+                "SELECT COUNT(*) FROM edges GROUP BY source, target HAVING COUNT(*) > 1"
+            )
+            result = con.execute(text(query))
+            num_parallel_edges = 0
+            for duplicates in result.fetchall():
+                num_parallel_edges += duplicates[0] - 1
+
+            query = "SELECT count(*) FROM edges WHERE source = target"
+            result = con.execute(text(query))
+            num_self_loops = result.fetchone()[0]
+
         directed = PropertiesByGraphType(
             graph_type=GraphType.DIRECTED, number_of_edges=num_edges_directed
         )
@@ -475,4 +491,6 @@ class NetworkGraphProperties(ValueMetadata):
                 directed_multi,
                 undirected_multi,
             ],
+            number_of_self_loops=num_self_loops,
+            number_of_parallel_edges=num_parallel_edges,
         )
