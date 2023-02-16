@@ -40,11 +40,9 @@ dev_documentation = [
 ]
 dev_testing = [
     "kiara[dev_testing]",
-    "types-setuptools",
-    "sqlalchemy-stubs"
 ]
 dev_utils = [
-    "kiara[dev_utils]"
+    "kiara[dev_utils]",
 ]
 dev_all = [
     "kiara[dev_all]"
@@ -90,3 +88,94 @@ exclude = '''
 
 [tool.setuptools_scm]
 write_to = "src/kiara_plugin/network_analysis/version.txt"
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "src"
+]
+
+[tool.ruff]
+line-length = 88
+
+src = ["src", "tests"]
+
+select = [
+    "E",
+    "F",
+    "RUF",
+    "I001",
+    "YTT",
+    "S",
+    "C4",
+    "T10",
+    "ISC",
+    "ICN",
+    "T20",
+    "Q",
+    "TID",
+    "PD",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "PIE",
+]
+ignore = ["E501", "S101", "SIM118", "SIM108", "PLR2004", "PLR0913", "S110", "PLR0912", "PLR0915", "PIE810"]
+
+fix = true
+fixable = ["E", "F", "RUF100", "I001", "Q"]
+
+
+#fixable = ["E", "F", "RUF100", "I001"]
+# Enable Pyflakes `E` and `F` codes by default.
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+per-file-ignores = { }
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Assume Python 3.10.
+target-version = "py310"
+
+[tool.ruff.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 10
+
+[tool.ruff.isort]
+known-first-party = ["kiara", "kiara_plugin"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/__pycache__"]
+ignore = []
+
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+executionEnvironments = [
+]

@@ -4,9 +4,6 @@
 """
 from typing import Any, Type
 
-from kiara_plugin.tabular.data_types.db import DatabaseType
-from kiara_plugin.tabular.models.db import KiaraDatabase
-
 from kiara_plugin.network_analysis.defaults import (
     ID_COLUMN_NAME,
     LABEL_COLUMN_NAME,
@@ -14,6 +11,8 @@ from kiara_plugin.network_analysis.defaults import (
     TARGET_COLUMN_NAME,
 )
 from kiara_plugin.network_analysis.models import NetworkData
+from kiara_plugin.tabular.data_types.db import DatabaseType
+from kiara_plugin.tabular.models.db import KiaraDatabase
 
 
 class NetworkDataType(DatabaseType):

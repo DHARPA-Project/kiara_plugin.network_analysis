@@ -5,14 +5,11 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, Mapping, Union
 
-from kiara.api import KiaraModule, Value, ValueMap, ValueMapSchema
+from kiara.api import KiaraModule, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraProcessingException
 from kiara.models.rendering import RenderValueResult
+from kiara.models.values.value import Value
 from kiara.modules.included_core_modules.export_as import DataExportModule
-from kiara_plugin.tabular.models.table import KiaraTable
-from kiara_plugin.tabular.modules.db import RenderDatabaseModuleBase
-from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
-
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
     ID_COLUMN_NAME,
@@ -22,6 +19,9 @@ from kiara_plugin.network_analysis.defaults import (
 )
 from kiara_plugin.network_analysis.models import NetworkData
 from kiara_plugin.network_analysis.utils import insert_table_data_into_network_graph
+from kiara_plugin.tabular.models.table import KiaraTable
+from kiara_plugin.tabular.modules.db import RenderDatabaseModuleBase
+from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
 
 
 class CreateGraphFromTablesModule(KiaraModule):
@@ -319,6 +319,11 @@ class RenderNetworkModule(RenderDatabaseModuleBase):
 
 
 class NetworkClustersModule(KiaraModule):
+    """Analyse clustering in network data.
+
+    This module analyses network data and checks if it contains clusters, and if so, how many.
+    It also extracts the largest component of the graph.
+    """
 
     _module_type_name = "network_data.check_clusters"
 

@@ -18,7 +18,10 @@ __email__ = "markus@frkl.io"
 
 
 KIARA_METADATA = {
-    "authors": [{"name": __author__, "email": __email__}],
+    "authors": [
+        {"name": __author__, "email": __email__},
+        {"name": "Lena Jaskov", "email": "helena.jaskov@uni.lu"},
+    ],
     "description": "Kiara modules for: network_analysis",
     "references": {
         "source_repo": {

@@ -5,7 +5,6 @@
 import typing
 
 from kiara.utils.output import DictTabularWrap, TabularWrap
-
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
     ID_COLUMN_NAME,
@@ -54,7 +53,7 @@ class NetworkDataTabularWrap(TabularWrap):
         return result
 
     def slice(
-        self, offset: int = 0, length: typing.Optional[int] = None
+        self, offset: int = 0, length: typing.Union[int, None] = None
     ) -> "TabularWrap":
 
         from sqlalchemy import text
@@ -112,9 +111,9 @@ def convert_graphml_type_to_sqlite(data_type: str) -> str:
 def insert_table_data_into_network_graph(
     network_data: "NetworkData",
     edges_table: "pa.Table",
-    edges_column_map: typing.Optional[typing.Mapping[str, str]] = None,
-    nodes_table: typing.Optional["pa.Table"] = None,
-    nodes_column_map: typing.Optional[typing.Mapping[str, str]] = None,
+    edges_column_map: typing.Union[typing.Mapping[str, str], None] = None,
+    nodes_table: typing.Union["pa.Table", None] = None,
+    nodes_column_map: typing.Union[typing.Mapping[str, str], None] = None,
     chunk_size: int = DEFAULT_NETWORK_DATA_CHUNK_SIZE,
 ):
 

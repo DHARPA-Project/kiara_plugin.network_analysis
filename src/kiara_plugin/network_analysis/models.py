@@ -15,14 +15,11 @@ import tempfile
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Set, Type, Union
 
-from kiara.models.values.value import Value
-from kiara.models.values.value_metadata import ValueMetadata
-from kiara_plugin.tabular.defaults import SqliteDataType
-from kiara_plugin.tabular.models.db import KiaraDatabase, SqliteTableSchema
-from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
 from pydantic import BaseModel, Field, PrivateAttr
 from sqlalchemy import Table
 
+from kiara.models.values.value import Value
+from kiara.models.values.value_metadata import ValueMetadata
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
     ID_COLUMN_NAME,
@@ -36,6 +33,9 @@ from kiara_plugin.network_analysis.utils import (
     extract_nodes_as_table,
     insert_table_data_into_network_graph,
 )
+from kiara_plugin.tabular.defaults import SqliteDataType
+from kiara_plugin.tabular.models.db import KiaraDatabase, SqliteTableSchema
+from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
 
 if TYPE_CHECKING:
     import networkx as nx
@@ -348,7 +348,7 @@ class NetworkData(KiaraDatabase):
         else:
             existing_node_ids = set(existing_node_ids)
 
-        required_node_ids = set((edge[SOURCE_COLUMN_NAME] for edge in edges))
+        required_node_ids = {edge[SOURCE_COLUMN_NAME] for edge in edges}
         required_node_ids.update(edge[TARGET_COLUMN_NAME] for edge in edges)
 
         node_ids = list(required_node_ids.difference(existing_node_ids))
