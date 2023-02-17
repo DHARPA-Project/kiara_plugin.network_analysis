@@ -327,7 +327,7 @@ class RenderNetworkModule(RenderDatabaseModuleBase):
         return result
 
 
-class NetworkClustersModule(KiaraModule):
+class ExtractLargestComponentModule(KiaraModule):
     """Extract the largest connected component from this network data.
 
     This module analyses network data and checks if it contains clusters, and if so, how many. If all nodes are connected
