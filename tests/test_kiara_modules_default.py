@@ -23,7 +23,6 @@ def test_assert():
 
 def test_network_data_properties(kiara_api: KiaraAPI, data_folder: Path):
 
-    assert kiara_api.list_operations()
     example_dir = data_folder / "simple_networks" / "example_1"
 
     inputs = {
@@ -74,23 +73,4 @@ def test_network_data_properties(kiara_api: KiaraAPI, data_folder: Path):
     component_network = largest_component_value.data
     assert isinstance(component_network, NetworkData)
 
-    # TODO: should this be the same as the original network?
-    # properties: NetworkGraphProperties = largest_component_value.get_all_property_data()["metadata.graph_properties"]
-    #
-    # assert properties.number_of_nodes == 4
-    # assert properties.number_of_self_loops == 2
-    # assert properties.number_of_parallel_edges == 0
-    #
-    # properties_by_graph_type = properties.properties_by_graph_type
-    # assert len(properties_by_graph_type) == 4
-    # for p in properties_by_graph_type:
-    #     if p.graph_type == GraphType.DIRECTED:
-    #         assert p.number_of_edges == 6
-    #     elif p.graph_type == GraphType.UNDIRECTED:
-    #         assert p.number_of_edges == 6
-    #     elif p.graph_type == GraphType.DIRECTED_MULTI:
-    #         assert p.number_of_edges == 6
-    #     elif p.graph_type == GraphType.UNDIRECTED_MULTI:
-    #         assert p.number_of_edges == 6
-    #     else:
-    #         assert False, f"Invalid graph type: '{p.number_of_edges}'."
+    assert largest_component_value.value_id == nd.value_id
