@@ -86,6 +86,7 @@ class NetworkData(KiaraDatabase):
 
     @classmethod
     def create_network_data_from_sqlite(cls, db_file_path: str) -> "NetworkData":
+        """Create a `NetworkData` instance from a sqlite database file."""
 
         return cls.create_network_data_from_database(
             KiaraDatabase(db_file_path=db_file_path)
@@ -93,6 +94,7 @@ class NetworkData(KiaraDatabase):
 
     @classmethod
     def create_network_data_from_database(cls, db: KiaraDatabase) -> "NetworkData":
+        """Create a `NetworkData` instance from a `KiaraDatabase` instance."""
 
         insp = db.get_sqlalchemy_inspector()
         e_cols = insp.get_columns(NetworkDataTableType.EDGES.value)
@@ -137,12 +139,16 @@ class NetworkData(KiaraDatabase):
         schema_nodes: Union[None, SqliteTableSchema, Mapping] = None,
         keep_unlocked: bool = False,
     ):
+        """Create a new, empty `NetworkData` instance in a temporary directory."""
 
         temp_f = tempfile.mkdtemp()
         db_path = os.path.join(temp_f, "network_data.sqlite")
 
         def cleanup():
-            shutil.rmtree(db_path, ignore_errors=True)
+            try:
+                os.unlink(db_path)
+            except Exception:
+                pass
 
         atexit.register(cleanup)
 
@@ -243,38 +249,6 @@ class NetworkData(KiaraDatabase):
         description="The schema information for the nodes table."
     )
 
-    # @root_validator(pre=True)
-    # def pre_validate(cls, values):
-    #
-    #     _edges_schema = values.get("edges_schema", None)
-    #     _nodes_schema = values.get("nodes_schema", None)
-    #     _path = values.get("db_file_path", None)
-    #     if _path is not None:
-    #         db = KiaraDatabase(db_file_path=_path)
-    #         if _edges_schema is not None:
-    #             raise ValueError(
-    #                 "Can't initialize network data with both 'db_file_path' and 'edges_schema'."
-    #             )
-    #         if _nodes_schema is not None:
-    #             raise ValueError(
-    #                 "Can't initialize network data with both 'db_file_path' and 'nodes_schema'."
-    #             )
-    #
-    #         md = db.create_metadata()
-    #         edges_col_schema = md.tables.get(
-    #             NetworkDataTableType.EDGES.value
-    #         ).column_schema
-    #         nodes_col_schema = md.tables.get(
-    #             NetworkDataTableType.NODES.value
-    #         ).column_schema
-    #         edges_schema = SqliteTableSchema(**edges_col_schema)
-    #         nodes_schema = SqliteTableSchema(**nodes_col_schema)
-    #
-    #         values["edges_schema"] = edges_schema
-    #         values["nodes_schema"] = nodes_schema
-    #
-    #     return values
-
     _nodes_table_obj: Union[Table, None] = PrivateAttr(default=None)
     _edges_table_obj: Union[Table, None] = PrivateAttr(default=None)
 
@@ -310,6 +284,24 @@ class NetworkData(KiaraDatabase):
             autoload_with=self.get_sqlalchemy_engine(),
         )
         return self._edges_table_obj
+
+    def clone(self) -> "NetworkData":
+        """Clone the current network data instance."""
+
+        temp_f = tempfile.mkdtemp()
+
+        new_file = shutil.copy2(self.db_file_path, temp_f)
+
+        def cleanup():
+            try:
+                os.unlink(new_file)
+            except Exception:
+                pass
+
+        atexit.register(cleanup)
+
+        result = self.__class__.create_network_data_from_sqlite(new_file)
+        return result
 
     def insert_nodes(self, *nodes: Mapping[str, Any]):
         """Add nodes to a network data item.
