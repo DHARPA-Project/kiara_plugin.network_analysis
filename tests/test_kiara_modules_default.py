@@ -5,10 +5,10 @@
 from pathlib import Path
 
 import pytest  # noqa
-from kiara.interfaces.python_api import KiaraAPI
-from kiara.models.values.value import Value
 
 import kiara_plugin.network_analysis
+from kiara.interfaces.python_api import KiaraAPI
+from kiara.models.values.value import Value
 from kiara_plugin.network_analysis.models import (
     GraphType,
     NetworkData,
@@ -62,7 +62,7 @@ def test_network_data_properties(kiara_api: KiaraAPI, data_folder: Path):
     inputs = {
         "network_data": nd,
     }
-    result = kiara_api.run_job("network_data.check_clusters", inputs=inputs)
+    result = kiara_api.run_job("network_data.extract_largest_component", inputs=inputs)
 
     is_connected = result.get_value_data("is_connected")
     assert is_connected is True
