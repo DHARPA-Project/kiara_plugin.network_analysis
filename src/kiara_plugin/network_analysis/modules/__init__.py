@@ -440,7 +440,7 @@ class NetworkClustersModule(KiaraModule):
             con.execute(delete_from_nodes)
 
             delete_from_edges = text(
-                """DELETE FROM edges WHERE source IN :nodes AND target IN :nodes"""
+                """DELETE FROM edges WHERE source IN :nodes OR target IN :nodes"""
             )
             delete_from_edges = delete_from_edges.bindparams(
                 bindparam("nodes", expanding=True, value=nodes_largest_component)
