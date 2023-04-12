@@ -167,15 +167,14 @@ class NetworkData(KiaraDatabase):
                     TARGET_COLUMN_NAME: suggested_id_type,  # type: ignore
                 }
             )
+        elif isinstance(schema_edges, Mapping):
+            edges_schema = SqliteTableSchema(**schema_edges)
+        elif not isinstance(schema_edges, SqliteTableSchema):
+            raise ValueError(
+                f"Invalid data type for edges schema: {type(schema_edges)}"
+            )
         else:
-            if isinstance(schema_edges, Mapping):
-                edges_schema = SqliteTableSchema(**schema_edges)
-            elif not isinstance(schema_edges, SqliteTableSchema):
-                raise ValueError(
-                    f"Invalid data type for edges schema: {type(schema_edges)}"
-                )
-            else:
-                edges_schema = schema_edges
+            edges_schema = schema_edges
 
         if (
             edges_schema.columns[SOURCE_COLUMN_NAME]
