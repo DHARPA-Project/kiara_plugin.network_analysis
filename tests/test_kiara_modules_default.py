@@ -31,7 +31,7 @@ def test_network_data_properties(kiara_api: KiaraAPI, data_folder: Path):
         "id_column_name": "Id",
     }
 
-    result = kiara_api.run_job("create.network_data.from.files", inputs=inputs)
+    result = kiara_api.run_job("assemble.network_data.from.files", inputs=inputs)
 
     nd: Value = result["network_data"]
 
