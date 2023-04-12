@@ -209,11 +209,10 @@ class NetworkData(KiaraDatabase):
 
         if LABEL_COLUMN_NAME not in nodes_schema.columns.keys():
             nodes_schema.columns[LABEL_COLUMN_NAME] = "TEXT"
-        else:
-            if nodes_schema.columns[LABEL_COLUMN_NAME] != "TEXT":
-                raise ValueError(
-                    f"Invalid nodes schema, '{LABEL_COLUMN_NAME}' column must be of type 'TEXT', not '{nodes_schema.columns[LABEL_COLUMN_NAME]}'."
-                )
+        elif nodes_schema.columns[LABEL_COLUMN_NAME] != "TEXT":
+            raise ValueError(
+                f"Invalid nodes schema, '{LABEL_COLUMN_NAME}' column must be of type 'TEXT', not '{nodes_schema.columns[LABEL_COLUMN_NAME]}'."
+            )
 
         if (
             nodes_schema.columns[ID_COLUMN_NAME]
