@@ -13,7 +13,7 @@ steps:
     step_id: create_nodes_table
     input_links:
       file: import_nodes_file.file
-  - module_type: create.network_data.from.tables
+  - module_type: assemble.network_data.from.tables
     step_id: assemble_network_data
     input_links:
       edges: create_edges_table.table
