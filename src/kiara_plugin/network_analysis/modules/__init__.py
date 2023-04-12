@@ -5,12 +5,20 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, Mapping, Tuple, Union
 
+from pydantic import Field
 from sqlalchemy import bindparam, text
 
 from kiara.api import KiaraModule, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraProcessingException
+from kiara.models.filesystem import (
+    FileModel,
+)
 from kiara.models.rendering import RenderValueResult
 from kiara.models.values.value import Value
+from kiara.modules.included_core_modules.create_from import (
+    CreateFromModule,
+    CreateFromModuleConfig,
+)
 from kiara.modules.included_core_modules.export_as import DataExportModule
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
@@ -33,15 +41,87 @@ KIARA_METADATA = {
 }
 
 
+class CreateNetworkDataModuleConfig(CreateFromModuleConfig):
+
+    ignore_errors: bool = Field(
+        description="Whether to ignore convert errors and omit the failed items.",
+        default=False,
+    )
+
+
+class CreateNetworkDataModule(CreateFromModule):
+
+    _module_type_name = "create.network_data"
+    _config_cls = CreateNetworkDataModuleConfig
+
+    def create__network_data__from__file(self, source_value: Value) -> Any:
+        """Create a table from a file, trying to auto-determine the format of said file.
+
+        Supported file formats (at the moment):
+        - gml
+        - gexf
+        - graphml (uses the standard xml library present in Python, which is insecure - see xml for additional information. Only parse GraphML files you trust)
+        - pajek
+        -leda
+        - graph6
+        - sparse6
+        """
+
+        source_file: FileModel = source_value.data
+
+        if source_file.file_name.endswith(".gml"):
+
+            import networkx as nx
+
+            graph = nx.read_gml(source_file.path)
+
+        elif source_file.file_name.endswith(".gexf"):
+            import networkx as nx
+
+            graph = nx.read_gexf(source_file.path)
+        elif source_file.file_name.endswith(".graphml"):
+            import networkx as nx
+
+            graph = nx.read_graphml(source_file.path)
+        elif source_file.file_name.endswith(".pajek") or source_file.file_name.endswith(
+            ".net"
+        ):
+            import networkx as nx
+
+            graph = nx.read_pajek(source_file.path)
+        elif source_file.file_name.endswith(".leda"):
+            import networkx as nx
+
+            graph = nx.read_leda(source_file.path)
+        elif source_file.file_name.endswith(
+            ".graph6"
+        ) or source_file.file_name.endswith(".g6"):
+            import networkx as nx
+
+            graph = nx.read_graph6(source_file.path)
+        elif source_file.file_name.endswith(
+            ".sparse6"
+        ) or source_file.file_name.endswith(".s6"):
+            import networkx as nx
+
+            graph = nx.read_sparse6(source_file.path)
+        else:
+            raise KiaraProcessingException(
+                f"Can't create network data for unsupported format of file: {source_file.file_name}."
+            )
+
+        return NetworkData.create_from_networkx_graph(graph)
+
+
 class CreateGraphFromTablesModule(KiaraModule):
-    """Create a graph object from one or two tables.
+    """Create a network_data instance from one or two tables.
 
     This module needs at least one table as input, providing the edges of the resulting network data set.
     If no further table is created, basic node information will be automatically created by using unique values from
     the edges source and target columns.
     """
 
-    _module_type_name = "create.network_data.from.tables"
+    _module_type_name = "assemble.network_data.from.tables"
 
     def create_inputs_schema(
         self,
@@ -360,7 +440,7 @@ class ExtractLargestComponentModule(KiaraModule):
 
         result["largest_component"] = {
             "type": "network_data",
-            "doc": "A sub-graph of the largest component of the graph.",
+            "doc": "A sub-graph of the largest component of the graph. In case the graph is a single component, the original input will be returned.",
         }
 
         result["other_components"] = {

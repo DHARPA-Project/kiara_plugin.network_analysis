@@ -1,5 +1,5 @@
 {
-  "pipeline_name": "create.network_data.from.files",
+  "pipeline_name": "assemble.network_data.from.files",
   "doc": "Create table values from files containing edges and node data, then assemble those to the network_data result.",
   "steps": [
     {
@@ -11,7 +11,7 @@
       "step_id": "create_nodes_table"
     },
     {
-      "module_type": "create.network_data.from.tables",
+      "module_type": "assemble.network_data.from.tables",
       "step_id": "assemble_network_data",
       "input_links": {
         "edges": "create_edges_table.table",
