@@ -2,6 +2,7 @@ Creator "Mark Newman on Thu Aug 31 12:59:09 2006"
 graph
 [
   directed 1
+  multigraph 1
   node
   [
     id 0
