@@ -12,6 +12,8 @@ taken from D. E. Knuth, The Stanford GraphBase: A Platform for
 Combinatorial Computing, Addison-Wesley, Reading, MA (1993)."
 
 As explained in the file description this data represents a coappearance network. This makes it an **undirected** network. It is furthermore a **weighted** network, edge weights are named "value" in the gml file. This is a **one-mode** network because there is only one type of nodes (book characters).
+- 77 nodes
+- 254 edges (undirected)
 
 ### karate
 "The file karate.gml contains the network of friendships between the 34
@@ -23,6 +25,8 @@ Anthropological Research 33, 452-473 (1977)."
 See also: https://en.wikipedia.org/wiki/Zachary%27s_karate_club#cite_note-Data-3
 
 This is a **one-mode** network where nodes represent friends. It is **undirected** and **unweighted**. 
+- 34 nodes
+- 78 edges (undirected)
 
 ### celegansneural
 
@@ -47,4 +51,6 @@ London 314, 1-340 (1986).
 D. J. Watts and S. H. Strogatz, "Collective dynamics of `small-world'
 networks", Nature 393, 440-442 (1998)."
 
-A **one-mode** network where nodes represent neurons. It is **directed** and **weighted**.
+A **one-mode** network where nodes represent neurons. It is a **directed** **multigraph** (14 parallel edges) that is **weighted**.
+- nodes 297
+- edges 2359 (directed, multi)
