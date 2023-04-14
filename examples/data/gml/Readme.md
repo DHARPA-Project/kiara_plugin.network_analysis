@@ -23,3 +23,28 @@ Anthropological Research 33, 452-473 (1977)."
 See also: https://en.wikipedia.org/wiki/Zachary%27s_karate_club#cite_note-Data-3
 
 This is a **one-mode** network where nodes represent friends. It is **undirected** and **unweighted**. 
+
+### celegansneural
+
+"Neural network of the nematode C. Elegans
+
+Compiled by Duncan Watts and Steven Strogatz from original experimental
+data by White et al.
+
+The file celegansneural.gml describes a weighted, directed network
+representing the neural network of C. Elegans.  The data were taken from
+the web site of Prof. Duncan Watts at Columbia University,
+http://cdg.columbia.edu/cdg/datasets.  The nodes in the original data were
+not consecutively numbered, so they have been renumbered to be consecutive.
+The original node numbers from Watts' data file are retained as the labels
+of the nodes.  Edge weights are the weights given by Watts.
+
+These data can be cited as:
+J. G. White, E. Southgate, J. N. Thompson, and S. Brenner, "The structure
+of the nervous system of the nematode C. Elegans", Phil. Trans. R. Soc.
+London 314, 1-340 (1986).
+
+D. J. Watts and S. H. Strogatz, "Collective dynamics of `small-world'
+networks", Nature 393, 440-442 (1998)."
+
+A **one-mode** network where nodes represent neurons. It is **directed** and **weighted**.
