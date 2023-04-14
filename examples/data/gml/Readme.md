@@ -29,7 +29,7 @@ This is a **one-mode** network where nodes represent friends. It is **undirected
 - 78 edges (undirected)
 
 ### celegansneural
-*Note: The multigraph tag has been manually added to the original gml file so that it can be parsed by the networkX 3.0 code.*
+*Note: The multigraph tag has been manually added to the original gml file so that it can be parsed by the networkX 3.0 read_gml() code.*
 
 "Neural network of the nematode C. Elegans
 
@@ -55,3 +55,20 @@ networks", Nature 393, 440-442 (1998)."
 A **one-mode** network where nodes represent neurons. It is a **directed** **multigraph** (14 parallel edges) that is **weighted**.
 - nodes 297
 - edges 2359 (directed, multi)
+
+### adjnoun
+"The file adjnoun.gml contains the network of common adjective and noun
+adjacencies for the novel "David Copperfield" by Charles Dickens, as
+described by M. Newman.  Nodes represent the most commonly occurring
+adjectives and nouns in the book.  Node values are 0 for adjectives and 1
+for nouns.  Edges connect any pair of words that occur in adjacent position
+in the text of the book.  
+
+Please cite M. E. J. Newman, Finding community
+structure in networks using the eigenvectors of matrices, Preprint
+physics/0605087 (2006)."
+
+This can be construed as a **two-mode** network taking the two different node types into account (nouns and adjectives) or as a **one-mode** network of adjacent words in a text. As a two-mode network it is not truly bipartite, because there are also links between the same node type (noun-noun, adjective-adjective). The network is **undirected** and **unweighted**.
+
+- nodes 112 (two types, adjectives and nouns)
+- edges 425 (undirected)
