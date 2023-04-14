@@ -29,6 +29,7 @@ This is a **one-mode** network where nodes represent friends. It is **undirected
 - 78 edges (undirected)
 
 ### celegansneural
+*Note: The multigraph tag has been manually added to the original gml file so that it can be parsed by the networkX 3.0 code.*
 
 "Neural network of the nematode C. Elegans
 
