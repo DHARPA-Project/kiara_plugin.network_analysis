@@ -18,3 +18,19 @@ It is furthermore a **weighted** network, edge weights are named "value" in the 
 This is a **one-mode** network because there is only one type of nodes (book characters).
 - 77 nodes
 - 254 edges (undirected)
+
+### ChineseBuddhism_SNA
+
+This gexf file is located in another [repository](https://github.com/DHARPA-Project/kiara.examples/tree/main/examples/data/gexf), 
+because it is too large (20,4 MB).
+
+It comes from this website:
+
+https://github.com/mbingenheimer/ChineseBuddhism_SNA
+
+The data represents an undirected multigraph with:
+
+- 18130 Nodes
+- 33976 Edges (undirected* modified)
+
+
