@@ -18,5 +18,22 @@ The restructured data was converted into JSON with networkX for visualization in
 
 The data represents a **two-mode** graph that is **dynamic** ('time-specific'), **bipartite**, **undirected** and **unweighted**.
 
-- 120 (two types, countries and treaties)
+- 120 nodes (two types, countries and treaties)
 - 203 edges (undirected)
+
+### radicaltranslations
+
+This network is based on the work of The Radical Translations Project (https://radicaltranslations.org/).
+
+An interactive visualisation can be found here:
+
+https://observablehq.com/@jmiguelv/radical-translations-agents-network-visualisation
+
+The visualisation shows a network of – *person (f), person (m), person (u), organisation, place, serial publication* – nodes, and how they are connected to one another via the relationships *based in (place), edited, knows, member of, published, published in (place), translated*. The size of the nodes corresponds to the number of connections the node has.
+
+This network represents a **multi-mode network** with **several node-types** (person, organisation, place, serial publication) and **several edge (or relationship) types** (based_in, edited, knows, member of, published, translated..)
+
+The dataset is a **json file** that seems to be the output of the the project's online database (https://radicaltranslations.org/about/database/). There is also **zip file** available for download on the website. The zip file contains several CSV files, one for each of the main data types (Agents, Events, Places and Resources) in the project.
+
+- 1495 nodes (multiple types)
+- 6675 edges (multiple types)
