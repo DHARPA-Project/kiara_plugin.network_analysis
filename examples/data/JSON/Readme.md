@@ -2,7 +2,7 @@
 
 
 ### peacetreaties
-This file was created by Lena Jaskov. It is is based on data contained in a database focused on 
+This file was created by [Lena Jaskov](https://github.com/yaslena). It is is based on data contained in a database focused on 
 European peace treaties from 1450 to 1789 (https://www.ieg-friedensvertraege.de/vertraege).
 
 The database was created as part of a project that was funded by the DFG (German Research Foundation) 
