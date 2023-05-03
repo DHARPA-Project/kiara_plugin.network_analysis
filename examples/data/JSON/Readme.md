@@ -23,6 +23,8 @@ The data represents a **two-mode** graph that is **dynamic** ('time-specific'), 
 
 ### radicaltranslations
 
+This file is too large, it is therefore located in a different [repository](https://github.com/DHARPA-Project/kiara.examples/tree/main/examples/data/network_analysis/JSON).
+
 This network is based on the work of The Radical Translations Project (https://radicaltranslations.org/).
 
 An interactive visualisation can be found here:
