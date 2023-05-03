@@ -21,7 +21,7 @@ This is a **one-mode** network because there is only one type of nodes (book cha
 
 ### ChineseBuddhism_SNA
 
-This gexf file is located in another [repository](https://github.com/DHARPA-Project/kiara.examples/tree/main/examples/data/gexf), 
+This gexf file is located in another [repository](https://github.com/DHARPA-Project/kiara.examples/blob/main/examples/data/network_analysis/gexf), 
 because it is too large (20,4 MB).
 
 It comes from this website:
