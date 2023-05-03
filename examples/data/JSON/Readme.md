@@ -16,5 +16,7 @@ In a second step the data from the scraping process was restructured to fit the 
 Code for restructuring the table data and for generating a bipartite graph with python networkX can be found [here](https://github.com/yaslena/NetworkAnalysis).
 The restructured data was converted into JSON with networkX for visualization in JavaScript on [Observable](https://observablehq.com/@yaslena/dynamic-network-graph)
 
+The data represents a **two-mode** graph that is **bipartite**, **undirected** and **unweighted**.
+
 - 120 (two types, countries and treaties)
 - 203 edges (undirected)
