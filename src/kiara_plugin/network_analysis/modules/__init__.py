@@ -62,7 +62,7 @@ class CreateNetworkDataModule(CreateFromModule):
         - gexf
         - graphml (uses the standard xml library present in Python, which is insecure - see xml for additional information. Only parse GraphML files you trust)
         - pajek
-        -leda
+        - leda
         - graph6
         - sparse6
         """
