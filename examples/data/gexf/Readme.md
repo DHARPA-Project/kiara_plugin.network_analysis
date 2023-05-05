@@ -3,6 +3,8 @@
 Most datasets come from here https://github.com/gephi/gephi/wiki/Datasets if not otherwise stated.
 
 ### lesmis
+
+#### gexf file version: 1.3
 The lesmis gephi file represents the same data as the one in gml format found in 
 Marc Newmans GML dataset collection: http://www-personal.umich.edu/~mejn/netdata/
 It also has some additional graph data, like node positions, node colors (by modularity group), node size etc because the gexf format can also store that kind of data.
