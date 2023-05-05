@@ -128,3 +128,26 @@ This dataset represents a **one-mode**, **undirected**, **unweighted** graph.
 
 - nodes 115
 - edges 613 (undirected)
+
+### polbooks
+
+"Books about US politics
+Compiled by Valdis Krebs
+
+Nodes represent books about US politics sold by the online bookseller
+Amazon.com.  Edges represent frequent co-purchasing of books by the same
+buyers, as indicated by the "customers who bought this book also bought
+these other books" feature on Amazon.
+
+Nodes have been given values "l", "n", or "c" to indicate whether they are
+"liberal", "neutral", or "conservative".  These alignments were assigned
+separately by Mark Newman based on a reading of the descriptions and
+reviews of the books posted on Amazon.
+
+These data should be cited as V. Krebs, unpublished,
+http://www.orgnet.com/."
+
+This dataset represents a **one-mode** (book nodes), **undirected** (co-purchasing on Amazon), **unweighted** network.
+
+- nodes 105
+- edges 441 (undirected)
