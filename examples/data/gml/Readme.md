@@ -92,7 +92,39 @@ Additional information on the network can be found in
   D. Lusseau, Evidence for social role in a dolphin social network,
   Preprint q-bio/0607048 (http://arxiv.org/abs/q-bio.PE/0607048)"
   
-  This data represents a **one-mode**, **undirected**, **unweighted** network.
+This data represents a **one-mode**, **undirected**, **unweighted** network.
   
-  - nodes 62
-  - edges 159 (undirected)
+- nodes 62
+- edges 159 (undirected)
+  
+### football
+ 
+ "The file football.gml contains the network of American football games
+between Division IA colleges during regular season Fall 2000, as compiled
+by M. Girvan and M. Newman.  The nodes have values that indicate to which
+conferences they belong.  The values are as follows:
+
+  0 = Atlantic Coast
+  1 = Big East
+  2 = Big Ten
+  3 = Big Twelve
+  4 = Conference USA
+  5 = Independents
+  6 = Mid-American
+  7 = Mountain West
+  8 = Pacific Ten
+  9 = Southeastern
+ 10 = Sun Belt
+ 11 = Western Athletic
+
+If you make use of these data, please cite M. Girvan and M. E. J. Newman,
+Community structure in social and biological networks,
+Proc. Natl. Acad. Sci. USA 99, 7821-7826 (2002).
+
+Correction: Two edges were erroneously duplicated in this data set, and
+have been removed (21 SEP 2014)"
+
+This dataset represents a **one-mode**, **undirected**, **unweighted** graph.
+
+- nodes 115
+- edges 613 (undirected)
