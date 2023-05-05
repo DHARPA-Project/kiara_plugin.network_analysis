@@ -151,3 +151,26 @@ This dataset represents a **one-mode** (book nodes), **undirected** (co-purchasi
 
 - nodes 105
 - edges 441 (undirected)
+
+### cond_mat_2005
+
+#### Note: This dataset will not load with networkX because it has a lot of duplicate labels.
+
+"The file cond-mat-2005.gml contains an updated version of cond-mat.gml, the
+collaboration network of scientists posting preprints on the condensed
+matter archive at www.arxiv.org.  This version is based on preprints posted
+to the archive between January 1, 1995 and March 31, 2005.  The network is
+weighted, with weights assigned as described in M. E. J. Newman,
+Phys. Rev. E 64, 016132 (2001).
+
+These data can be cited (as an updated version of)
+
+  M. E. J. Newman, The structure of scientific collaboration networks,
+  Proc. Natl. Acad. Sci. USA 98, 404-409 (2001)."
+  
+ This file is too large for this repository, it can be found [here](https://github.com/DHARPA-Project/kiara.examples/tree/main/examples/data/network_analysis/gml).
+ 
+ This dataset represents a **one-mode** (scientists), **undirected**, **weighted** network.
+ 
+ - nodes 40421
+ - edges 175692 (undirected)
