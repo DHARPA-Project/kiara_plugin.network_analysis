@@ -31,6 +31,7 @@ from kiara_plugin.network_analysis.defaults import (
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_ALIAS_NAMES,
     TARGET_COLUMN_NAME,
+    NetworkDataTableType,
 )
 from kiara_plugin.network_analysis.models import NetworkData
 from kiara_plugin.network_analysis.utils import insert_table_data_into_network_graph
@@ -224,18 +225,14 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
     def process(self, inputs: ValueMap, outputs: ValueMap) -> None:
 
-        import pyarrow as pa
-        import pyarrow.compute as pc
+        import polars as pl
 
         # process nodes
         nodes = inputs.get_value_obj("nodes")
-        nodes_table: Union[KiaraTable, None] = None
 
         nodes_column_map: Dict[str, str] = inputs.get_value_data("nodes_column_map")
         if nodes_column_map is None:
             nodes_column_map = {}
-
-        nodes_arrow_table: Union[None, pa.Table] = None
 
         # we need to process the nodes first, because if we have nodes, we need to create the node id map that translates from the original
         # id to the new, internal, integer-based one
@@ -247,7 +244,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
                         f"Nodes column map contains target column name that starts with an underscore ('{col_name}'). This is not allowed."
                     )
 
-            nodes_table = nodes.data
+            nodes_table: KiaraTable = nodes.data
             assert nodes_table is not None
 
             nodes_column_names = nodes_table.column_names
@@ -286,58 +283,22 @@ class AssembleGraphFromTablesModule(KiaraModule):
                         label_column_name = col_name
                         break
 
-            if label_column_name:
-                if label_column_name not in nodes_column_names:
-                    raise KiaraProcessingException(
-                        f"Could not find id column '{id_column_name}' in the nodes table. Please specify a valid column name manually, using one of: {', '.join(nodes_column_names)}"
-                    )
-
-            nodes_arrow_table = nodes_table.arrow_table
-
-            index_column = range(0, len(nodes_arrow_table))
-            orig_id_column = nodes_arrow_table.column(id_column_name).to_pylist()
-
-            node_id_map = dict(zip(orig_id_column, index_column))
-            assert len(node_id_map) == len(orig_id_column)
-
-            nodes_arrow_table = nodes_arrow_table.add_column(
-                0, ID_COLUMN_NAME, [index_column]
-            )
-
-            if label_column_name is None:
-                label_column_name = id_column_name
-
-            # we create a copy of the label column, and stringify its items
-            label_column = nodes_arrow_table.column(label_column_name)
-            if label_column.type != pa.string():
-                label_column = pc.cast(label_column, pa.string())
-
-            if label_column.null_count != 0:
+            if label_column_name and label_column_name not in nodes_column_names:
                 raise KiaraProcessingException(
-                    f"Label column '{label_column_name}' contains null values. This is not allowed."
+                    f"Could not find id column '{id_column_name}' in the nodes table. Please specify a valid column name manually, using one of: {', '.join(nodes_column_names)}"
                 )
 
-            nodes_arrow_table = nodes_arrow_table.add_column(
-                1, LABEL_COLUMN_NAME, label_column
-            )
-
+            nodes_arrow_dataframe = nodes_table.polars_dataframe
             nullable_columns = [
                 col_name
-                for col_name in nodes_arrow_table.column_names
+                for col_name in nodes_arrow_dataframe.columns
                 if col_name not in [ID_COLUMN_NAME, LABEL_COLUMN_NAME]
             ]
 
-            nodes_data_schema = create_sqlite_schema_data_from_arrow_table(
-                table=nodes_arrow_table,
-                index_columns=[ID_COLUMN_NAME, LABEL_COLUMN_NAME],
-                column_map=nodes_column_map,
-                nullable_columns=nullable_columns,
-                unique_columns=[ID_COLUMN_NAME],
-            )
-
         else:
-            nodes_data_schema = None
-            node_id_map = {}
+            nodes_arrow_dataframe = None
+            nullable_columns = []
+            label_column_name = None
 
         # process edges
 
@@ -346,8 +307,8 @@ class AssembleGraphFromTablesModule(KiaraModule):
         edges_source_column_name = inputs.get_value_data("source_column")
         edges_target_column_name = inputs.get_value_data("target_column")
 
-        edges_arrow_table = edges_table.arrow_table
-        edges_column_names = edges_arrow_table.column_names
+        edges_arrow_dataframe = edges_table.polars_dataframe
+        edges_column_names = edges_arrow_dataframe.columns
 
         if edges_source_column_name is None:
             column_names_to_test = self.get_config_value("source_column_aliases")
@@ -356,17 +317,28 @@ class AssembleGraphFromTablesModule(KiaraModule):
                     edges_source_column_name = item
                     break
 
-            if not edges_source_column_name:
-                raise KiaraProcessingException(
-                    f"Could not auto-detect source column name. Please specify it manually using one of: {', '.join(edges_column_names)}."
-                )
-
         if edges_target_column_name is None:
             column_names_to_test = self.get_config_value("target_column_aliases")
             for item in edges_column_names:
                 if item.lower() in column_names_to_test:
                     edges_target_column_name = item
                     break
+
+        if not edges_source_column_name or not edges_target_column_name:
+
+            if not edges_source_column_name and not edges_target_column_name:
+                if len(edges_column_names) == 2:
+                    edges_source_column_name = edges_column_names[0]
+                    edges_target_column_name = edges_column_names[1]
+                else:
+                    raise KiaraProcessingException(
+                        f"Could not auto-detect source and target column names. Please specify them manually using one of: {', '.join(edges_column_names)}."
+                    )
+
+            if not edges_source_column_name:
+                raise KiaraProcessingException(
+                    f"Could not auto-detect source column name. Please specify it manually using one of: {', '.join(edges_column_names)}."
+                )
 
             if not edges_target_column_name:
                 raise KiaraProcessingException(
@@ -409,34 +381,103 @@ class AssembleGraphFromTablesModule(KiaraModule):
                     f"Column name '{column_name}' starts with an underscore, that is not allowed."
                 )
 
-        source_column = edges_arrow_table.column(edges_source_column_name)
-        target_column = edges_arrow_table.column(edges_target_column_name)
+        source_column_old = edges_arrow_dataframe.get_column(edges_source_column_name)
+        target_column_old = edges_arrow_dataframe.get_column(edges_target_column_name)
 
-        def id_mapper(element):
-            return node_id_map[element.as_py()]
+        # fill out the node id map
+        unique_node_ids_old = pl.concat(
+            [source_column_old, target_column_old], rechunk=False
+        ).unique()
 
-        source_column_mapped = (node_id_map[x] for x in source_column.to_pylist())
-        target_column_mapped = (node_id_map[x] for x in target_column.to_pylist())
+        if nodes_arrow_dataframe is None:
+            new_node_ids = range(0, len(unique_node_ids_old))
+            node_id_map = {
+                node_id: new_node_id
+                for node_id, new_node_id in zip(unique_node_ids_old, new_node_ids)
+            }
 
-        edges_arrow_table = edges_arrow_table.remove_column(
-            edges_arrow_table.schema.get_field_index(edges_source_column_name)
-        )
-        edges_arrow_table = edges_arrow_table.remove_column(
-            edges_arrow_table.schema.get_field_index(edges_target_column_name)
-        )
+            nodes_arrow_dataframe = pl.DataFrame(
+                {
+                    ID_COLUMN_NAME: new_node_ids,
+                    LABEL_COLUMN_NAME: (str(x) for x in unique_node_ids_old),
+                    "id": unique_node_ids_old,
+                }
+            )
+            unique_node_columns = [ID_COLUMN_NAME, "id"]
 
-        edges_arrow_table = edges_arrow_table.add_column(
-            0, SOURCE_COLUMN_NAME, [source_column_mapped]
-        )
-        edges_arrow_table = edges_arrow_table.add_column(
-            1, TARGET_COLUMN_NAME, [target_column_mapped]
-        )
+        else:
+            id_column_old = nodes_arrow_dataframe.get_column(id_column_name)
+            old_len = len(unique_node_ids_old)
+            if len(unique_node_ids_old) > old_len:
+                raise NotImplementedError()
+            else:
+                new_node_ids = range(0, len(id_column_old))
+                node_id_map = {
+                    node_id: new_node_id
+                    for node_id, new_node_id in zip(id_column_old, new_node_ids)
+                }
+                new_idx_series = pl.Series(name=ID_COLUMN_NAME, values=new_node_ids)
+                nodes_arrow_dataframe.insert_at_idx(0, new_idx_series)
+
+                if label_column_name is None:
+                    label_column_name = ID_COLUMN_NAME
+
+                # we create a copy of the label column, and stringify its items
+                label_column = nodes_arrow_dataframe.get_column(
+                    label_column_name
+                ).rename(LABEL_COLUMN_NAME)
+                if label_column.dtype != pl.Utf8:
+                    label_column = label_column.cast(pl.Utf8)
+
+                if label_column.null_count() != 0:
+                    raise KiaraProcessingException(
+                        f"Label column '{label_column_name}' contains null values. This is not allowed."
+                    )
+
+                nodes_arrow_dataframe = nodes_arrow_dataframe.insert_at_idx(
+                    1, label_column
+                )
+
+            unique_node_columns = [ID_COLUMN_NAME, id_column_name]
+
+        source_column_mapped = source_column_old.map_dict(
+            node_id_map, default=None
+        ).rename(SOURCE_COLUMN_NAME)
+        if source_column_mapped.is_null().any():
+            raise KiaraProcessingException(
+                "The source column contains values that are not mapped in the nodes table."
+            )
+        target_column_mapped = target_column_old.map_dict(
+            node_id_map, default=None
+        ).rename(TARGET_COLUMN_NAME)
+        if target_column_mapped.is_null().any():
+            raise KiaraProcessingException(
+                "The target column contains values that are not mapped in the nodes table."
+            )
+
+        edges_arrow_dataframe.insert_at_idx(0, source_column_mapped)
+        edges_arrow_dataframe.insert_at_idx(1, target_column_mapped)
+
+        edges_arrow_dataframe = edges_arrow_dataframe.drop(edges_source_column_name)
+        edges_arrow_dataframe = edges_arrow_dataframe.drop(edges_target_column_name)
+
+        edges_arrow_table = edges_arrow_dataframe.to_arrow()
 
         # TODO: also index the other columns?
         edges_data_schema = create_sqlite_schema_data_from_arrow_table(
             table=edges_arrow_table,
             index_columns=[SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME],
             column_map=edges_column_map,
+        )
+
+        nodes_arrow_table = nodes_arrow_dataframe.to_arrow()
+
+        nodes_data_schema = create_sqlite_schema_data_from_arrow_table(
+            table=nodes_arrow_table,
+            index_columns=[ID_COLUMN_NAME, LABEL_COLUMN_NAME],
+            column_map=nodes_column_map,
+            nullable_columns=nullable_columns,
+            unique_columns=unique_node_columns,
         )
 
         network_data = NetworkData.create_network_data_in_temp_dir(
@@ -449,7 +490,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
             network_data=network_data,
             edges_table=edges_arrow_table,
             edges_column_map=edges_column_map,
-            nodes_table=None if nodes_arrow_table is None else nodes_arrow_table,
+            nodes_table=nodes_arrow_table,
             nodes_column_map=nodes_column_map,
             chunk_size=DEFAULT_NETWORK_DATA_CHUNK_SIZE,
         )
@@ -645,14 +686,16 @@ class ExtractLargestComponentModule(KiaraModule):
 
         with largest_component.get_sqlalchemy_engine().connect() as con:
 
-            delete_from_nodes = text("""DELETE FROM nodes WHERE id NOT IN :nodes""")
+            delete_from_nodes = text(
+                f"""DELETE FROM {NetworkDataTableType.NODES.value} WHERE {ID_COLUMN_NAME} NOT IN :nodes"""
+            )
             delete_from_nodes = delete_from_nodes.bindparams(
                 bindparam("nodes", expanding=True, value=nodes_largest_component)
             )
             con.execute(delete_from_nodes)
 
             delete_from_edges = text(
-                """DELETE FROM edges WHERE source NOT IN :nodes AND target NOT IN :nodes"""
+                f"""DELETE FROM {NetworkDataTableType.EDGES.value} WHERE {SOURCE_COLUMN_NAME} NOT IN :{NetworkDataTableType.NODES.value} AND {TARGET_COLUMN_NAME} NOT IN :nodes"""
             )
             delete_from_edges = delete_from_edges.bindparams(
                 bindparam("nodes", expanding=True, value=nodes_largest_component)
@@ -670,14 +713,16 @@ class ExtractLargestComponentModule(KiaraModule):
         other_components._unlock_db()
         with other_components.get_sqlalchemy_engine().connect() as con:
 
-            delete_from_nodes = text("""DELETE FROM nodes WHERE id IN :nodes""")
+            delete_from_nodes = text(
+                f"""DELETE FROM {NetworkDataTableType.NODES.value} WHERE {ID_COLUMN_NAME} IN :nodes"""
+            )
             delete_from_nodes = delete_from_nodes.bindparams(
                 bindparam("nodes", expanding=True, value=nodes_largest_component)
             )
             con.execute(delete_from_nodes)
 
             delete_from_edges = text(
-                """DELETE FROM edges WHERE source IN :nodes OR target IN :nodes"""
+                f"""DELETE FROM {NetworkDataTableType.EDGES.value} WHERE {SOURCE_COLUMN_NAME} IN :nodes OR {TARGET_COLUMN_NAME} IN :nodes"""
             )
             delete_from_edges = delete_from_edges.bindparams(
                 bindparam("nodes", expanding=True, value=nodes_largest_component)

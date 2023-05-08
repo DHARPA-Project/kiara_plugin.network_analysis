@@ -39,6 +39,7 @@ from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_tabl
 
 if TYPE_CHECKING:
     import networkx as nx
+    import rustworkx as rx
 
 
 class GraphTypesEnum(Enum):
@@ -272,6 +273,8 @@ class NetworkData(KiaraDatabase):
     _edges_table_obj: Union[Table, None] = PrivateAttr(default=None)
 
     _nx_graph = PrivateAttr(default={})
+    _rx_graph = PrivateAttr(default=None)
+    _rx_digraph = PrivateAttr(default=None)
 
     def _invalidate_other(self):
 
@@ -379,14 +382,17 @@ class NetworkData(KiaraDatabase):
 
         return required_node_ids
 
-    def as_networkx_graph(self, graph_type: Type["nx.Graph"]) -> "nx.Graph":
+    def as_networkx_graph(
+        self, graph_type: Type["nx.Graph"], read_only: bool = False
+    ) -> "nx.Graph":
         """Return the network data as a networkx graph object.
 
         Arguments:
             graph_type: the networkx Graph class to use
+            read_only: if True, a potentially cached instance of the graph is returned, and the return graph object must be treated as read-only and can't be modified (although nothing is preventing you from doing so)
         """
 
-        if graph_type in self._nx_graph.keys():
+        if read_only and graph_type in self._nx_graph.keys():
             return self._nx_graph[graph_type]
 
         graph = graph_type()
@@ -410,8 +416,121 @@ class NetworkData(KiaraDatabase):
                     target = row.pop(TARGET_COLUMN_NAME)
                     graph.add_edge(source, target, **row)
 
-        self._nx_graph[graph_type] = graph
-        return self._nx_graph[graph_type]
+        if read_only:
+            self._nx_graph[graph_type] = graph
+        return graph
+
+    def get_number_of_nodes(self):
+
+        from sqlalchemy import text
+
+        with self.get_sqlalchemy_engine().connect() as con:
+
+            result = con.execute(
+                text(f"SELECT count(*) from {NetworkDataTableType.NODES.value}")
+            )
+            num_rows = result.fetchone()[0]
+
+        return num_rows
+
+    def as_rustworkx_graph(
+        self,
+        incl_node_attributes: bool = False,
+        incl_edge_attributes: bool = False,
+        read_only: bool = False,
+    ) -> "rx.PyGraph":
+        """
+        Return the network data as a rustworkx graph object.
+
+        Arguments:
+            incl_node_attributes: if True, node attributes are included in the graph
+            incl_edge_attributes: if True, edge attributes are included in the graph
+            read_only: if True, a potentially cached instance of the graph is returned, and the return graph object must be treated as read-only and can't be modified (although nothing is preventing you from doing so)
+
+        """
+
+        if read_only and self._rx_graph is not None:
+            return self._rx_graph
+
+        import rustworkx as rx
+
+        graph = self._generate_rustworkx_graph(
+            graph_type=rx.PyGraph,
+            incl_node_attributes=incl_node_attributes,
+            incl_edge_attributes=incl_edge_attributes,
+        )
+        if read_only:
+            self._rx_graph = graph
+        return graph
+
+    def as_rustworkx_digraph(
+        self,
+        incl_node_attributes: bool = False,
+        incl_edge_attributes: bool = False,
+        read_only: bool = False,
+    ) -> "rx.PyDiGraph":
+        """
+        Return the network data as a rustworkx digraph object.
+
+        Arguments:
+            incl_node_attributes: if True, node attributes are included in the graph
+            incl_edge_attributes: if True, edge attributes are included in the graph
+            read_only: if True, a potentially cached instance of the graph is returned, and the return graph object must be treated as read-only and can't be modified (although nothing is preventing you from doing so)
+
+        """
+
+        if read_only and self._rx_digraph is not None:
+            return self._rx_digraph
+
+        import rustworkx as rx
+
+        digraph = self._generate_rustworkx_graph(
+            graph_type=rx.PyDiGraph,
+            incl_node_attributes=incl_node_attributes,
+            incl_edge_attributes=incl_edge_attributes,
+        )
+        if read_only:
+            self._rx_digraph = digraph
+        return digraph
+
+    def _generate_rustworkx_graph(
+        self,
+        graph_type: Type,
+        incl_node_attributes: bool = False,
+        incl_edge_attributes: bool = False,
+    ) -> Any:
+
+        if incl_node_attributes:
+            raise NotImplementedError("incl_node_attributes not implemented yet")
+        if incl_edge_attributes:
+            raise NotImplementedError("incl_edge_attributes not implemented yet")
+
+        from sqlalchemy import ColumnElement, select  # type: ignore
+
+        graph = graph_type()
+
+        engine = self.get_sqlalchemy_engine()
+        edges = self.get_sqlalchemy_edges_table()
+
+        num_nodes = self.get_number_of_nodes()
+        # rustworkx uses 0-based integer indexes, so we don't neeed to look up the node ids (unless we want to
+        # include node attributes)
+        graph.add_nodes_from(list(range(num_nodes)))
+
+        with engine.connect() as conn:
+            with conn.begin():
+                s_col: ColumnElement[Any] = edges.columns[SOURCE_COLUMN_NAME]
+                t_col: ColumnElement[Any] = edges.columns[TARGET_COLUMN_NAME]
+                stmt = select(s_col, t_col)
+
+                result = conn.execute(stmt)
+                for r in result:
+                    source = r[0]
+                    target = r[1]
+                    graph.add_edge(source, target, None)
+
+        self._rx_graph = graph
+        return self._rx_graph
 
 
 class GraphType(Enum):
