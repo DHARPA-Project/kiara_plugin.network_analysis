@@ -3,7 +3,7 @@ import csv
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Mapping, Tuple, Union
+from typing import Any, Dict, List, Mapping, Tuple, Union
 
 from pydantic import Field
 from sqlalchemy import bindparam, text
@@ -13,6 +13,7 @@ from kiara.exceptions import KiaraProcessingException
 from kiara.models.filesystem import (
     FileModel,
 )
+from kiara.models.module import KiaraModuleConfig
 from kiara.models.rendering import RenderValueResult
 from kiara.models.values.value import Value
 from kiara.modules.included_core_modules.create_from import (
@@ -23,8 +24,12 @@ from kiara.modules.included_core_modules.export_as import DataExportModule
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
     ID_COLUMN_NAME,
+    LABEL_ALIAS_NAMES,
     LABEL_COLUMN_NAME,
+    NODE_ID_ALIAS_NAMES,
+    SOURCE_COLUMN_ALIAS_NAMES,
     SOURCE_COLUMN_NAME,
+    TARGET_COLUMN_ALIAS_NAMES,
     TARGET_COLUMN_NAME,
 )
 from kiara_plugin.network_analysis.models import NetworkData
@@ -68,12 +73,21 @@ class CreateNetworkDataModule(CreateFromModule):
         """
 
         source_file: FileModel = source_value.data
+        # the name of the attribute kiara should use to populate the node labels
+        label_attr_name: Union[str, None] = None
+        # attributes to ignore when creating the node table,
+        # mostly useful if we know that the file contains attributes that are not relevant for the network
+        # or for 'label', if we don't want to duplicate the information in '_label' and 'label'
+        ignore_node_attributes = None
 
         if source_file.file_name.endswith(".gml"):
-
             import networkx as nx
 
-            graph = nx.read_gml(source_file.path)
+            # we use 'lable="id"' here because networkx is fussy about labels being unique and non-null
+            # we use the 'label' attribute for the node labels manually later
+            graph = nx.read_gml(source_file.path, label="id")
+            label_attr_name = "label"
+            ignore_node_attributes = ["label"]
 
         elif source_file.file_name.endswith(".gexf"):
             import networkx as nx
@@ -110,18 +124,46 @@ class CreateNetworkDataModule(CreateFromModule):
                 f"Can't create network data for unsupported format of file: {source_file.file_name}."
             )
 
-        return NetworkData.create_from_networkx_graph(graph)
+        return NetworkData.create_from_networkx_graph(
+            graph=graph,
+            label_attr_name=label_attr_name,
+            ignore_node_attributes=ignore_node_attributes,
+        )
 
 
-class CreateGraphFromTablesModule(KiaraModule):
+class AssembleNetworkDataModuleConfig(KiaraModuleConfig):
+
+    node_id_column_aliases: List[str] = Field(
+        description="Alias strings to test (in order) for auto-detecting the node id column.",
+        default=NODE_ID_ALIAS_NAMES,
+    )  # pydantic should handle that correctly (deepcopy) -- and anyway, it's immutable (hopefully)
+    label_column_aliases: List[str] = Field(
+        description="Alias strings to test (in order) for auto-detecting the node label column.",
+        default=LABEL_ALIAS_NAMES,
+    )
+    source_column_aliases: List[str] = Field(
+        description="Alias strings to test (in order) for auto-detecting the source column.",
+        default=SOURCE_COLUMN_ALIAS_NAMES,
+    )
+    target_column_aliases: List[str] = Field(
+        description="Alias strings to test (in order) for auto-detecting the target column.",
+        default=TARGET_COLUMN_ALIAS_NAMES,
+    )
+
+
+class AssembleGraphFromTablesModule(KiaraModule):
     """Create a network_data instance from one or two tables.
 
     This module needs at least one table as input, providing the edges of the resulting network data set.
     If no further table is created, basic node information will be automatically created by using unique values from
     the edges source and target columns.
+
+    If no `source_column_name` (and/or `target_column_name`) is provided, *kiara* will try to auto-detect the most likely
+    of the existing columns to use. If that is not possible, an error will be raised.
     """
 
     _module_type_name = "assemble.network_data.from.tables"
+    _config_cls = AssembleNetworkDataModuleConfig
 
     def create_inputs_schema(
         self,
@@ -133,15 +175,15 @@ class CreateGraphFromTablesModule(KiaraModule):
                 "doc": "A table that contains the edges data.",
                 "optional": False,
             },
-            "source_column_name": {
+            "source_column": {
                 "type": "string",
                 "doc": "The name of the source column name in the edges table.",
-                "default": SOURCE_COLUMN_NAME,
+                "optional": True,
             },
-            "target_column_name": {
+            "target_column": {
                 "type": "string",
                 "doc": "The name of the target column name in the edges table.",
-                "default": TARGET_COLUMN_NAME,
+                "optional": True,
             },
             "edges_column_map": {
                 "type": "dict",
@@ -153,12 +195,12 @@ class CreateGraphFromTablesModule(KiaraModule):
                 "doc": "A table that contains the nodes data.",
                 "optional": True,
             },
-            "id_column_name": {
+            "id_column": {
                 "type": "string",
                 "doc": "The name (before any potential column mapping) of the node-table column that contains the node identifier (used in the edges table).",
-                "default": ID_COLUMN_NAME,
+                "optional": True,
             },
-            "label_column_name": {
+            "label_column": {
                 "type": "string",
                 "doc": "The name of a column that contains the node label (before any potential column name mapping). If not specified, the value of the id value will be used as label.",
                 "optional": True,
@@ -182,28 +224,154 @@ class CreateGraphFromTablesModule(KiaraModule):
 
     def process(self, inputs: ValueMap, outputs: ValueMap) -> None:
 
-        edges = inputs.get_value_obj("edges")
-        edges_table: KiaraTable = edges.data
-        edges_source_column_name = inputs.get_value_data("source_column_name")
-        edges_target_column_name = inputs.get_value_data("target_column_name")
+        import pyarrow as pa
+        import pyarrow.compute as pc
 
-        edges_columns = edges_table.column_names
-        if edges_source_column_name not in edges_columns:
-            raise KiaraProcessingException(
-                f"Edges table does not contain source column '{edges_source_column_name}'. Choose one of: {', '.join(edges_columns)}."
-            )
-        if edges_target_column_name not in edges_columns:
-            raise KiaraProcessingException(
-                f"Edges table does not contain target column '{edges_target_column_name}'. Choose one of: {', '.join(edges_columns)}."
-            )
-
+        # process nodes
         nodes = inputs.get_value_obj("nodes")
+        nodes_table: Union[KiaraTable, None] = None
 
-        id_column_name = inputs.get_value_data("id_column_name")
-        label_column_name = inputs.get_value_data("label_column_name")
         nodes_column_map: Dict[str, str] = inputs.get_value_data("nodes_column_map")
         if nodes_column_map is None:
             nodes_column_map = {}
+
+        nodes_arrow_table: Union[None, pa.Table] = None
+
+        # we need to process the nodes first, because if we have nodes, we need to create the node id map that translates from the original
+        # id to the new, internal, integer-based one
+        if nodes.is_set:
+
+            for col_name in nodes_column_map.values():
+                if col_name.startswith("_"):
+                    raise KiaraProcessingException(
+                        f"Nodes column map contains target column name that starts with an underscore ('{col_name}'). This is not allowed."
+                    )
+
+            nodes_table = nodes.data
+            assert nodes_table is not None
+
+            nodes_column_names = nodes_table.column_names
+
+            # TODO: deal with the case that we are importing a table that was exported from an earlier network_data instance
+            for col_name in nodes_column_names:
+                if col_name.startswith("_"):
+                    raise KiaraProcessingException(
+                        f"Nodes table contains column that starts with an underscore ('{col_name}'). This is not allowed."
+                    )
+
+            # the most important column is the id column, which is the only one that we absolute need to have
+            id_column_name = inputs.get_value_data("id_column")
+            if id_column_name is None:
+                column_names_to_test = self.get_config_value("node_id_column_aliases")
+                for col_name in nodes_column_names:
+                    if col_name.lower() in column_names_to_test:
+                        id_column_name = col_name
+                        break
+                if id_column_name is None:
+                    raise KiaraProcessingException(
+                        f"Could not auto-determine id column name. Please specify one manually, using one of: {', '.join(nodes_column_names)}"
+                    )
+
+            if id_column_name not in nodes_column_names:
+                raise KiaraProcessingException(
+                    f"Could not find id column '{id_column_name}' in the nodes table. Please specify a valid column name manually, using one of: {', '.join(nodes_column_names)}"
+                )
+
+            # the label is optional, if not specified, we try to auto-detect it. If not possible, we will use the (stringified) id column as label.
+            label_column_name = inputs.get_value_data("label_column")
+            if label_column_name is None:
+                column_names_to_test = self.get_config_value("label_column_aliases")
+                for col_name in nodes_column_names:
+                    if col_name.lower() in column_names_to_test:
+                        label_column_name = col_name
+                        break
+
+            if label_column_name:
+                if label_column_name not in nodes_column_names:
+                    raise KiaraProcessingException(
+                        f"Could not find id column '{id_column_name}' in the nodes table. Please specify a valid column name manually, using one of: {', '.join(nodes_column_names)}"
+                    )
+
+            nodes_arrow_table = nodes_table.arrow_table
+
+            index_column = range(0, len(nodes_arrow_table))
+            orig_id_column = nodes_arrow_table.column(id_column_name).to_pylist()
+
+            node_id_map = dict(zip(orig_id_column, index_column))
+            assert len(node_id_map) == len(orig_id_column)
+
+            nodes_arrow_table = nodes_arrow_table.add_column(
+                0, ID_COLUMN_NAME, [index_column]
+            )
+
+            if label_column_name is None:
+                label_column_name = id_column_name
+
+            # we create a copy of the label column, and stringify its items
+            label_column = nodes_arrow_table.column(label_column_name)
+            if label_column.type != pa.string():
+                label_column = pc.cast(label_column, pa.string())
+
+            if label_column.null_count != 0:
+                raise KiaraProcessingException(
+                    f"Label column '{label_column_name}' contains null values. This is not allowed."
+                )
+
+            nodes_arrow_table = nodes_arrow_table.add_column(
+                1, LABEL_COLUMN_NAME, label_column
+            )
+
+            nullable_columns = [
+                col_name
+                for col_name in nodes_arrow_table.column_names
+                if col_name not in [ID_COLUMN_NAME, LABEL_COLUMN_NAME]
+            ]
+
+            nodes_data_schema = create_sqlite_schema_data_from_arrow_table(
+                table=nodes_arrow_table,
+                index_columns=[ID_COLUMN_NAME, LABEL_COLUMN_NAME],
+                column_map=nodes_column_map,
+                nullable_columns=nullable_columns,
+                unique_columns=[ID_COLUMN_NAME],
+            )
+
+        else:
+            nodes_data_schema = None
+            node_id_map = {}
+
+        # process edges
+
+        edges = inputs.get_value_obj("edges")
+        edges_table: KiaraTable = edges.data
+        edges_source_column_name = inputs.get_value_data("source_column")
+        edges_target_column_name = inputs.get_value_data("target_column")
+
+        edges_arrow_table = edges_table.arrow_table
+        edges_column_names = edges_arrow_table.column_names
+
+        if edges_source_column_name is None:
+            column_names_to_test = self.get_config_value("source_column_aliases")
+            for item in edges_column_names:
+                if item.lower() in column_names_to_test:
+                    edges_source_column_name = item
+                    break
+
+            if not edges_source_column_name:
+                raise KiaraProcessingException(
+                    f"Could not auto-detect source column name. Please specify it manually using one of: {', '.join(edges_column_names)}."
+                )
+
+        if edges_target_column_name is None:
+            column_names_to_test = self.get_config_value("target_column_aliases")
+            for item in edges_column_names:
+                if item.lower() in column_names_to_test:
+                    edges_target_column_name = item
+                    break
+
+            if not edges_target_column_name:
+                raise KiaraProcessingException(
+                    f"Could not auto-detect target column name. Please specify it manually using one of: {', '.join(edges_column_names)}."
+                )
 
         edges_column_map: Dict[str, str] = inputs.get_value_data("edges_column_map")
         if edges_column_map is None:
@@ -217,70 +385,59 @@ class CreateGraphFromTablesModule(KiaraModule):
                 "The value of the 'source_column_name' argument is not allowed in the edges column map."
             )
 
-        edges_column_map[edges_source_column_name] = SOURCE_COLUMN_NAME
-        edges_column_map[edges_target_column_name] = TARGET_COLUMN_NAME
+        for v in edges_column_map.values():
+            if v.startswith("_"):
+                raise KiaraProcessingException(
+                    "Mapped column names in the edges column map must not start with an underscore ('_')."
+                )
 
+        if edges_source_column_name not in edges_column_names:
+            raise KiaraProcessingException(
+                f"Edges table does not contain source column '{edges_source_column_name}'. Choose one of: {', '.join(edges_column_names)}."
+            )
+        if edges_target_column_name not in edges_column_names:
+            raise KiaraProcessingException(
+                f"Edges table does not contain target column '{edges_target_column_name}'. Choose one of: {', '.join(edges_column_names)}."
+            )
+
+        for column_name in edges_column_map.keys():
+            if (
+                column_name.startswith("_")
+                and column_name not in edges_column_map.keys()
+            ):
+                raise KiaraProcessingException(
+                    f"Column name '{column_name}' starts with an underscore, that is not allowed."
+                )
+
+        source_column = edges_arrow_table.column(edges_source_column_name)
+        target_column = edges_arrow_table.column(edges_target_column_name)
+
+        def id_mapper(element):
+            return node_id_map[element.as_py()]
+
+        source_column_mapped = (node_id_map[x] for x in source_column.to_pylist())
+        target_column_mapped = (node_id_map[x] for x in target_column.to_pylist())
+
+        edges_arrow_table = edges_arrow_table.remove_column(
+            edges_arrow_table.schema.get_field_index(edges_source_column_name)
+        )
+        edges_arrow_table = edges_arrow_table.remove_column(
+            edges_arrow_table.schema.get_field_index(edges_target_column_name)
+        )
+
+        edges_arrow_table = edges_arrow_table.add_column(
+            0, SOURCE_COLUMN_NAME, [source_column_mapped]
+        )
+        edges_arrow_table = edges_arrow_table.add_column(
+            1, TARGET_COLUMN_NAME, [target_column_mapped]
+        )
+
+        # TODO: also index the other columns?
         edges_data_schema = create_sqlite_schema_data_from_arrow_table(
-            table=edges_table.arrow_table,
+            table=edges_arrow_table,
             index_columns=[SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME],
             column_map=edges_column_map,
         )
-
-        nodes_table: Union[KiaraTable, None] = None
-        if nodes.is_set:
-            if (
-                id_column_name in nodes_column_map.keys()
-                and nodes_column_map[id_column_name] != ID_COLUMN_NAME
-            ):
-                raise KiaraProcessingException(
-                    "The value of the 'id_column_name' argument is not allowed in the node column map."
-                )
-
-            nodes_column_map[id_column_name] = ID_COLUMN_NAME
-
-            nodes_table = nodes.data
-
-            assert nodes_table is not None
-
-            extra_schema = []
-            if label_column_name is None:
-                label_column_name = LABEL_COLUMN_NAME
-
-            for cn in nodes_table.column_names:
-                if cn.lower() == LABEL_COLUMN_NAME.lower():
-                    label_column_name = cn
-                    break
-
-            if LABEL_COLUMN_NAME in nodes_table.column_names:
-                if label_column_name != LABEL_COLUMN_NAME:
-                    raise KiaraProcessingException(
-                        f"Can't create database for graph data: original data contains column called 'label', which is a protected column name. If this column can be used as a label, remove your '{label_column_name}' input value for the 'label_column_name' input and re-run this module."
-                    )
-
-            if label_column_name in nodes_table.column_names:
-                if label_column_name in nodes_column_map.keys():
-                    raise KiaraProcessingException(
-                        "The value of the 'label_column_name' argument is not allowed in the node column map."
-                    )
-            else:
-                extra_schema.append("    label    TEXT")
-
-            nodes_column_map[label_column_name] = LABEL_COLUMN_NAME
-
-            nullable_columns = list(nodes_table.column_names)
-            if ID_COLUMN_NAME in nullable_columns:
-                nullable_columns.remove(ID_COLUMN_NAME)
-
-            nodes_data_schema = create_sqlite_schema_data_from_arrow_table(
-                table=nodes_table.arrow_table,
-                index_columns=[ID_COLUMN_NAME],
-                column_map=nodes_column_map,
-                nullable_columns=[],
-                unique_columns=[ID_COLUMN_NAME],
-            )
-
-        else:
-            nodes_data_schema = None
 
         network_data = NetworkData.create_network_data_in_temp_dir(
             schema_edges=edges_data_schema,
@@ -290,9 +447,9 @@ class CreateGraphFromTablesModule(KiaraModule):
 
         insert_table_data_into_network_graph(
             network_data=network_data,
-            edges_table=edges_table.arrow_table,
+            edges_table=edges_arrow_table,
             edges_column_map=edges_column_map,
-            nodes_table=None if nodes_table is None else nodes_table.arrow_table,
+            nodes_table=None if nodes_arrow_table is None else nodes_arrow_table,
             nodes_column_map=nodes_column_map,
             chunk_size=DEFAULT_NETWORK_DATA_CHUNK_SIZE,
         )

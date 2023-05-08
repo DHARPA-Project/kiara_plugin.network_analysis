@@ -54,22 +54,43 @@ class NetworkData(KiaraDatabase):
 
     This class provides different ways to access the underlying network data, most notably via sql and as networkx Graph object.
 
-    Internally, network data is stored in a sqlite database with the edges stored in a table called 'edges' and the nodes, well,
-    in a table aptly called 'nodes'.
+    Internally, network data is stored in a sqlite database with the edges stored in a table called 'edges' and the nodes in a table called 'nodes'. The edges table must have (at least) the following columns: '_source', '_target'. The nodes table must have (at least) the following columns: '_id' (integer), '_label' (string).
 
     """
 
     _kiara_model_id = "instance.network_data"
 
     @classmethod
-    def create_from_networkx_graph(cls, graph: "nx.Graph") -> "NetworkData":
+    def create_from_networkx_graph(
+        cls,
+        graph: "nx.Graph",
+        label_attr_name: Union[str, None] = None,
+        ignore_node_attributes: Union[Iterable[str], None] = None,
+    ) -> "NetworkData":
         """Create a `NetworkData` instance from a networkx Graph object."""
 
-        edges_table = extract_edges_as_table(graph)
-        edges_schema = create_sqlite_schema_data_from_arrow_table(edges_table)
+        # TODO: should we also index nodes/edges attributes?
 
-        nodes_table = extract_nodes_as_table(graph)
-        nodes_schema = create_sqlite_schema_data_from_arrow_table(nodes_table)
+        nodes_table, node_id_map = extract_nodes_as_table(
+            graph=graph,
+            label_attr_name=label_attr_name,
+            ignore_attributes=ignore_node_attributes,
+        )
+
+        index_columns = [ID_COLUMN_NAME, LABEL_COLUMN_NAME]
+        unique_columns = [ID_COLUMN_NAME]
+        nodes_schema = create_sqlite_schema_data_from_arrow_table(
+            nodes_table,
+            index_columns=index_columns,
+            unique_columns=unique_columns,
+            primary_key=ID_COLUMN_NAME,
+        )
+
+        edges_table = extract_edges_as_table(graph, node_id_map)
+        index_columns = [SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME]
+        edges_schema = create_sqlite_schema_data_from_arrow_table(
+            edges_table, index_columns=index_columns
+        )
 
         network_data = NetworkData.create_network_data_in_temp_dir(
             schema_edges=edges_schema, schema_nodes=nodes_schema, keep_unlocked=True
@@ -435,28 +456,32 @@ class NetworkGraphProperties(ValueMetadata):
         network_data: NetworkData = value.data
 
         with network_data.get_sqlalchemy_engine().connect() as con:
-            result = con.execute(text("SELECT count(*) from nodes"))
+            result = con.execute(
+                text(f"SELECT count(*) from {NetworkDataTableType.NODES.value}")
+            )
             num_rows = result.fetchone()[0]
-            result = con.execute(text("SELECT count(*) from edges"))
+            result = con.execute(
+                text(f"SELECT count(*) from {NetworkDataTableType.EDGES.value}")
+            )
             num_rows_eges = result.fetchone()[0]
             result = con.execute(
-                text("SELECT COUNT(*) FROM (SELECT DISTINCT source, target FROM edges)")
+                text(
+                    f"SELECT COUNT(*) FROM (SELECT DISTINCT {SOURCE_COLUMN_NAME}, {TARGET_COLUMN_NAME} FROM {NetworkDataTableType.EDGES.value})"
+                )
             )
             num_edges_directed = result.fetchone()[0]
-            query = "SELECT COUNT(*) FROM edges WHERE rowid in (SELECT DISTINCT MIN(rowid) FROM (SELECT rowid, source, target from edges UNION ALL SELECT rowid, target, source from edges) GROUP BY source, target)"
+            query = f"SELECT COUNT(*) FROM {NetworkDataTableType.EDGES.value} WHERE rowid in (SELECT DISTINCT MIN(rowid) FROM (SELECT rowid, {SOURCE_COLUMN_NAME}, {TARGET_COLUMN_NAME} from {NetworkDataTableType.EDGES.value} UNION ALL SELECT rowid, {TARGET_COLUMN_NAME}, {SOURCE_COLUMN_NAME} from {NetworkDataTableType.EDGES.value}) GROUP BY {SOURCE_COLUMN_NAME}, {TARGET_COLUMN_NAME})"
 
             result = con.execute(text(query))
             num_edges_undirected = result.fetchone()[0]
 
-            query = (
-                "SELECT COUNT(*) FROM edges GROUP BY source, target HAVING COUNT(*) > 1"
-            )
+            query = f"SELECT COUNT(*) FROM {NetworkDataTableType.EDGES.value} GROUP BY {SOURCE_COLUMN_NAME}, {TARGET_COLUMN_NAME} HAVING COUNT(*) > 1"
             result = con.execute(text(query))
             num_parallel_edges = 0
             for duplicates in result.fetchall():
                 num_parallel_edges += duplicates[0] - 1
 
-            query = "SELECT count(*) FROM edges WHERE source = target"
+            query = f"SELECT count(*) FROM {NetworkDataTableType.EDGES.value} WHERE {SOURCE_COLUMN_NAME} = {TARGET_COLUMN_NAME}"
             result = con.execute(text(query))
             num_self_loops = result.fetchone()[0]
 

@@ -36,10 +36,10 @@
   "input_aliases": {
     "import_edges_file.path": "edges_path",
     "import_nodes_file.path": "nodes_path",
-    "assemble_network_data.source_column_name": "source_column_name",
-    "assemble_network_data.target_column_name": "target_column_name",
-    "assemble_network_data.id_column_name": "id_column_name",
-    "assemble_network_data.label_column_name": "label_column_name",
+    "assemble_network_data.source_column": "source_column_name",
+    "assemble_network_data.target_column": "target_column_name",
+    "assemble_network_data.id_column": "id_column_name",
+    "assemble_network_data.label_column": "label_column_name",
     "assemble_network_data.edges_column_map": "edges_column_map",
     "assemble_network_data.nodes_column_map": "nodes_column_map"
   },

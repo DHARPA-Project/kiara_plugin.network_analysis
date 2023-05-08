@@ -9,6 +9,7 @@ from kiara_plugin.network_analysis.defaults import (
     LABEL_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
+    NetworkDataTableType,
 )
 from kiara_plugin.network_analysis.models import NetworkData
 from kiara_plugin.tabular.data_types.db import DatabaseType
@@ -48,20 +49,13 @@ class NetworkDataType(DatabaseType):
         network_data: NetworkData = value
 
         table_names = network_data.table_names
-        for tn in ["edges", "nodes"]:
-            if tn not in table_names:
-                raise Exception(
-                    f"Invalid 'network_data' value: database does not contain table '{tn}'"
-                )
-
-        table_names = network_data.table_names
-        if "edges" not in table_names:
+        if NetworkDataTableType.EDGES.value not in table_names:
             raise Exception(
-                "Invalid 'network_data' value: database does not contain table 'edges'"
+                f"Invalid 'network_data' value: database does not contain table '{NetworkDataTableType.EDGES.value}'"
             )
         if "nodes" not in table_names:
             raise Exception(
-                "Invalid 'network_data' value: database does not contain table 'nodes'"
+                f"Invalid 'network_data' value: database does not contain table '{NetworkDataTableType.NODES.value}'"
             )
 
         edges_columns = network_data.edges_schema.columns

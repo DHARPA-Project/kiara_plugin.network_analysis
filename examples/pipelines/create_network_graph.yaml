@@ -22,11 +22,11 @@ steps:
 input_aliases:
   import_edges_file.path: edges_file
   import_nodes_file.path: nodes_file
-  assemble_network_data.source_column_name: source_column_name
-  assemble_network_data.target_column_name: target_column_name
+  assemble_network_data.source_column: source_column
+  assemble_network_data.target_column: target_column
   assemble_network_data.edges_column_map: edges_column_map
-  assemble_network_data.id_column_name: id_column_name
-  assemble_network_data.label_column_name: label_column_name
+  assemble_network_data.id_column: id_column
+  assemble_network_data.label_column: label_column
   assemble_network_data.nodes_column_map: nodes_column_map
 
 output_aliases:
@@ -35,7 +35,3 @@ output_aliases:
 defaults:
   edges_file: "${pipeline_dir}/../data/journals/JournalEdges1902.csv"
   nodes_file: "${pipeline_dir}/../data/journals/JournalNodes1902.csv"
-  source_column_name: Source
-  target_column_name: Target
-  id_column_name: Id
-  label_column_name: Label

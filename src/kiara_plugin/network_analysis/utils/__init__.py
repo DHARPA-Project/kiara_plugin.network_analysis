@@ -2,8 +2,19 @@
 #  Copyright (c) 2022, Markus Binsteiner
 #
 #  Mozilla Public License, version 2.0 (see LICENSE or https://www.mozilla.org/en-US/MPL/2.0/)
-import typing
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Hashable,
+    Iterable,
+    List,
+    Mapping,
+    Tuple,
+    Union,
+)
 
+from kiara.exceptions import KiaraException
 from kiara.utils.output import DictTabularWrap, TabularWrap
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
@@ -14,7 +25,7 @@ from kiara_plugin.network_analysis.defaults import (
     NetworkDataTableType,
 )
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     import networkx as nx
     import pyarrow as pa
     from sqlalchemy import MetaData, Table  # noqa
@@ -42,7 +53,7 @@ class NetworkDataTabularWrap(TabularWrap):
 
         return num_rows
 
-    def retrieve_column_names(self) -> typing.Iterable[str]:
+    def retrieve_column_names(self) -> Iterable[str]:
 
         from sqlalchemy import inspect
 
@@ -52,9 +63,7 @@ class NetworkDataTabularWrap(TabularWrap):
         result = [column["name"] for column in columns]
         return result
 
-    def slice(
-        self, offset: int = 0, length: typing.Union[int, None] = None
-    ) -> "TabularWrap":
+    def slice(self, offset: int = 0, length: Union[int, None] = None) -> "TabularWrap":
 
         from sqlalchemy import text
 
@@ -67,7 +76,7 @@ class NetworkDataTabularWrap(TabularWrap):
             query = f"{query} OFFSET {offset}"
         with self._db.get_sqlalchemy_engine().connect() as con:
             result = con.execute(text(query))
-            result_dict: typing.Dict[str, typing.List[typing.Any]] = {}
+            result_dict: Dict[str, List[Any]] = {}
             for cn in self.column_names:
                 result_dict[cn] = []
             for r in result:
@@ -76,7 +85,7 @@ class NetworkDataTabularWrap(TabularWrap):
 
         return DictTabularWrap(result_dict)
 
-    def to_pydict(self) -> typing.Mapping:
+    def to_pydict(self) -> Mapping:
 
         from sqlalchemy import text
 
@@ -84,7 +93,7 @@ class NetworkDataTabularWrap(TabularWrap):
 
         with self._db.get_sqlalchemy_engine().connect() as con:
             result = con.execute(text(query))
-            result_dict: typing.Dict[str, typing.List[typing.Any]] = {}
+            result_dict: Dict[str, List[Any]] = {}
             for cn in self.column_names:
                 result_dict[cn] = []
             for r in result:
@@ -111,9 +120,9 @@ def convert_graphml_type_to_sqlite(data_type: str) -> str:
 def insert_table_data_into_network_graph(
     network_data: "NetworkData",
     edges_table: "pa.Table",
-    edges_column_map: typing.Union[typing.Mapping[str, str], None] = None,
-    nodes_table: typing.Union["pa.Table", None] = None,
-    nodes_column_map: typing.Union[typing.Mapping[str, str], None] = None,
+    edges_column_map: Union[Mapping[str, str], None] = None,
+    nodes_table: Union["pa.Table", None] = None,
+    nodes_column_map: Union[Mapping[str, str], None] = None,
     chunk_size: int = DEFAULT_NETWORK_DATA_CHUNK_SIZE,
 ):
 
@@ -171,72 +180,115 @@ def insert_table_data_into_network_graph(
         added_node_ids.update(all_node_ids)
 
 
-def extract_edges_as_table(graph: "nx.Graph"):
+def extract_edges_as_table(
+    graph: "nx.Graph", node_id_map: Dict[Hashable, int]
+) -> "pa.Table":
+    """Extract the edges of this graph as a pyarrow table.
+
+    The provided `node_id_map` might be modified if a node id is not yet in the map.
+
+    Args:
+        graph: The graph to extract edges from.
+        node_id_map: A mapping from (original) node ids to (kiara-internal) (integer) node-ids.
+    """
 
     # adapted from networx code
     # License: 3-clause BSD license
     # Copyright (C) 2004-2022, NetworkX Developers
 
-    import networkx as nx
     import pyarrow as pa
 
-    edgelist = graph.edges(data=True)
-    source_nodes = [s for s, _, _ in edgelist]
-    target_nodes = [t for _, t, _ in edgelist]
+    if node_id_map is None:
+        node_id_map = {}
 
-    all_attrs: typing.Set[str] = set().union(*(d.keys() for _, _, d in edgelist))  # type: ignore
+    # nan = float("nan")
 
-    if SOURCE_COLUMN_NAME in all_attrs:
-        raise nx.NetworkXError(
-            f"Source name {SOURCE_COLUMN_NAME} is an edge attribute name"
-        )
-    if SOURCE_COLUMN_NAME in all_attrs:
-        raise nx.NetworkXError(
-            f"Target name {SOURCE_COLUMN_NAME} is an edge attribute name"
-        )
-
-    nan = float("nan")
-    edge_attr = {k: [d.get(k, nan) for _, _, d in edgelist] for k in all_attrs}
-
-    edge_lists = {
-        SOURCE_COLUMN_NAME: source_nodes,
-        TARGET_COLUMN_NAME: target_nodes,
+    max_node_id = max(node_id_map.values())  # TODO: could we just use len(node_id_map)?
+    edge_columns: Dict[str, List[int]] = {
+        SOURCE_COLUMN_NAME: [],
+        TARGET_COLUMN_NAME: [],
     }
 
-    edge_lists.update(edge_attr)
-    edges_table = pa.Table.from_pydict(mapping=edge_lists)
+    for (source, target, edge_data) in graph.edges(data=True):
+        if source not in node_id_map.keys():
+            max_node_id += 1
+            node_id_map[source] = max_node_id
+        if target not in node_id_map.keys():
+            max_node_id += 1
+            node_id_map[target] = max_node_id
+
+        edge_columns[SOURCE_COLUMN_NAME].append(node_id_map[source])
+        edge_columns[TARGET_COLUMN_NAME].append(node_id_map[target])
+
+        for k in edge_data.keys():
+
+            if k.startswith("_"):
+                raise KiaraException(
+                    "Graph contains edge column name starting with '_'. This is reserved for internal use, and not allowed."
+                )
+
+            v = edge_data.get(k, None)
+            edge_columns.setdefault(k, []).append(v)
+
+    edges_table = pa.Table.from_pydict(mapping=edge_columns)
 
     return edges_table
 
 
-def extract_nodes_as_table(graph: "nx.Graph"):
+def extract_nodes_as_table(
+    graph: "nx.Graph",
+    label_attr_name: Union[str, None, Iterable[str]] = None,
+    ignore_attributes: Union[None, Iterable[str]] = None,
+) -> Tuple["pa.Table", Dict[Hashable, int]]:
 
     # adapted from networx code
     # License: 3-clause BSD license
     # Copyright (C) 2004-2022, NetworkX Developers
 
-    import networkx as nx
     import pyarrow as pa
 
-    nodelist = graph.nodes(data=True)
+    # nan = float("nan")
 
-    node_ids = [n for n, _ in nodelist]
+    nodes: Dict[str, List[Any]] = {
+        ID_COLUMN_NAME: [],
+        LABEL_COLUMN_NAME: [],
+    }
+    nodes_map = {}
 
-    all_attrs: typing.Set[str] = set().union(*(d.keys() for _, d in nodelist))  # type: ignore
+    for i, (node_id, node_data) in enumerate(graph.nodes(data=True)):
+        nodes[ID_COLUMN_NAME].append(i)
+        if label_attr_name is None:
+            nodes[LABEL_COLUMN_NAME].append(str(node_id))
+        elif isinstance(label_attr_name, str):
+            label = node_data.get(label_attr_name, None)
+            if label:
+                nodes[LABEL_COLUMN_NAME].append(str(label))
+            else:
+                nodes[LABEL_COLUMN_NAME].append(str(node_id))
+        else:
+            label_final = None
+            for label in label_attr_name:
+                label_final = node_data.get(label, None)
+                if label_final:
+                    break
+            if not label_final:
+                label_final = node_id
+            nodes[LABEL_COLUMN_NAME].append(str(label_final))
 
-    if ID_COLUMN_NAME in all_attrs:
-        raise nx.NetworkXError(
-            f"Id column name {ID_COLUMN_NAME} is an node attribute name"
-        )
-    if SOURCE_COLUMN_NAME in all_attrs:
-        raise nx.NetworkXError(
-            f"Target name {SOURCE_COLUMN_NAME} is an edge attribute name"
-        )
+        nodes_map[node_id] = i
+        for k in node_data.keys():
 
-    nan = float("nan")
-    node_attr = {k: [d.get(k, nan) for _, d in nodelist] for k in all_attrs}
+            if ignore_attributes and k in ignore_attributes:
+                continue
 
-    node_attr[ID_COLUMN_NAME] = node_ids
-    nodes_table = pa.Table.from_pydict(mapping=node_attr)
+            if k.startswith("_"):
+                raise KiaraException(
+                    "Graph contains node column name starting with '_'. This is reserved for internal use, and not allowed."
+                )
 
-    return nodes_table
+            v = node_data.get(k, None)
+            nodes.setdefault(k, []).append(v)
+
+    nodes_table = pa.Table.from_pydict(mapping=nodes)
+
+    return nodes_table, nodes_map
