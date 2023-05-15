@@ -44,7 +44,6 @@ class NetworkDataTabularWrap(TabularWrap):
         return self._table_type.value
 
     def retrieve_number_of_rows(self) -> int:
-
         from sqlalchemy import text
 
         with self._db.get_sqlalchemy_engine().connect() as con:
@@ -54,7 +53,6 @@ class NetworkDataTabularWrap(TabularWrap):
         return num_rows
 
     def retrieve_column_names(self) -> Iterable[str]:
-
         from sqlalchemy import inspect
 
         engine = self._db.get_sqlalchemy_engine()
@@ -64,7 +62,6 @@ class NetworkDataTabularWrap(TabularWrap):
         return result
 
     def slice(self, offset: int = 0, length: Union[int, None] = None) -> "TabularWrap":
-
         from sqlalchemy import text
 
         query = f"SELECT * FROM {self._table_name}"
@@ -86,7 +83,6 @@ class NetworkDataTabularWrap(TabularWrap):
         return DictTabularWrap(result_dict)
 
     def to_pydict(self) -> Mapping:
-
         from sqlalchemy import text
 
         query = f"SELECT * FROM {self._table_name}"
@@ -104,7 +100,6 @@ class NetworkDataTabularWrap(TabularWrap):
 
 
 def convert_graphml_type_to_sqlite(data_type: str) -> str:
-
     type_map = {
         "boolean": "INTEGER",
         "int": "INTEGER",
@@ -125,7 +120,6 @@ def insert_table_data_into_network_graph(
     nodes_column_map: Union[Mapping[str, str], None] = None,
     chunk_size: int = DEFAULT_NETWORK_DATA_CHUNK_SIZE,
 ):
-
     added_node_ids = set()
 
     if edges_column_map is None:
@@ -161,7 +155,6 @@ def insert_table_data_into_network_graph(
             added_node_ids.update(ids)
 
     for batch in edges_table.to_batches(chunk_size):
-
         batch_dict = batch.to_pydict()
 
         for k, v in edges_column_map.items():
@@ -209,7 +202,7 @@ def extract_edges_as_table(
         TARGET_COLUMN_NAME: [],
     }
 
-    for (source, target, edge_data) in graph.edges(data=True):
+    for source, target, edge_data in graph.edges(data=True):
         if source not in node_id_map.keys():
             max_node_id += 1
             node_id_map[source] = max_node_id
@@ -221,7 +214,6 @@ def extract_edges_as_table(
         edge_columns[TARGET_COLUMN_NAME].append(node_id_map[target])
 
         for k in edge_data.keys():
-
             if k.startswith("_"):
                 raise KiaraException(
                     "Graph contains edge column name starting with '_'. This is reserved for internal use, and not allowed."
@@ -240,7 +232,6 @@ def extract_nodes_as_table(
     label_attr_name: Union[str, None, Iterable[str]] = None,
     ignore_attributes: Union[None, Iterable[str]] = None,
 ) -> Tuple["pa.Table", Dict[Hashable, int]]:
-
     # adapted from networx code
     # License: 3-clause BSD license
     # Copyright (C) 2004-2022, NetworkX Developers
@@ -277,7 +268,6 @@ def extract_nodes_as_table(
 
         nodes_map[node_id] = i
         for k in node_data.keys():
-
             if ignore_attributes and k in ignore_attributes:
                 continue
 

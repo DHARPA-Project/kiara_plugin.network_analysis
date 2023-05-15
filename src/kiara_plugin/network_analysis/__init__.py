@@ -63,7 +63,6 @@ def get_version():
         dist_name = __name__
         __version__ = get_distribution(dist_name).version
     except DistributionNotFound:
-
         try:
             version_file = os.path.join(os.path.dirname(__file__), "version.txt")
 
@@ -73,7 +72,7 @@ def get_version():
             else:
                 __version__ = "unknown"
 
-        except (Exception):
+        except Exception:
             pass
 
         if __version__ is None:

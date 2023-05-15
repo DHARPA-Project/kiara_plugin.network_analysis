@@ -17,8 +17,20 @@ LABEL_ALIAS_NAMES = ["label", "node_label"]
 SOURCE_COLUMN_ALIAS_NAMES = ["source", "sources", "source_id", "from", "sender"]
 TARGET_COLUMN_ALIAS_NAMES = ["target", "targets", "target_id", "to", "receiver"]
 
+WEIGHT_COLUMN_ALIAS_NAMES = [
+    "weight",
+    "weights",
+    "edge_weight",
+    "edge_weights",
+    "strength",
+    "strengths",
+]
+
+RANKING_TABLE_NAME = "ranking"
+RANKING_COLUNN_NAME = "_rank"
+RANKING_VALUE_COLUMN_NAME = "_value"
+
 
 class NetworkDataTableType(Enum):
-
     EDGES = "edges"
     NODES = "nodes"
