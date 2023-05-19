@@ -43,12 +43,15 @@ from kiara_plugin.network_analysis.defaults import (
     RANKING_VALUE_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
-    NetworkDataTableType, WEIGHT_UNDIRECTED_COLUMN_NAME, WEIGHT_DIRECTED_COLUMN_NAME,
+    WEIGHT_DIRECTED_COLUMN_NAME,
+    WEIGHT_UNDIRECTED_COLUMN_NAME,
+    NetworkDataTableType,
 )
 from kiara_plugin.network_analysis.utils import (
+    augment_edges_table,
     extract_edges_as_table,
     extract_nodes_as_table,
-    insert_table_data_into_network_graph, augment_edges_table,
+    insert_table_data_into_network_graph,
 )
 from kiara_plugin.tabular.defaults import SqliteDataType
 from kiara_plugin.tabular.models.db import KiaraDatabase, SqliteTableSchema
@@ -182,7 +185,7 @@ class NetworkData(KiaraDatabase):
     ) -> "NetworkData":
         """Create a `NetworkData` instance from a networkx Graph object."""
 
-        import duckdb
+
         # TODO: should we also index nodes/edges attributes?
 
         nodes_table, node_id_map = extract_nodes_as_table(
@@ -203,7 +206,12 @@ class NetworkData(KiaraDatabase):
         edges_table = extract_edges_as_table(graph, node_id_map)
         edges_table_augmented = augment_edges_table(edges_table)
 
-        index_columns = [SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME, WEIGHT_DIRECTED_COLUMN_NAME, WEIGHT_UNDIRECTED_COLUMN_NAME]
+        index_columns = [
+            SOURCE_COLUMN_NAME,
+            TARGET_COLUMN_NAME,
+            WEIGHT_DIRECTED_COLUMN_NAME,
+            WEIGHT_UNDIRECTED_COLUMN_NAME,
+        ]
         edges_schema = create_sqlite_schema_data_from_arrow_table(
             edges_table_augmented, index_columns=index_columns
         )

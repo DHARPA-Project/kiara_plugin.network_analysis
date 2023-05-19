@@ -22,15 +22,15 @@ from kiara_plugin.network_analysis.defaults import (
     LABEL_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
-    NetworkDataTableType,
-    WEIGHT_UNDIRECTED_COLUMN_NAME,
     WEIGHT_DIRECTED_COLUMN_NAME,
+    WEIGHT_UNDIRECTED_COLUMN_NAME,
+    NetworkDataTableType,
 )
 
 if TYPE_CHECKING:
     import networkx as nx
-    import pyarrow as pa
     import polars as pl
+    import pyarrow as pa
     from sqlalchemy import MetaData, Table  # noqa
 
     from kiara_plugin.network_analysis.models import NetworkData
@@ -323,16 +323,16 @@ def augment_nodes_table(
 
     node_attr_columns = [x for x in column_names if not x.startswith("_")]
     if node_attr_columns:
-        other_columns = ", " + ", ".join(node_attr_columns)
+        ", " + ", ".join(node_attr_columns)
     else:
-        other_columns = ""
+        pass
 
     query = """
-        select 
-            NT._id, 
+        select
+            NT._id,
             COALESCE(COUNT(ET_S._source), 0) as count_source,
-            COALESCE(COUNT(ET_T._target), 0) as count_target 
-        from nodes_table NT 
+            COALESCE(COUNT(ET_T._target), 0) as count_target
+        from nodes_table NT
         LEFT JOIN augmented_edges_table ET_S
         ON NT._id = ET_S._source
         LEFT JOIN augmented_edges_table ET_T

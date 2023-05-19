@@ -33,9 +33,9 @@ from kiara_plugin.network_analysis.defaults import (
 )
 from kiara_plugin.network_analysis.models import NetworkData
 from kiara_plugin.network_analysis.utils import (
-    insert_table_data_into_network_graph,
     augment_edges_table,
     augment_nodes_table,
+    insert_table_data_into_network_graph,
 )
 from kiara_plugin.tabular.models.table import KiaraTable
 from kiara_plugin.tabular.modules.db import RenderDatabaseModuleBase
@@ -223,7 +223,6 @@ class AssembleGraphFromTablesModule(KiaraModule):
     def process(self, inputs: ValueMap, outputs: ValueMap) -> None:
 
         import polars as pl
-        import duckdb
 
         # process nodes
         nodes = inputs.get_value_obj("nodes")
@@ -470,7 +469,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
         nodes_arrow_table = nodes_arrow_dataframe.to_arrow()
 
-        nodes_table_augmented = augment_nodes_table(
+        augment_nodes_table(
             nodes_arrow_table, edges_table_augmented
         )
 
