@@ -23,11 +23,14 @@ from kiara_plugin.network_analysis.defaults import (
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
     NetworkDataTableType,
+    WEIGHT_UNDIRECTED_COLUMN_NAME,
+    WEIGHT_DIRECTED_COLUMN_NAME,
 )
 
 if TYPE_CHECKING:
     import networkx as nx
     import pyarrow as pa
+    import polars as pl
     from sqlalchemy import MetaData, Table  # noqa
 
     from kiara_plugin.network_analysis.models import NetworkData
@@ -120,6 +123,7 @@ def insert_table_data_into_network_graph(
     nodes_column_map: Union[Mapping[str, str], None] = None,
     chunk_size: int = DEFAULT_NETWORK_DATA_CHUNK_SIZE,
 ):
+
     added_node_ids = set()
 
     if edges_column_map is None:
@@ -153,10 +157,11 @@ def insert_table_data_into_network_graph(
             network_data.insert_nodes(*data)
 
             added_node_ids.update(ids)
+    else:
+        raise KiaraException("Nodes table is required to create network data.")
 
     for batch in edges_table.to_batches(chunk_size):
         batch_dict = batch.to_pydict()
-
         for k, v in edges_column_map.items():
             if k in batch_dict.keys():
                 _data = batch_dict.pop(k)
@@ -282,3 +287,63 @@ def extract_nodes_as_table(
     nodes_table = pa.Table.from_pydict(mapping=nodes)
 
     return nodes_table, nodes_map
+
+
+def augment_edges_table(edges_table: Union["pa.Table", "pl.DataFrame"]) -> "pa.Table":
+
+    import duckdb
+
+    try:
+        column_names = edges_table.column_names  # type: ignore
+    except Exception:
+        column_names = edges_table.columns  # type: ignore
+
+    edge_attr_columns = [x for x in column_names if not x.startswith("_")]
+    if edge_attr_columns:
+        other_columns = ", " + ", ".join(edge_attr_columns)
+    else:
+        other_columns = ""
+
+    query = f"SELECT {SOURCE_COLUMN_NAME}, {TARGET_COLUMN_NAME}, COUNT(*) OVER (PARTITION BY {SOURCE_COLUMN_NAME}, {TARGET_COLUMN_NAME}) as {WEIGHT_DIRECTED_COLUMN_NAME}, COUNT(*) OVER (PARTITION BY LEAST({SOURCE_COLUMN_NAME}, {TARGET_COLUMN_NAME}), GREATEST({SOURCE_COLUMN_NAME}, {TARGET_COLUMN_NAME})) as {WEIGHT_UNDIRECTED_COLUMN_NAME} {other_columns} FROM edges_table"
+
+    result = duckdb.sql(query)
+    edges_table_augmented = result.arrow()
+    return edges_table_augmented
+
+
+def augment_nodes_table(
+    nodes_table: Union["pa.Table", "pl.DataFrame"], augmented_edges_table: "pa.Table"
+) -> "pa.Table":
+    import duckdb
+
+    try:
+        column_names = nodes_table.column_names  # type: ignore
+    except Exception:
+        column_names = nodes_table.columns  # type: ignore
+
+    node_attr_columns = [x for x in column_names if not x.startswith("_")]
+    if node_attr_columns:
+        other_columns = ", " + ", ".join(node_attr_columns)
+    else:
+        other_columns = ""
+
+    query = """
+        select 
+            NT._id, 
+            COALESCE(COUNT(ET_S._source), 0) as count_source,
+            COALESCE(COUNT(ET_T._target), 0) as count_target 
+        from nodes_table NT 
+        LEFT JOIN augmented_edges_table ET_S
+        ON NT._id = ET_S._source
+        LEFT JOIN augmented_edges_table ET_T
+        ON NT._id = ET_T._target
+        GROUP BY NT._id
+    """
+    result = duckdb.sql(query)
+    nodes_table_augmented = result.arrow()
+    dbg(result)
+    dbg(augmented_edges_table)
+    import sys
+
+    sys.exit()
+    return nodes_table_augmented

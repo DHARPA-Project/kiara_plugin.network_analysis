@@ -17,14 +17,17 @@ LABEL_ALIAS_NAMES = ["label", "node_label"]
 SOURCE_COLUMN_ALIAS_NAMES = ["source", "sources", "source_id", "from", "sender"]
 TARGET_COLUMN_ALIAS_NAMES = ["target", "targets", "target_id", "to", "receiver"]
 
-WEIGHT_COLUMN_ALIAS_NAMES = [
-    "weight",
-    "weights",
-    "edge_weight",
-    "edge_weights",
-    "strength",
-    "strengths",
-]
+# WEIGHT_COLUMN_ALIAS_NAMES = [
+#     "weight",
+#     "weights",
+#     "edge_weight",
+#     "edge_weights",
+#     "strength",
+#     "strengths",
+# ]
+
+WEIGHT_DIRECTED_COLUMN_NAME = "_dup_directed"
+WEIGHT_UNDIRECTED_COLUMN_NAME = "_dup_undirected"
 
 RANKING_TABLE_NAME = "ranking"
 RANKING_COLUNN_NAME = "_rank"

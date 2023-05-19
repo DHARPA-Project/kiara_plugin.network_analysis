@@ -32,7 +32,11 @@ from kiara_plugin.network_analysis.defaults import (
     TARGET_COLUMN_NAME,
 )
 from kiara_plugin.network_analysis.models import NetworkData
-from kiara_plugin.network_analysis.utils import insert_table_data_into_network_graph
+from kiara_plugin.network_analysis.utils import (
+    insert_table_data_into_network_graph,
+    augment_edges_table,
+    augment_nodes_table,
+)
 from kiara_plugin.tabular.models.table import KiaraTable
 from kiara_plugin.tabular.modules.db import RenderDatabaseModuleBase
 from kiara_plugin.tabular.utils import create_sqlite_schema_data_from_arrow_table
@@ -217,7 +221,9 @@ class AssembleGraphFromTablesModule(KiaraModule):
         return outputs
 
     def process(self, inputs: ValueMap, outputs: ValueMap) -> None:
+
         import polars as pl
+        import duckdb
 
         # process nodes
         nodes = inputs.get_value_obj("nodes")
@@ -451,16 +457,22 @@ class AssembleGraphFromTablesModule(KiaraModule):
         edges_arrow_dataframe = edges_arrow_dataframe.drop(edges_source_column_name)
         edges_arrow_dataframe = edges_arrow_dataframe.drop(edges_target_column_name)
 
-        edges_arrow_table = edges_arrow_dataframe.to_arrow()
+        # edges_arrow_table = edges_arrow_dataframe.to_arrow()
+
+        edges_table_augmented = augment_edges_table(edges_arrow_dataframe)
 
         # TODO: also index the other columns?
         edges_data_schema = create_sqlite_schema_data_from_arrow_table(
-            table=edges_arrow_table,
+            table=edges_table_augmented,
             index_columns=[SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME],
             column_map=edges_column_map,
         )
 
         nodes_arrow_table = nodes_arrow_dataframe.to_arrow()
+
+        nodes_table_augmented = augment_nodes_table(
+            nodes_arrow_table, edges_table_augmented
+        )
 
         nodes_data_schema = create_sqlite_schema_data_from_arrow_table(
             table=nodes_arrow_table,
@@ -478,7 +490,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
         insert_table_data_into_network_graph(
             network_data=network_data,
-            edges_table=edges_arrow_table,
+            edges_table=edges_table_augmented,
             edges_column_map=edges_column_map,
             nodes_table=nodes_arrow_table,
             nodes_column_map=nodes_column_map,
