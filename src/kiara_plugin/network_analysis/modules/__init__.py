@@ -438,6 +438,11 @@ class ExtractLargestComponentModule(KiaraModule):
 
         result: Dict[str, Dict[str, Any]] = {}
 
+        result["component_network"] = {
+            "type": "network_data",
+            "doc": "Updated network data with component group assigned as a node attribute.",
+        }
+
         result["largest_component"] = {
             "type": "network_data",
             "doc": "A sub-graph of the largest component of the graph. In case the graph is a single component, the original input will be returned.",
@@ -480,6 +485,17 @@ class ExtractLargestComponentModule(KiaraModule):
                 other_components=None,
             )
             return
+
+        # Add component group as node attribute to the output component_network
+        components_dict = {}
+        for i, c in enumerate(undir_components):
+            for name in c:
+                components_dict[name] = i
+
+        nx.set_node_attributes(undir_graph, components_dict, "component_group")
+
+        attribute_network = NetworkData.create_from_networkx_graph(undir_graph)
+        outputs.set_value("component_network", attribute_network)
 
         nodes_largest_component: Tuple[Any, ...] = tuple(max(undir_components, key=len))  # type: ignore
 
