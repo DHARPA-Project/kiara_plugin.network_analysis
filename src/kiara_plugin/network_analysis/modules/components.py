@@ -3,7 +3,12 @@ from typing import Any, Dict
 
 from kiara.api import KiaraModule, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraException
+from kiara_plugin.network_analysis.defaults import (
+    ATTRIBUTE_PROPERTY_KEY,
+    COMPONENT_ID_COLUMN_NAME,
+)
 from kiara_plugin.network_analysis.models import NetworkData
+from kiara_plugin.network_analysis.models.metadata import NetworkNodeAttributeMetadata
 
 KIARA_METADATA = {
     "authors": [
@@ -13,16 +18,18 @@ KIARA_METADATA = {
     "description": "Modules related to extracting components from network data.",
 }
 
+COMPONENT_COLUMN_TEXT = """The id of the component the node is part of.
+
+If all nodes are connected, all nodes will have '0' as value in the component_id field. Otherwise, the nodes will be assigned 'component_id'-s according to the component they belong to, with the largest component having '0' as component_id, the second largest '1' and so on. If two components have the same size, who gets the higher component_id is not determinate."""
+COMPONENT_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=COMPONENT_COLUMN_TEXT)  # type: ignore
+
 
 class ExtractLargestComponentModule(KiaraModule):
     """Extract the largest connected component from this network data.
 
-    This module analyses network data and checks if it contains clusters, and if so, how many. If all nodes are connected
-    to each other, the input data will be returned as largest component and the 'other_components' output will be unset.
+    This module analyses network data and checks if it contains clusters, and if so, how many. If all nodes are connected, all nodes will have '0' as value in the component_id field.
 
-    Otherwise, the dataset will be split up into nodes of the largest component, and nodes that are not part of that.
-    Then this module will create 2 new network data items, one for the largest component, and one for the other components that excludes
-    the nodes and edges that are part of the largest component.
+    Otherwise, the nodes will be assigned 'component_id'-s according to the component they belong to, with the  largest component having '0' as component_id, the second largest '1' and so on. If two components have the same size, who gets the higher component_id is not determinate.
     """
 
     _module_type_name = "network_data.extract_components"
@@ -66,8 +73,6 @@ class ExtractLargestComponentModule(KiaraModule):
         network_value = inputs.get_value_obj("network_data")
         network_data: NetworkData = network_value.data
 
-        component_column_name = "component"
-
         # TODO: maybe this can be done directly in sql, without networx, which would be faster and better
         # for memory usage
         undir_graph = network_data.as_rustworkx_graph(
@@ -78,16 +83,23 @@ class ExtractLargestComponentModule(KiaraModule):
         )
         undir_components = rx.connected_components(undir_graph)
 
+        nodes_columns_metadata = {
+            COMPONENT_ID_COLUMN_NAME: {
+                ATTRIBUTE_PROPERTY_KEY: COMPONENT_COLUMN_METADATA
+            }
+        }
+
         if len(undir_components) == 1:
 
             nodes = network_data.nodes.arrow_table
             components_column = pa.array([0] * len(nodes), type=pa.int64())
-            nodes = nodes.append_column(component_column_name, components_column)
+            nodes = nodes.append_column(COMPONENT_ID_COLUMN_NAME, components_column)
 
             network_data = NetworkData.create_network_data(
                 nodes_table=nodes,
                 edges_table=network_data.edges.arrow_table,
                 augment_tables=False,
+                nodes_column_metadata=nodes_columns_metadata,
             )
             outputs.set_values(
                 network_data=network_data,
@@ -119,11 +131,12 @@ class ExtractLargestComponentModule(KiaraModule):
         )
 
         nodes = network_data.nodes.arrow_table
-        nodes = nodes.append_column(component_column_name, components_column)
+        nodes = nodes.append_column(COMPONENT_ID_COLUMN_NAME, components_column)
         network_data = NetworkData.create_network_data(
             nodes_table=nodes,
             edges_table=network_data.edges.arrow_table,
             augment_tables=False,
+            nodes_column_metadata=nodes_columns_metadata,
         )
         outputs.set_values(
             is_connected=is_connected,

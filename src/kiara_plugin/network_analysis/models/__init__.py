@@ -25,19 +25,28 @@ from typing import (
 from pydantic import BaseModel, Field
 
 from kiara.exceptions import KiaraException
+from kiara.models import KiaraModel
 from kiara.models.values.value import Value
 from kiara.models.values.value_metadata import ValueMetadata
 from kiara_plugin.network_analysis.defaults import (
     ATTRIBUTE_PROPERTY_KEY,
+    CONNECTIONS_COLUMN_NAME,
+    CONNECTIONS_MULTI_COLUMN_NAME,
+    COUNT_DIRECTED_COLUMN_NAME,
+    COUNT_IDX_DIRECTED_COLUMN_NAME,
+    COUNT_IDX_UNDIRECTED_COLUMN_NAME,
+    COUNT_UNDIRECTED_COLUMN_NAME,
     EDGE_ID_COLUMN_NAME,
     EDGES_TABLE_NAME,
+    IN_DIRECTED_COLUMN_NAME,
+    IN_DIRECTED_MULTI_COLUMN_NAME,
     LABEL_COLUMN_NAME,
     NODE_ID_COLUMN_NAME,
     NODES_TABLE_NAME,
+    OUT_DIRECTED_COLUMN_NAME,
+    OUT_DIRECTED_MULTI_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
-    WEIGHT_IDX_DIRECTED_COLUMN_NAME,
-    WEIGHT_IDX_UNDIRECTED_COLUMN_NAME,
     GraphType,
 )
 from kiara_plugin.network_analysis.utils import (
@@ -77,6 +86,8 @@ class NetworkData(KiaraTables):
         nodes_table: "pa.Table",
         edges_table: "pa.Table",
         augment_tables: bool = True,
+        nodes_column_metadata: Union[Dict[str, Dict[str, KiaraModel]], None] = None,
+        edges_column_metadata: Union[Dict[str, Dict[str, KiaraModel]], None] = None,
     ) -> "NetworkData":
         """Create a `NetworkData` instance from two Arrow tables.
 
@@ -87,9 +98,20 @@ class NetworkData(KiaraTables):
         """
 
         from kiara_plugin.network_analysis.models.metadata import (
+            EDGE_COUNT_DUP_DIRECTED_COLUMN_METADATA,
+            EDGE_COUNT_DUP_UNDIRECTED_COLUMN_METADATA,
             EDGE_ID_COLUMN_METADATA,
+            EDGE_IDX_DUP_DIRECTED_COLUMN_METADATA,
+            EDGE_IDX_DUP_UNDIRECTED_COLUMN_METADATA,
             EDGE_SOURCE_COLUMN_METADATA,
             EDGE_TARGET_COLUMN_METADATA,
+            NODE_COUND_EDGES_MULTI_COLUMN_METADATA,
+            NODE_COUNT_EDGES_COLUMN_METADATA,
+            NODE_COUNT_IN_EDGES_COLUMN_METADATA,
+            NODE_COUNT_IN_EDGES_MULTI_COLUMN_METADATA,
+            NODE_COUNT_OUT_EDGES_COLUMN_METADATA,
+            NODE_COUNT_OUT_EDGES_MULTI_COLUMN_METADATA,
+            NODE_ID_COLUMN_METADATA,
             NODE_LABEL_COLUMN_METADATA,
         )
 
@@ -103,6 +125,7 @@ class NetworkData(KiaraTables):
             {NODES_TABLE_NAME: nodes_table, EDGES_TABLE_NAME: edges_table}
         )
 
+        # set default column metadata
         network_data.edges.set_column_metadata(
             EDGE_ID_COLUMN_NAME,
             ATTRIBUTE_PROPERTY_KEY,
@@ -121,11 +144,35 @@ class NetworkData(KiaraTables):
             EDGE_TARGET_COLUMN_METADATA,
             overwrite_existing=False,
         )
+        network_data.edges.set_column_metadata(
+            COUNT_DIRECTED_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            EDGE_COUNT_DUP_DIRECTED_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.edges.set_column_metadata(
+            COUNT_IDX_DIRECTED_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            EDGE_IDX_DUP_DIRECTED_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.edges.set_column_metadata(
+            COUNT_UNDIRECTED_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            EDGE_COUNT_DUP_UNDIRECTED_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.edges.set_column_metadata(
+            COUNT_IDX_UNDIRECTED_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            EDGE_IDX_DUP_UNDIRECTED_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
 
         network_data.nodes.set_column_metadata(
             NODE_ID_COLUMN_NAME,
             ATTRIBUTE_PROPERTY_KEY,
-            EDGE_ID_COLUMN_METADATA,
+            NODE_ID_COLUMN_METADATA,
             overwrite_existing=False,
         )
         network_data.nodes.set_column_metadata(
@@ -134,6 +181,55 @@ class NetworkData(KiaraTables):
             NODE_LABEL_COLUMN_METADATA,
             overwrite_existing=False,
         )
+        network_data.nodes.set_column_metadata(
+            CONNECTIONS_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_COUNT_EDGES_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
+            CONNECTIONS_MULTI_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_COUND_EDGES_MULTI_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
+            IN_DIRECTED_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_COUNT_IN_EDGES_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
+            IN_DIRECTED_MULTI_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_COUNT_IN_EDGES_MULTI_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
+            OUT_DIRECTED_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_COUNT_OUT_EDGES_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
+            OUT_DIRECTED_MULTI_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_COUNT_OUT_EDGES_MULTI_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+
+        if nodes_column_metadata is not None:
+            for col_name, col_meta in nodes_column_metadata.items():
+                for prop_name, prop_value in col_meta.items():
+                    network_data.nodes.set_column_metadata(
+                        col_name, prop_name, prop_value, overwrite_existing=True
+                    )
+        if edges_column_metadata is not None:
+            for col_name, col_meta in edges_column_metadata.items():
+                for prop_name, prop_value in col_meta.items():
+                    network_data.edges.set_column_metadata(
+                        col_name, prop_name, prop_value, overwrite_existing=True
+                    )
 
         return network_data
 
@@ -197,7 +293,7 @@ class NetworkData(KiaraTables):
         import duckdb
 
         con = duckdb.connect()
-        edges = self.edges.arrow_table  # noqa
+        edges = self.edges.arrow_table  # noqak
         if relation_name != EDGES_TABLE_NAME:
             sql_query = sql_query.replace(relation_name, EDGES_TABLE_NAME)
 
@@ -486,12 +582,12 @@ class NetworkGraphProperties(ValueMetadata):
         num_edges = network_data.num_edges
 
         # query_num_edges_directed = f"SELECT COUNT(*) FROM (SELECT DISTINCT {SOURCE_COLUMN_NAME}, {TARGET_COLUMN_NAME} FROM {EDGES_TABLE_NAME})"
-        query_num_edges_directed = f"SELECT COUNT(*) FROM {EDGES_TABLE_NAME} WHERE {WEIGHT_IDX_DIRECTED_COLUMN_NAME} = 1"
+        query_num_edges_directed = f"SELECT COUNT(*) FROM {EDGES_TABLE_NAME} WHERE {COUNT_IDX_DIRECTED_COLUMN_NAME} = 1"
 
         num_edges_directed_result = network_data.query_edges(query_num_edges_directed)
         num_edges_directed = num_edges_directed_result.columns[0][0].as_py()
 
-        query_num_edges_undirected = f"SELECT COUNT(*) FROM {EDGES_TABLE_NAME} WHERE {WEIGHT_IDX_UNDIRECTED_COLUMN_NAME} = 1"
+        query_num_edges_undirected = f"SELECT COUNT(*) FROM {EDGES_TABLE_NAME} WHERE {COUNT_IDX_UNDIRECTED_COLUMN_NAME} = 1"
         num_edges_undirected_result = network_data.query_edges(
             query_num_edges_undirected
         )
@@ -501,7 +597,7 @@ class NetworkGraphProperties(ValueMetadata):
         self_loop_result = network_data.query_edges(self_loop_query)
         num_self_loops = self_loop_result.columns[0][0].as_py()
 
-        num_parallel_edges_directed_query = f"SELECT COUNT(*) FROM {EDGES_TABLE_NAME} WHERE {WEIGHT_IDX_DIRECTED_COLUMN_NAME} = 2"
+        num_parallel_edges_directed_query = f"SELECT COUNT(*) FROM {EDGES_TABLE_NAME} WHERE {COUNT_IDX_DIRECTED_COLUMN_NAME} = 2"
         num_parallel_edges_directed_result = network_data.query_edges(
             num_parallel_edges_directed_query
         )
@@ -509,7 +605,7 @@ class NetworkGraphProperties(ValueMetadata):
             0
         ].as_py()
 
-        num_parallel_edges_undirected_query = f"SELECT COUNT(*) FROM {EDGES_TABLE_NAME} WHERE {WEIGHT_IDX_UNDIRECTED_COLUMN_NAME} = 2"
+        num_parallel_edges_undirected_query = f"SELECT COUNT(*) FROM {EDGES_TABLE_NAME} WHERE {COUNT_IDX_UNDIRECTED_COLUMN_NAME} = 2"
         num_parallel_edges_undirected_result = network_data.query_edges(
             num_parallel_edges_undirected_query
         )
