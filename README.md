@@ -7,7 +7,7 @@
 
 # [**kiara**](https://dharpa.org/kiara.documentation) plugin: (network_analysis)
 
-kiara modules and datatypes for network analysis.
+kiara data types and modules for network analysis
 
  - Documentation: [https://DHARPA-Project.github.io/kiara_plugin.network_analysis](https://DHARPA-Project.github.io/kiara_plugin.network_analysis)
  - Code: [https://github.com/DHARPA-Project/kiara_plugin.network_analysis](https://github.com/DHARPA-Project/kiara_plugin.network_analysis)

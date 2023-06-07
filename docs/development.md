@@ -6,10 +6,11 @@
 ### Using conda (recommended)
 
 ```
-conda create -n kiara-network-analysis python=3.9
-conda activate kiara-network-analysis
+conda create -n network_analysis python=3.9
+conda activate network_analysis
 conda install -c conda-forge mamba   # this is optional, but makes everything install related much faster, if you don't use it, replace 'mamba' with 'conda' below
-mamba install -c conda-forge -c dharpa kiara kiara_plugin.tabular
+mamba install -c conda-forge -c dharpa kiara
+mamba install -c conda-forge -c dharpa kiara_plugin.core_types kiara_plugin.tabular   # optional, adjust which plugin packages you depend on, those two are quite common
 ```
 
 ### Using Python venv
@@ -24,10 +25,10 @@ First, fork the [kiara_plugin.network_analysis](https://github.com/DHARPA-Projec
 Then, use the resulting url (in my case: https://github.com/makkus/kiara_modules.network_analysis.git) to clone the repository locally:
 
 ```
-https://github.com/<fork_github_id>/kiara_plugin.network_analysis
+https://github.com/<YOUR_FORKED_GITHUB_ID>/kiara_plugin.network_analysis
 ```
 
-## Install the kiara modules package into it
+## Install the kiara plugin package into it
 
 ```
 cd kiara_plugin.network_analysis
@@ -57,7 +58,7 @@ https://www.conventionalcommits.org/en/v1.0.0/
 To check if everything works as expected and you can start adding/changing code in this repository, run any `kiara` command:
 
 ```
-kiara operation list -t network_data
+kiara operation list -t network_analysis
 ```
 
 If everything is set up correctly, the output of this command should contain a few operations that are implemented in this repository.

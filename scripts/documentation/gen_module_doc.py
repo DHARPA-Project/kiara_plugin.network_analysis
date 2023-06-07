@@ -2,6 +2,7 @@
 import os
 
 import mkdocs_gen_files
+
 from kiara.context import Kiara
 
 kiara = Kiara.instance()
