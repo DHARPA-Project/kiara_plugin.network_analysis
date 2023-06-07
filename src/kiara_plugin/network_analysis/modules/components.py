@@ -5,7 +5,7 @@ from sqlalchemy import bindparam, text
 
 from kiara.api import KiaraModule, ValueMap, ValueMapSchema
 from kiara_plugin.network_analysis.defaults import (
-    ID_COLUMN_NAME,
+    NODE_ID_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
     NetworkDataTableType,
@@ -98,7 +98,7 @@ class ExtractLargestComponentModule(KiaraModule):
 
         with largest_component.get_sqlalchemy_engine().connect() as con:
             delete_from_nodes = text(
-                f"""DELETE FROM {NetworkDataTableType.NODES.value} WHERE {ID_COLUMN_NAME} NOT IN :nodes"""
+                f"""DELETE FROM {NetworkDataTableType.NODES.value} WHERE {NODE_ID_COLUMN_NAME} NOT IN :nodes"""
             )
             delete_from_nodes = delete_from_nodes.bindparams(
                 bindparam("nodes", expanding=True, value=nodes_largest_component)
@@ -124,7 +124,7 @@ class ExtractLargestComponentModule(KiaraModule):
         other_components._unlock_db()
         with other_components.get_sqlalchemy_engine().connect() as con:
             delete_from_nodes = text(
-                f"""DELETE FROM {NetworkDataTableType.NODES.value} WHERE {ID_COLUMN_NAME} IN :nodes"""
+                f"""DELETE FROM {NetworkDataTableType.NODES.value} WHERE {NODE_ID_COLUMN_NAME} IN :nodes"""
             )
             delete_from_nodes = delete_from_nodes.bindparams(
                 bindparam("nodes", expanding=True, value=nodes_largest_component)

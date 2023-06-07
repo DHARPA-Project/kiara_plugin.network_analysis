@@ -36,7 +36,7 @@ from kiara.models.values.value import Value
 from kiara.models.values.value_metadata import ValueMetadata
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
-    ID_COLUMN_NAME,
+    NODE_ID_COLUMN_NAME,
     LABEL_COLUMN_NAME,
     RANKING_COLUNN_NAME,
     RANKING_TABLE_NAME,
@@ -48,7 +48,7 @@ from kiara_plugin.network_analysis.defaults import (
     NetworkDataTableType,
 )
 from kiara_plugin.network_analysis.utils import (
-    augment_edges_table,
+    augment_edges_table_with_id_and_weights,
     extract_edges_as_table,
     extract_nodes_as_table,
     insert_table_data_into_network_graph,
@@ -118,17 +118,17 @@ class GraphRankingData(KiaraDatabase):
     ) -> "GraphRankingData":
 
         ranking_columns = {
-            ID_COLUMN_NAME: "INTEGER",
+            NODE_ID_COLUMN_NAME: "INTEGER",
             RANKING_COLUNN_NAME: "INTEGER",
             RANKING_VALUE_COLUMN_NAME: "REAL",
         }
 
         ranking_table_schema = SqliteTableSchema(
             columns=ranking_columns,
-            index_columns=[ID_COLUMN_NAME, RANKING_COLUNN_NAME],
+            index_columns=[NODE_ID_COLUMN_NAME, RANKING_COLUNN_NAME],
             nullable_columns=[],
-            unique_columns=[ID_COLUMN_NAME],
-            primary_key=ID_COLUMN_NAME,
+            unique_columns=[NODE_ID_COLUMN_NAME],
+            primary_key=NODE_ID_COLUMN_NAME,
         )
 
         db = GraphRankingData.create_in_temp_dir()
@@ -151,7 +151,7 @@ class GraphRankingData(KiaraDatabase):
                 count = 0
             rank_data.append(
                 {
-                    ID_COLUMN_NAME: k,
+                    NODE_ID_COLUMN_NAME: k,
                     RANKING_COLUNN_NAME: rank,
                     RANKING_VALUE_COLUMN_NAME: v,
                 }
@@ -194,17 +194,17 @@ class NetworkData(KiaraDatabase):
             ignore_attributes=ignore_node_attributes,
         )
 
-        index_columns = [ID_COLUMN_NAME, LABEL_COLUMN_NAME]
-        unique_columns = [ID_COLUMN_NAME]
+        index_columns = [NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME]
+        unique_columns = [NODE_ID_COLUMN_NAME]
         nodes_schema = create_sqlite_schema_data_from_arrow_table(
             nodes_table,
             index_columns=index_columns,
             unique_columns=unique_columns,
-            primary_key=ID_COLUMN_NAME,
+            primary_key=NODE_ID_COLUMN_NAME,
         )
 
         edges_table = extract_edges_as_table(graph, node_id_map)
-        edges_table_augmented = augment_edges_table(edges_table)
+        # edges_table_augmented = augment_edges_table_with_weights(edges_table)
 
         index_columns = [
             SOURCE_COLUMN_NAME,
@@ -302,9 +302,9 @@ class NetworkData(KiaraDatabase):
             suggested_id_type = "TEXT"
             if schema_nodes is not None:
                 if isinstance(schema_nodes, Mapping):
-                    suggested_id_type = schema_nodes.get(ID_COLUMN_NAME, "TEXT")
+                    suggested_id_type = schema_nodes.get(NODE_ID_COLUMN_NAME, "TEXT")
                 elif isinstance(schema_nodes, SqliteTableSchema):
-                    suggested_id_type = schema_nodes.columns.get(ID_COLUMN_NAME, "TEXT")
+                    suggested_id_type = schema_nodes.columns.get(NODE_ID_COLUMN_NAME, "TEXT")
 
             edges_schema = SqliteTableSchema.construct(
                 columns={
@@ -332,7 +332,7 @@ class NetworkData(KiaraDatabase):
         if schema_nodes is None:
             schema_nodes = SqliteTableSchema.construct(
                 columns={
-                    ID_COLUMN_NAME: edges_schema.columns[SOURCE_COLUMN_NAME],
+                    NODE_ID_COLUMN_NAME: edges_schema.columns[SOURCE_COLUMN_NAME],
                     LABEL_COLUMN_NAME: "TEXT",
                 }
             )
@@ -346,9 +346,9 @@ class NetworkData(KiaraDatabase):
                 f"Invalid data type for nodes schema: {type(schema_edges)}"
             )
 
-        if ID_COLUMN_NAME not in nodes_schema.columns.keys():
+        if NODE_ID_COLUMN_NAME not in nodes_schema.columns.keys():
             raise ValueError(
-                f"Invalid nodes schema: missing '{ID_COLUMN_NAME}' column."
+                f"Invalid nodes schema: missing '{NODE_ID_COLUMN_NAME}' column."
             )
 
         if LABEL_COLUMN_NAME not in nodes_schema.columns.keys():
@@ -359,11 +359,11 @@ class NetworkData(KiaraDatabase):
             )
 
         if (
-            nodes_schema.columns[ID_COLUMN_NAME]
+            nodes_schema.columns[NODE_ID_COLUMN_NAME]
             != edges_schema.columns[SOURCE_COLUMN_NAME]
         ):
             raise ValueError(
-                f"Invalid nodes schema, id column has different type to edges source/target columns: {nodes_schema.columns[ID_COLUMN_NAME]} != {edges_schema.columns[SOURCE_COLUMN_NAME]}"
+                f"Invalid nodes schema, id column has different type to edges source/target columns: {nodes_schema.columns[NODE_ID_COLUMN_NAME]} != {edges_schema.columns[SOURCE_COLUMN_NAME]}"
             )
 
         db = cls(
@@ -487,7 +487,7 @@ class NetworkData(KiaraDatabase):
         if node_ids:
             self.insert_nodes(
                 *(
-                    {ID_COLUMN_NAME: node_id, LABEL_COLUMN_NAME: str(node_id)}
+                    {NODE_ID_COLUMN_NAME: node_id, LABEL_COLUMN_NAME: str(node_id)}
                     for node_id in node_ids
                 )
             )
@@ -576,7 +576,7 @@ class NetworkData(KiaraDatabase):
         edge_attr_names = self._calculate_edge_attributes(incl_edge_attributes)[2:]
 
         def add_node(node_id: int, *attrs):
-            data = {ID_COLUMN_NAME: node_id}
+            data = {NODE_ID_COLUMN_NAME: node_id}
             if attrs:
                 data.update(zip(node_attr_names, attrs))
 
@@ -606,20 +606,20 @@ class NetworkData(KiaraDatabase):
         self, incl_node_attributes: Union[bool, str, Iterable[str]]
     ) -> List[str]:
         if incl_node_attributes is False:
-            node_attr_names: List[str] = [ID_COLUMN_NAME]
+            node_attr_names: List[str] = [NODE_ID_COLUMN_NAME]
         else:
             all_node_attr_names = self.nodes_schema.columns.keys()
             if incl_node_attributes is True:
-                node_attr_names = [ID_COLUMN_NAME]
-                node_attr_names.extend((x for x in all_node_attr_names if x != ID_COLUMN_NAME))  # type: ignore
+                node_attr_names = [NODE_ID_COLUMN_NAME]
+                node_attr_names.extend((x for x in all_node_attr_names if x != NODE_ID_COLUMN_NAME))  # type: ignore
             elif isinstance(incl_node_attributes, str):
                 if incl_node_attributes not in all_node_attr_names:
                     raise KiaraException(
                         f"Can't include node attribute {incl_node_attributes}: not part of the available attributes ({', '.join(all_node_attr_names)})."
                     )
-                node_attr_names = [ID_COLUMN_NAME, incl_node_attributes]
+                node_attr_names = [NODE_ID_COLUMN_NAME, incl_node_attributes]
             else:
-                node_attr_names = [ID_COLUMN_NAME]
+                node_attr_names = [NODE_ID_COLUMN_NAME]
                 for attr_name in incl_node_attributes:
                     if incl_node_attributes not in all_node_attr_names:
                         raise KiaraException(

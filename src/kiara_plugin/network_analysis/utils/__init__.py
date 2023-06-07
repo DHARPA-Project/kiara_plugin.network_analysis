@@ -18,7 +18,7 @@ from kiara.exceptions import KiaraException
 from kiara.utils.output import DictTabularWrap, TabularWrap
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
-    ID_COLUMN_NAME,
+    NODE_ID_COLUMN_NAME,
     LABEL_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
@@ -138,7 +138,7 @@ def insert_table_data_into_network_graph(
             if nodes_column_map:
                 for k, v in nodes_column_map.items():
                     if k in batch_dict.keys():
-                        if k == ID_COLUMN_NAME and v == LABEL_COLUMN_NAME:
+                        if k == NODE_ID_COLUMN_NAME and v == LABEL_COLUMN_NAME:
                             _data = batch_dict.get(k)
                         else:
                             _data = batch_dict.pop(k)
@@ -149,10 +149,10 @@ def insert_table_data_into_network_graph(
                         batch_dict[v] = _data
             if LABEL_COLUMN_NAME not in batch_dict.keys():
                 batch_dict[LABEL_COLUMN_NAME] = (
-                    str(x) for x in batch_dict[ID_COLUMN_NAME]
+                    str(x) for x in batch_dict[NODE_ID_COLUMN_NAME]
                 )
 
-            ids = batch_dict[ID_COLUMN_NAME]
+            ids = batch_dict[NODE_ID_COLUMN_NAME]
             data = [dict(zip(batch_dict, t)) for t in zip(*batch_dict.values())]
             network_data.insert_nodes(*data)
 
@@ -246,13 +246,13 @@ def extract_nodes_as_table(
     # nan = float("nan")
 
     nodes: Dict[str, List[Any]] = {
-        ID_COLUMN_NAME: [],
+        NODE_ID_COLUMN_NAME: [],
         LABEL_COLUMN_NAME: [],
     }
     nodes_map = {}
 
     for i, (node_id, node_data) in enumerate(graph.nodes(data=True)):
-        nodes[ID_COLUMN_NAME].append(i)
+        nodes[NODE_ID_COLUMN_NAME].append(i)
         if label_attr_name is None:
             nodes[LABEL_COLUMN_NAME].append(str(node_id))
         elif isinstance(label_attr_name, str):

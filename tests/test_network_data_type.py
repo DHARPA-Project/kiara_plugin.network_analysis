@@ -5,7 +5,7 @@ import networkx as nx
 import pyarrow as pa
 
 from kiara_plugin.network_analysis.defaults import (
-    ID_COLUMN_NAME,
+    NODE_ID_COLUMN_NAME,
     LABEL_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
@@ -30,7 +30,7 @@ def test_extract_nodes_as_table():
     assert isinstance(result_mapping, Mapping)
 
     # Check if the result table has the expected columns
-    expected_columns = [ID_COLUMN_NAME, LABEL_COLUMN_NAME, "attr1", "attr2"]
+    expected_columns = [NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME, "attr1", "attr2"]
     for column in expected_columns:
         assert column in result_table.schema.names
 
@@ -39,7 +39,7 @@ def test_extract_nodes_as_table():
     assert result_mapping == expected_mapping
 
     # Check if the result table has the expected data
-    assert result_table.column(ID_COLUMN_NAME).to_pylist() == [0, 1]
+    assert result_table.column(NODE_ID_COLUMN_NAME).to_pylist() == [0, 1]
     assert result_table.column(LABEL_COLUMN_NAME).to_pylist() == ["1", "2"]
     assert result_table.column("attr1").to_pylist() == ["value1", "value2"]
     assert result_table.column("attr2").to_pylist() == [42, 84]

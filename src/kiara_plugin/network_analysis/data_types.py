@@ -9,7 +9,7 @@ from rich.console import Group
 from kiara.defaults import DEFAULT_PRETTY_PRINT_CONFIG
 from kiara.models.values.value import Value
 from kiara_plugin.network_analysis.defaults import (
-    ID_COLUMN_NAME,
+    NODE_ID_COLUMN_NAME,
     LABEL_COLUMN_NAME,
     RANKING_COLUNN_NAME,
     SOURCE_COLUMN_NAME,
@@ -72,9 +72,9 @@ class NetworkDataType(DatabaseType):
             )
 
         nodes_columns = network_data.nodes_schema.columns
-        if ID_COLUMN_NAME not in nodes_columns.keys():
+        if NODE_ID_COLUMN_NAME not in nodes_columns.keys():
             raise Exception(
-                f"Invalid 'network_data' value: 'nodes' table does not contain a '{ID_COLUMN_NAME}' column. Available columns: {', '.join(nodes_columns.keys())}."
+                f"Invalid 'network_data' value: 'nodes' table does not contain a '{NODE_ID_COLUMN_NAME}' column. Available columns: {', '.join(nodes_columns.keys())}."
             )
         if LABEL_COLUMN_NAME not in nodes_columns.keys():
             raise Exception(

@@ -22,7 +22,7 @@ from kiara.modules.included_core_modules.create_from import (
 from kiara.modules.included_core_modules.export_as import DataExportModule
 from kiara_plugin.network_analysis.defaults import (
     DEFAULT_NETWORK_DATA_CHUNK_SIZE,
-    ID_COLUMN_NAME,
+    NODE_ID_COLUMN_NAME,
     LABEL_ALIAS_NAMES,
     LABEL_COLUMN_NAME,
     NODE_ID_ALIAS_NAMES,
@@ -33,7 +33,7 @@ from kiara_plugin.network_analysis.defaults import (
 )
 from kiara_plugin.network_analysis.models import NetworkData
 from kiara_plugin.network_analysis.utils import (
-    augment_edges_table,
+    augment_edges_table_with_id_and_weights,
     augment_nodes_table,
     insert_table_data_into_network_graph,
 )
@@ -284,11 +284,11 @@ class AssembleGraphFromTablesModule(KiaraModule):
                     f"Could not find id column '{id_column_name}' in the nodes table. Please specify a valid column name manually, using one of: {', '.join(nodes_column_names)}"
                 )
 
-            nodes_arrow_dataframe = nodes_table.polars_dataframe
+            nodes_arrow_dataframe = nodes_table.to_polars_dataframe()
             nullable_columns = [
                 col_name
                 for col_name in nodes_arrow_dataframe.columns
-                if col_name not in [ID_COLUMN_NAME, LABEL_COLUMN_NAME]
+                if col_name not in [NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME]
             ]
 
         else:
@@ -303,7 +303,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
         edges_source_column_name = inputs.get_value_data("source_column")
         edges_target_column_name = inputs.get_value_data("target_column")
 
-        edges_arrow_dataframe = edges_table.polars_dataframe
+        edges_arrow_dataframe = edges_table.to_polars_dataframe()
         edges_column_names = edges_arrow_dataframe.columns
 
         if edges_source_column_name is None:
@@ -393,12 +393,12 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
             nodes_arrow_dataframe = pl.DataFrame(
                 {
-                    ID_COLUMN_NAME: new_node_ids,
+                    NODE_ID_COLUMN_NAME: new_node_ids,
                     LABEL_COLUMN_NAME: (str(x) for x in unique_node_ids_old),
                     "id": unique_node_ids_old,
                 }
             )
-            unique_node_columns = [ID_COLUMN_NAME, "id"]
+            unique_node_columns = [NODE_ID_COLUMN_NAME, "id"]
 
         else:
             id_column_old = nodes_arrow_dataframe.get_column(id_column_name)
@@ -411,11 +411,11 @@ class AssembleGraphFromTablesModule(KiaraModule):
                     node_id: new_node_id
                     for node_id, new_node_id in zip(id_column_old, new_node_ids)
                 }
-                new_idx_series = pl.Series(name=ID_COLUMN_NAME, values=new_node_ids)
+                new_idx_series = pl.Series(name=NODE_ID_COLUMN_NAME, values=new_node_ids)
                 nodes_arrow_dataframe.insert_at_idx(0, new_idx_series)
 
                 if label_column_name is None:
-                    label_column_name = ID_COLUMN_NAME
+                    label_column_name = NODE_ID_COLUMN_NAME
 
                 # we create a copy of the label column, and stringify its items
                 label_column = nodes_arrow_dataframe.get_column(
@@ -433,7 +433,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
                     1, label_column
                 )
 
-            unique_node_columns = [ID_COLUMN_NAME, id_column_name]
+            unique_node_columns = [NODE_ID_COLUMN_NAME, id_column_name]
 
         source_column_mapped = source_column_old.map_dict(
             node_id_map, default=None
@@ -458,7 +458,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
         # edges_arrow_table = edges_arrow_dataframe.to_arrow()
 
-        edges_table_augmented = augment_edges_table(edges_arrow_dataframe)
+        edges_table_augmented = augment_edges_table_with_id_and_weights(edges_arrow_dataframe)
 
         # TODO: also index the other columns?
         edges_data_schema = create_sqlite_schema_data_from_arrow_table(
@@ -475,7 +475,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
         nodes_data_schema = create_sqlite_schema_data_from_arrow_table(
             table=nodes_arrow_table,
-            index_columns=[ID_COLUMN_NAME, LABEL_COLUMN_NAME],
+            index_columns=[NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME],
             column_map=nodes_column_map,
             nullable_columns=nullable_columns,
             unique_columns=unique_node_columns,
