@@ -1,0 +1,25 @@
+pipeline_name: example_pipeline_network_analysis
+doc: Example pipeline for the network_analysis plugin.
+steps:
+  - step_id: add_hello_string
+    module_type: example_proj.example
+    module_config:
+      separator: " "
+      constants:
+        text_1: "Hello"
+      defaults:
+        text_2: "World"
+  - step_id: add_exclamation_mark
+    module_type: example_proj.example
+    module_config:
+      separator: ""
+      constants:
+        text_2: "!"
+    input_links:
+      text_1: add_hello_string.text
+
+input_aliases:
+  add_hello_string.text_2: name
+
+output_aliases:
+  add_exclamation_mark.text: greeting

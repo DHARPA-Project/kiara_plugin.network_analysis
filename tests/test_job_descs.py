@@ -3,7 +3,7 @@ from kiara.interfaces.python_api.models.job import JobTest
 
 """Auto-generated tests that use job descriptions in the 'examples/jobs' folder and run them.
 
-To test against the outputs of those jobs, add files into the `tests/job_tests` folder.
+To test against the outputs of those jobs, add files into subfolders that are called the same as the job (minus the file extension), under the `tests/job_tests` folder.
 
 To test values directly, add a file called `outputs.json` or `outputs.yaml` into that folder, containing a 'dict'
 data structure with the value attribute to test as key and the expected value as value.

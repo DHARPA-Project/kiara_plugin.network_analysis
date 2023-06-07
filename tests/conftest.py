@@ -8,7 +8,6 @@
     https://pytest.org/latest/plugins.html
 """
 
-
 import os
 import tempfile
 import uuid
@@ -53,7 +52,6 @@ def example_job_test(request, kiara_api) -> JobTest:
     tests = get_tests_for_job(
         job_alias=job_desc.job_alias, job_tests_folder=job_tests_folder
     )
-
     job_test = JobTest(kiara_api=kiara_api, job_desc=job_desc, tests=tests)
     return job_test
 
@@ -68,6 +66,6 @@ def example_pipelines_folder() -> Path:
     return Path(os.path.join(ROOT_DIR, "examples", "pipelines"))
 
 
-@pytest.fixture()
+@pytest.fixture
 def tests_resources_folder() -> Path:
     return Path(os.path.join(ROOT_DIR, "tests"))

@@ -197,6 +197,7 @@ class NetworkData(KiaraTables):
         import duckdb
 
         con = duckdb.connect()
+        edges = self.edges.arrow_table  # noqa
         if relation_name != EDGES_TABLE_NAME:
             sql_query = sql_query.replace(relation_name, EDGES_TABLE_NAME)
 
@@ -214,6 +215,7 @@ class NetworkData(KiaraTables):
         import duckdb
 
         con = duckdb.connect()
+        nodes = self.nodes.arrow_table  # noqa
         if relation_name != NODES_TABLE_NAME:
             sql_query = sql_query.replace(relation_name, NODES_TABLE_NAME)
 

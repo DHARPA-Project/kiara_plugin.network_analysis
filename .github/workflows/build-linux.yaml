@@ -26,7 +26,7 @@ jobs:
           python-version: "${{ matrix.python_version }}"
       - uses: actions/checkout@v3
       - name: install kiara_plugin.network_analysis
-        run: pip install -U --extra-index-url https://pypi.fury.io/dharpa/ .[all,dev_testing]
+        run: pip install -U .[all,dev_testing]
       - name: display installed kiara and module package versions
         run: pip list | grep kiara
       - name: Test with pytest
@@ -43,16 +43,15 @@ jobs:
 #          python-version: "3.9"
 #      - uses: actions/checkout@v3
 #      - name: install kiara
-#        run: pip install -U --extra-index-url https://pypi.fury.io/dharpa/ .[all,dev_testing]
+#        run: pip install -U .[all,dev_testing]
 #      - name: display installed kiara and module package versions
 #        run: pip list | grep kiara
 #      - name: Run coverage
 #        run: coverage run -m pytest tests
-#      - name: Upload coverage data to coveralls.io
-#        run: coveralls --service=github
-#        env:
-#          GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}""
+#      - name: coveralls
+#        uses: coverallsapp/github-action@v2
 
+# Uncomment this if you want to run mypy
 #  mypy-linux:
 #    name: mypy check on linux
 #    runs-on: ubuntu-latest
@@ -66,7 +65,7 @@ jobs:
 #          python-version: "${{ matrix.python_version }}"
 #      - uses: actions/checkout@v3
 #      - name: install kiara_plugin.network_analysis
-#        run: pip install -U --extra-index-url https://pypi.fury.io/dharpa/ .[all,dev_testing]
+#        run: pip install -U .[all,dev_testing]
 #      - name: Test with mypy
 #        run: make mypy
 
@@ -101,15 +100,15 @@ jobs:
 #      - mypy-linux
 #      - linting-linux
     steps:
-      - name: Set up Python 3.9
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.11"
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: install kiara_plugin.network_analysis package
-        run: pip install -U --extra-index-url https://pypi.fury.io/dharpa/ .[all,dev_documentation]
+        run: pip install -U .[all,dev_documentation]
       - run: git config --global user.email "Markus Binsteiner"
       - run: git config --global user.name "markus@frkl.io"
       - name: create latest documentation
@@ -132,17 +131,17 @@ jobs:
     env:
         GEMFURY_PUSH_TOKEN: ${{ secrets.GEMFURY_PUSH_TOKEN }}
     steps:
-      - name: Set up Python 3.9
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.11"
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: install pip
         run: pip install pip==21.2.4 setuptools==57.4.0
       - name: install kiara
-        run: pip install -U --extra-index-url https://pypi.fury.io/dharpa/ -e .[all]
+        run: pip install -U -e .[all]
       - name: install 'build' package
         run: pip install -U build
       - name: create packages
@@ -166,10 +165,10 @@ jobs:
 #      - mypy-linux
 #      - linting-linux
     steps:
-      - name: "Set up Python 3.9"
+      - name: "Set up Python 3.11"
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.11"
       - name: pip cache
         id: pip-cache
         uses: actions/cache@v3
