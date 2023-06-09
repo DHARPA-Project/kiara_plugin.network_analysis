@@ -15,62 +15,104 @@ class ExportNetworkDataModule(DataExportModule):
 
     _module_type_name = "export.network_data"
 
-    # def export__network_data__as__graphml_file(
-    #     self, value: NetworkData, base_path: str, name: str
-    # ):
-    #     """Export network data as graphml file."""
-    #
-    #     import networkx as nx
-    #
-    #     target_path = os.path.join(base_path, f"{name}.graphml")
-    #
-    #     # TODO: can't just assume digraph
-    #     graph: nx.Graph = value.as_networkx_graph(nx.DiGraph)
-    #     nx.write_graphml(graph, target_path)
-    #
-    #     return {"files": target_path}
-    #
-    # def export__network_data__as__sqlite_db(
-    #     self, value: NetworkData, base_path: str, name: str
-    # ):
-    #     """Export network data as a sqlite database file."""
-    #
-    #     target_path = os.path.abspath(os.path.join(base_path, f"{name}.sqlite"))
-    #     shutil.copy2(value.db_file_path, target_path)
-    #
-    #     return {"files": target_path}
-    #
-    # def export__network_data__as__sql_dump(
-    #     self, value: NetworkData, base_path: str, name: str
-    # ):
-    #     """Export network data as a sql dump file."""
-    #
-    #     import sqlite_utils
-    #
-    #     db = sqlite_utils.Database(value.db_file_path)
-    #     target_path = Path(os.path.join(base_path, f"{name}.sql"))
-    #     with target_path.open("wt") as f:
-    #         for line in db.conn.iterdump():
-    #             f.write(line + "\n")
-    #
-    #     return {"files": target_path.as_posix()}
-
-    def export__network_data__as__csv_files(
+    def export__network_data__as__graphml_file(
         self, value: NetworkData, base_path: str, name: str
     ):
-        """Export network data as 2 csv files (one for edges, one for nodes."""
+        """Export network data as graphml file."""
 
-        from pyarrow import csv
+        import networkx as nx
 
-        files = []
+        target_path = os.path.join(base_path, f"{name}.graphml")
 
-        for table_name in value.table_names:
-            target_path = os.path.join(base_path, f"{name}__{table_name}.csv")
-            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        # TODO: can't just assume digraph
+        graph: nx.Graph = value.as_networkx_graph(
+            nx.DiGraph, incl_node_attributes=True, incl_edge_attributes=True
+        )
+        nx.write_graphml(graph, target_path)
 
-            table = value.get_table(table_name)
+        return {"files": target_path}
 
-            csv.write_csv(table.arrow_table, target_path)
-            files.append(target_path)
+    def export__network_data__as__gexf_file(
+        self, value: NetworkData, base_path: str, name: str
+    ):
+        """Export network data as gexf file."""
 
-        return {"files": files}
+        import networkx as nx
+
+        target_path = os.path.join(base_path, f"{name}.gexf")
+
+        # TODO: can't just assume digraph
+        graph: nx.Graph = value.as_networkx_graph(
+            nx.DiGraph, incl_node_attributes=True, incl_edge_attributes=True
+        )
+        nx.write_gexf(graph, target_path)
+
+        return {"files": target_path}
+
+    def export__network_data__as__adjlist_file(
+        self, value: NetworkData, base_path: str, name: str
+    ):
+        """Export network data as adjacency list file."""
+
+        import networkx as nx
+
+        target_path = os.path.join(base_path, f"{name}.adjlist")
+
+        # TODO: can't just assume digraph
+        graph: nx.Graph = value.as_networkx_graph(
+            nx.DiGraph, incl_node_attributes=True, incl_edge_attributes=True
+        )
+        nx.write_adjlist(graph, target_path)
+
+        return {"files": target_path}
+
+    def export__network_data__as__multiline_adjlist_file(
+        self, value: NetworkData, base_path: str, name: str
+    ):
+        """Export network data as multiline adjacency list file."""
+
+        import networkx as nx
+
+        target_path = os.path.join(base_path, f"{name}.adjlist_multiline")
+
+        # TODO: can't just assume digraph
+        graph: nx.Graph = value.as_networkx_graph(
+            nx.DiGraph, incl_node_attributes=True, incl_edge_attributes=True
+        )
+        nx.write_multiline_adjlist(graph, target_path)
+
+        return {"files": target_path}
+
+    def export__network_data__as__edgelist_file(
+        self, value: NetworkData, base_path: str, name: str
+    ):
+        """Export network data as edgelist file."""
+
+        import networkx as nx
+
+        target_path = os.path.join(base_path, f"{name}.edge_list")
+
+        # TODO: can't just assume digraph
+        graph: nx.Graph = value.as_networkx_graph(
+            nx.DiGraph, incl_node_attributes=True, incl_edge_attributes=True
+        )
+        nx.write_edgelist(graph, target_path)
+
+        return {"files": target_path}
+
+    def export__network_data__as__network_text_file(
+        self, value: NetworkData, base_path: str, name: str
+    ):
+        """Export network data as network text file (with a '.network' extension)."""
+
+        import networkx as nx
+
+        target_path = os.path.join(base_path, f"{name}.network")
+
+        # TODO: can't just assume digraph
+        graph: nx.Graph = value.as_networkx_graph(
+            nx.DiGraph, incl_node_attributes=True, incl_edge_attributes=True
+        )
+        nx.write_network_text(graph, target_path)
+
+        return {"files": target_path}

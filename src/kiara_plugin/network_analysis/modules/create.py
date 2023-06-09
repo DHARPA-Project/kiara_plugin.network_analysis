@@ -469,3 +469,17 @@ class AssembleGraphFromTablesModule(KiaraModule):
         )
 
         outputs.set_value("network_data", network_data)
+
+
+class FilteredNetworkDataModule(KiaraModule):
+    """Create a new network_data instance from an existing one, using only a sub-set of nodes and/or edges."""
+
+    def create_inputs_schema(
+        self,
+    ) -> ValueMapSchema:
+        return {}
+
+    def create_outputs_schema(
+        self,
+    ) -> ValueMapSchema:
+        return {}

@@ -10,13 +10,11 @@ sub-class a pydantic BaseModel or implement custom base classes.
 """
 from typing import (
     TYPE_CHECKING,
-    Any,
-    Callable,
     Dict,
     Iterable,
     List,
     Literal,
-    Tuple,
+    Protocol,
     Type,
     TypeVar,
     Union,
@@ -66,6 +64,16 @@ if TYPE_CHECKING:
 
 NETWORKX_GRAPH_TYPE = TypeVar("NETWORKX_GRAPH_TYPE", bound="nx.Graph")
 RUSTWORKX_GRAPH_TYPE = TypeVar("RUSTWORKX_GRAPH_TYPE", "rx.PyGraph", "rx.PyDiGraph")
+
+
+class NodesCallback(Protocol):
+    def __call__(self, _node_id: int, **kwargs) -> None:
+        ...
+
+
+class EdgesCallback(Protocol):
+    def __call__(self, _source: int, _target: int, **kwargs) -> None:
+        ...
 
 
 class NetworkData(KiaraTables):
@@ -388,8 +396,8 @@ class NetworkData(KiaraTables):
 
     def retrieve_graph_data(
         self,
-        nodes_callback: Union[Callable[[int, Tuple[Any, ...]], Any], None] = None,
-        edges_callback: Union[Callable[[int, int, Tuple[Any, ...]], Any], None] = None,
+        nodes_callback: Union[NodesCallback, None] = None,
+        edges_callback: Union[EdgesCallback, None] = None,
         incl_node_attributes: Union[bool, str, Iterable[str]] = False,
         incl_edge_attributes: Union[bool, str, Iterable[str]] = False,
         omit_self_loops: bool = False,
@@ -453,11 +461,11 @@ class NetworkData(KiaraTables):
 
         graph = graph_type()
 
-        def add_node(node_id: int, *attrs):
-            graph.add_node(node_id, *attrs)
+        def add_node(_node_id: int, **attrs):
+            graph.add_node(_node_id, **attrs)
 
-        def add_edge(source: int, target: int, *attrs):
-            graph.add_edge(source, target, *attrs)
+        def add_edge(_source: int, _target: int, **attrs):
+            graph.add_edge(_source, _target, **attrs)
 
         self.retrieve_graph_data(
             nodes_callback=add_node,
@@ -500,16 +508,15 @@ class NetworkData(KiaraTables):
         # rustworkx uses 0-based integer indexes, so we don't neeed to look up the node ids (unless we want to
         # include node attributes)
 
-        node_attr_names = self._calculate_node_attributes(incl_node_attributes)[1:]
-        edge_attr_names = self._calculate_edge_attributes(incl_edge_attributes)[2:]
+        self._calculate_node_attributes(incl_node_attributes)[1:]
+        self._calculate_edge_attributes(incl_edge_attributes)[2:]
 
         # we can use a 'global' dict here because we know the nodes are processed before the edges
         node_map: bidict = bidict()
 
-        def add_node(_node_id: int, *attrs):
+        def add_node(_node_id: int, **attrs):
             data = {NODE_ID_COLUMN_NAME: _node_id}
-            if attrs:
-                data.update(zip(node_attr_names, attrs))
+            data.update(attrs)
 
             graph_node_id = graph.add_node(data)
 
@@ -517,15 +524,14 @@ class NetworkData(KiaraTables):
             # if not _node_id == graph_node_id:
             #     raise Exception("Internal error: node ids don't match")
 
-        def add_edge(_source: int, _target: int, *attrs):
+        def add_edge(_source: int, _target: int, **attrs):
 
             source = node_map[_source]
             target = node_map[_target]
             if not attrs:
                 graph.add_edge(source, target, None)
             else:
-                data = dict(zip(edge_attr_names, attrs))
-                graph.add_edge(source, target, data)
+                graph.add_edge(source, target, attrs)
 
         self.retrieve_graph_data(
             nodes_callback=add_node,
