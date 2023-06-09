@@ -60,6 +60,9 @@ if TYPE_CHECKING:
     import pyarrow as pa
     import rustworkx as rx
 
+    from kiara_plugin.network_analysis.models.metadata import (
+        NetworkNodeAttributeMetadata,
+    )
     from kiara_plugin.tabular.models.table import KiaraTable
 
 NETWORKX_GRAPH_TYPE = TypeVar("NETWORKX_GRAPH_TYPE", bound="nx.Graph")
@@ -100,7 +103,7 @@ class NetworkData(KiaraTables):
         """Create a `NetworkData` instance from two Arrow tables.
 
         This method requires the nodes to have an "_id' column (int) as well as a '_label' one (utf8).
-        The edges table needs a '_source' (int) and '_target' (int) column.
+        The edges table needs at least a '_source' (int) and '_target' (int) column.
 
         This method will augment both tables with additional columns that are required for the internal representation (weights, degrees).
         """
@@ -240,6 +243,58 @@ class NetworkData(KiaraTables):
                     )
 
         return network_data
+
+    @classmethod
+    def from_filtered_nodes(
+        cls, network_data: "NetworkData", nodes_list: List[int]
+    ) -> "NetworkData":
+
+        import duckdb
+        import polars as pl
+
+        node_columns = [NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME]
+        for column_name, metadata in network_data.nodes.column_metadata.items():
+            attr_prop: Union[None, NetworkNodeAttributeMetadata] = metadata.get(
+                ATTRIBUTE_PROPERTY_KEY, None
+            )
+            if attr_prop is None or not attr_prop.computed_attribute:
+                node_columns.append(column_name)
+
+        node_list_str = ", ".join([str(n) for n in nodes_list])
+
+        nodes_table = network_data.nodes.arrow_table  # noqa
+        nodes_query = f"SELECT {', '.join(node_columns)} FROM nodes_table n WHERE n.{NODE_ID_COLUMN_NAME} IN ({node_list_str})"
+
+        nodes_result = duckdb.sql(nodes_query).pl()
+
+        edges_table = network_data.edges.arrow_table  # noqa
+        edge_columns = [SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME]
+        for column_name, metadata in network_data.edges.column_metadata.items():
+            attr_prop = metadata.get(ATTRIBUTE_PROPERTY_KEY, None)
+            if attr_prop is None or not attr_prop.computed_attribute:
+                edge_columns.append(column_name)
+
+        edges_query = f"SELECT {', '.join(edge_columns)} FROM edges_table WHERE {SOURCE_COLUMN_NAME} IN ({node_list_str}) OR {TARGET_COLUMN_NAME} IN ({node_list_str})"
+
+        edges_result = duckdb.sql(edges_query).pl()
+
+        nodes_idx_colum = range(len(nodes_result))
+        old_idx_column = nodes_result[NODE_ID_COLUMN_NAME]
+
+        repl_map = dict(zip(old_idx_column.to_list(), nodes_idx_colum))
+        nodes_result = nodes_result.with_columns(
+            pl.col(NODE_ID_COLUMN_NAME).map_dict(repl_map)
+        )
+
+        edges_result = edges_result.with_columns(
+            pl.col(SOURCE_COLUMN_NAME).map_dict(repl_map),
+            pl.col(TARGET_COLUMN_NAME).map_dict(repl_map),
+        )
+
+        filtered = NetworkData.create_network_data(
+            nodes_table=nodes_result, edges_table=edges_result
+        )
+        return filtered
 
     @classmethod
     def create_from_networkx_graph(

@@ -49,11 +49,17 @@ class NetworkDataType(TablesType):
                     f"Can't import network data: no '{NODES_TABLE_NAME}' table found"
                 )
 
-            return NetworkData.create_tables(
-                {
-                    EDGES_TABLE_NAME: data.tables[EDGES_TABLE_NAME],
-                    NODES_TABLE_NAME: data.tables[NODES_TABLE_NAME],
-                }
+            # return NetworkData(
+            #     tables={
+            #         EDGES_TABLE_NAME: data.tables[EDGES_TABLE_NAME],
+            #         NODES_TABLE_NAME: data.tables[NODES_TABLE_NAME],
+            #     },
+            #
+            # )
+            return NetworkData.create_network_data(
+                edges_table=data.tables[EDGES_TABLE_NAME].arrow_table,
+                nodes_table=data.tables[NODES_TABLE_NAME].arrow_table,
+                augment_tables=False,
             )
 
         return data
