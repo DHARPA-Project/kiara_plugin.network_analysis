@@ -4,7 +4,7 @@ This package contains a set of commonly used/useful modules, pipelines, types an
 
 ## Description
 
-kiara modules and datatypes for network analysis.
+kiara data types and modules for network analysis
 
 ## Package content
 
