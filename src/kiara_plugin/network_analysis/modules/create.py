@@ -382,10 +382,11 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
         if nodes_arrow_dataframe is None:
             new_node_ids = range(0, len(unique_node_ids_old))
-            node_id_map = {
-                node_id: new_node_id
-                for node_id, new_node_id in zip(unique_node_ids_old, new_node_ids)
-            }
+            node_id_map = dict(zip(unique_node_ids_old, new_node_ids))
+            # node_id_map = {
+            #     node_id: new_node_id
+            #     for node_id, new_node_id in
+            # }
 
             nodes_arrow_dataframe = pl.DataFrame(
                 {
@@ -402,10 +403,11 @@ class AssembleGraphFromTablesModule(KiaraModule):
                 raise NotImplementedError()
             else:
                 new_node_ids = range(0, len(id_column_old))
-                node_id_map = {
-                    node_id: new_node_id
-                    for node_id, new_node_id in zip(id_column_old, new_node_ids)
-                }
+                node_id_map = dict(zip(id_column_old, new_node_ids))
+                # node_id_map = {
+                #     node_id: new_node_id
+                #     for node_id, new_node_id in
+                # }
                 new_idx_series = pl.Series(
                     name=NODE_ID_COLUMN_NAME, values=new_node_ids
                 )
