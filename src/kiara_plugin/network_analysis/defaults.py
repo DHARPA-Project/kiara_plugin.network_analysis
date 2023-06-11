@@ -11,6 +11,7 @@ TARGET_COLUMN_NAME = "_target"
 LABEL_COLUMN_NAME = "_label"
 
 COMPONENT_ID_COLUMN_NAME = "component_id"
+IS_CUTPOINT_COLUMN_NAME = "is_cut_point"
 
 EDGES_TABLE_NAME = "edges"
 NODES_TABLE_NAME = "nodes"

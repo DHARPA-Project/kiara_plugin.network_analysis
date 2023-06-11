@@ -614,7 +614,7 @@ class GraphProperties(BaseModel):
 class NetworkGraphProperties(ValueMetadata):
     """Network data stats."""
 
-    _metadata_key = "graph_properties"
+    _metadata_key = "network_data"
 
     number_of_nodes: int = Field(description="Number of nodes in the network graph.")
     properties_by_graph_type: Dict[  # type: ignore
