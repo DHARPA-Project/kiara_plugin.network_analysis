@@ -6,7 +6,7 @@ from kiara_plugin.network_analysis.models import NetworkGraphProperties
 def check_properties(network_data: Value):
 
     properties: NetworkGraphProperties = network_data.get_property_data(
-        "metadata.graph_properties"
+        "metadata.network_data"
     )
     assert (
         properties.number_of_nodes == 276
