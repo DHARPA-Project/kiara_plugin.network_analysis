@@ -3,6 +3,7 @@
 #
 #  Mozilla Public License, version 2.0 (see LICENSE or https://www.mozilla.org/en-US/MPL/2.0/)
 from enum import Enum
+from typing import Literal
 
 NODE_ID_COLUMN_NAME = "_node_id"
 EDGE_ID_COLUMN_NAME = "_edge_id"
@@ -128,3 +129,25 @@ EDGE_IDX_DUP_UNDIRECTED_TEXT = """A unique index for this edge within its set of
 
 This is a unique integer identifier in combination with (_source/_target), counting up from 0. The order of the edges within this set is not guaranteed.
 """
+
+
+ALLOWED_AGGREGATION_FUNCTIONS = {
+    "group_by": "Don't aggregate on this column, but keep it as is and use it in the group by clause.",
+    "any_val": "Returns the first non-null value",
+    "avg": "Calculates the average value for all tuples in arg.",
+    "bool_and": "Returns TRUE if every input value is TRUE, otherwise FALSE.",
+    "bool_or": "Returns TRUE if any input value is TRUE, otherwise FALSE.",
+    "count": "Returns the number of input values.",
+    "favg": "Calculates the average using a more accurate floating point summation (Kahan Sum).",
+    "first": "Returns the first value of a column.",
+    "fsum": "Calculates the sum using a more accurate floating point summation (Kahan Sum).",
+    "histogram": "Returns a LIST of STRUCTs with the fields bucket and count.",
+    "last": "Returns the last value of a column.",
+    "list": "Returns a LIST containing all the values of a column.",
+    "max": "Returns the maximum value present in the column.",
+    "min": "Returns the minimum value present in the column.",
+    "product": "Returns the product of all tuples in the column.",
+    "string_agg_comma": "Concatenates the column string values with a comma separator.",
+    "sum": "Calculates the sum value for all tuples in arg.",
+}
+AGGREGATION_FUNCTION_NAME = Literal[tuple(ALLOWED_AGGREGATION_FUNCTIONS.keys())]  # type: ignore
