@@ -28,7 +28,8 @@ input_aliases:
   assemble_network_data.id_column: id_column
   assemble_network_data.label_column: label_column
   assemble_network_data.nodes_column_map: nodes_column_map
-
+  create_edges_table.first_row_is_header: first_edges_row_is_header
+  create_nodes_table.first_row_is_header: first_nodes_row_is_header
 output_aliases:
   assemble_network_data.network_data: network_data
 

@@ -1,0 +1,7 @@
+jobs:
+  - "${this_dir}/../jobs/create_journals_network.yaml"
+  - operation: network_data.extract_components
+    inputs:
+      network_data: journals_network
+    save:
+      network_data: journals_network_components

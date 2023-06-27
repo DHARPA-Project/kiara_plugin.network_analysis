@@ -6,7 +6,7 @@ from pydantic import Field
 from kiara.api import KiaraModule, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraProcessingException
 from kiara.models.filesystem import (
-    FileModel,
+    KiaraFile,
 )
 from kiara.models.module import KiaraModuleConfig
 from kiara.models.module.jobs import JobLog
@@ -61,7 +61,7 @@ class CreateNetworkDataModule(CreateFromModule):
         - sparse6
         """
 
-        source_file: FileModel = source_value.data
+        source_file: KiaraFile = source_value.data
         # the name of the attribute kiara should use to populate the node labels
         label_attr_name: Union[str, None] = None
         # attributes to ignore when creating the node table,
@@ -473,15 +473,15 @@ class AssembleGraphFromTablesModule(KiaraModule):
         outputs.set_value("network_data", network_data)
 
 
-class FilteredNetworkDataModule(KiaraModule):
-    """Create a new network_data instance from an existing one, using only a sub-set of nodes and/or edges."""
-
-    def create_inputs_schema(
-        self,
-    ) -> ValueMapSchema:
-        return {}
-
-    def create_outputs_schema(
-        self,
-    ) -> ValueMapSchema:
-        return {}
+# class FilteredNetworkDataModule(KiaraModule):
+#     """Create a new network_data instance from an existing one, using only a sub-set of nodes and/or edges."""
+#
+#     def create_inputs_schema(
+#         self,
+#     ) -> ValueMapSchema:
+#         return {}
+#
+#     def create_outputs_schema(
+#         self,
+#     ) -> ValueMapSchema:
+#         return {}
