@@ -16,7 +16,6 @@ from kiara.utils.class_loading import (
 __author__ = """Markus Binsteiner"""
 __email__ = "markus@frkl.io"
 
-
 KIARA_METADATA = {
     "authors": [],
     "description": "Kiara modules for: network_analysis",
@@ -51,6 +50,16 @@ find_pipelines: KiaraEntryPointItem = (
     "kiara_plugin.network_analysis.pipelines",
     KIARA_METADATA,
 )
+
+try:
+    from kiara_plugin.streamlit import find_kiara_streamlit_components_under
+
+    find_kiara_streamlit_components: KiaraEntryPointItem = (
+        find_kiara_streamlit_components_under,
+        "kiara_plugin.network_analysis.streamlit.components",
+    )
+except Exception:
+    find_kiara_streamlit_components = list
 
 
 def get_version():

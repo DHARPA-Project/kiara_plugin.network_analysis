@@ -109,9 +109,21 @@ class CreateNetworkDataModule(CreateFromModule):
 
             graph = nx.read_sparse6(source_file.path)
         else:
-            raise KiaraProcessingException(
-                f"Can't create network data for unsupported format of file: {source_file.file_name}."
-            )
+            supported_file_estensions = [
+                "gml",
+                "gexf",
+                "graphml",
+                "pajek",
+                "leda",
+                "graph6",
+                "g6",
+                "sparse6",
+                "s6",
+            ]
+
+            msg = f"Can't create network data for unsupported format of file: {source_file.file_name}. Supported file extensions: {', '.join(supported_file_estensions)}"
+
+            raise KiaraProcessingException(msg)
 
         return NetworkData.create_from_networkx_graph(
             graph=graph,
@@ -232,6 +244,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
             # the most important column is the id column, which is the only one that we absolutely need to have
             id_column_name = inputs.get_value_data("id_column")
+
             if id_column_name is None:
                 # try to auto-detect the id column
                 column_names_to_test = self.get_config_value("node_id_column_aliases")
@@ -353,6 +366,10 @@ class AssembleGraphFromTablesModule(KiaraModule):
             edges_column_map[edges_source_column_name] = SOURCE_COLUMN_NAME
 
         if edges_target_column_name in edges_column_map.keys():
+            if edges_column_map[edges_target_column_name] == SOURCE_COLUMN_NAME:
+                raise KiaraProcessingException(
+                    msg="Edges and source column names can't be the same."
+                )
             if edges_column_map[edges_target_column_name] != TARGET_COLUMN_NAME:
                 raise KiaraProcessingException(
                     f"Existing mapping of target column name '{edges_target_column_name}' is not mapped to '{TARGET_COLUMN_NAME}' in the 'edges_column_map' input."
@@ -398,9 +415,11 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
         else:
             id_column_old = nodes_arrow_dataframe.get_column(id_column_name)
-            old_len = len(unique_node_ids_old)
-            if len(unique_node_ids_old) > old_len:
-                raise NotImplementedError()
+            unique_node_ids_nodes_table = id_column_old.unique().sort()
+
+            if len(unique_node_ids_old) > len(unique_node_ids_nodes_table):
+                ~(unique_node_ids_old.is_in(unique_node_ids_nodes_table))
+                raise NotImplementedError("MISSING NODE IDS NOT IMPLEMENTED YET")
             else:
                 new_node_ids = range(0, len(id_column_old))
                 node_id_map = dict(zip(id_column_old, new_node_ids))
@@ -413,10 +432,11 @@ class AssembleGraphFromTablesModule(KiaraModule):
                 )
                 nodes_arrow_dataframe.insert_at_idx(0, new_idx_series)
 
-                if label_column_name is None:
+                if not label_column_name:
                     label_column_name = NODE_ID_COLUMN_NAME
 
                 # we create a copy of the label column, and stringify its items
+
                 label_column = nodes_arrow_dataframe.get_column(
                     label_column_name
                 ).rename(LABEL_COLUMN_NAME)
@@ -432,16 +452,30 @@ class AssembleGraphFromTablesModule(KiaraModule):
                     1, label_column
                 )
 
-        source_column_mapped = source_column_old.map_dict(
-            node_id_map, default=None
-        ).rename(SOURCE_COLUMN_NAME)
+        # TODO: deal with different types if node ids are strings or integers
+        try:
+            source_column_mapped = source_column_old.map_dict(
+                node_id_map, default=None
+            ).rename(SOURCE_COLUMN_NAME)
+        except Exception:
+            raise KiaraProcessingException(
+                "Could not map node ids onto edges source column.  In most cases the issue is that your node ids have a different data type in your nodes table as in the source column of your edges table."
+            )
+
         if source_column_mapped.is_null().any():
             raise KiaraProcessingException(
                 "The source column contains values that are not mapped in the nodes table."
             )
-        target_column_mapped = target_column_old.map_dict(
-            node_id_map, default=None
-        ).rename(TARGET_COLUMN_NAME)
+
+        try:
+            target_column_mapped = target_column_old.map_dict(
+                node_id_map, default=None
+            ).rename(TARGET_COLUMN_NAME)
+        except Exception:
+            raise KiaraProcessingException(
+                "Could not map node ids onto edges source column.  In most cases the issue is that your node ids have a different data type in your nodes table as in the target column of your edges table."
+            )
+
         if target_column_mapped.is_null().any():
             raise KiaraProcessingException(
                 "The target column contains values that are not mapped in the nodes table."

@@ -387,7 +387,7 @@ class NetworkData(KiaraTables):
         """Calculate the node attributes that should be included in the output."""
 
         if incl_node_attributes is False:
-            node_attr_names: List[str] = [NODE_ID_COLUMN_NAME]
+            node_attr_names: List[str] = [NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME]
         else:
             all_node_attr_names = self.nodes.column_names
             if incl_node_attributes is True:

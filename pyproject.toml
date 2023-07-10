@@ -33,6 +33,7 @@ dependencies = [
     "kiara>=0.4.44",
     "kiara-plugin.tabular>=0.4.28",
     "rustworkx>=0.13.0, <0.14.0",
+    "pyvis>=0.3.0",
 ]
 dynamic = ["version"]
 
@@ -48,6 +49,9 @@ dev_utils = [
 ]
 dev_all = [
     "kiara[dev_all]"
+]
+streamlit = [
+    "kiara_plugin.streamlit",
 ]
 
 [project.entry-points."kiara.plugin"]
@@ -65,6 +69,8 @@ network_analysis = "kiara_plugin.network_analysis:find_modules"
 [project.entry-points."kiara.pipelines"]
 network_analysis = "kiara_plugin.network_analysis:find_pipelines"
 
+[project.entry-points."kiara.streamlit_components"]
+streamlit = "kiara_plugin.network_analysis:find_kiara_streamlit_components"
 
 [project.urls]
 homepage = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
