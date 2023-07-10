@@ -1,3 +1,0 @@
-operation: "network_data.extract_components"
-inputs:
-  network_data: simple_disconnected
