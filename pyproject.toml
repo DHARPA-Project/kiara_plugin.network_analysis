@@ -128,7 +128,7 @@ select = [
     "PLW",
     "PIE",
 ]
-ignore = ["E501", "S101", "SIM118", "SIM108", "PLR2004", "PLR0913", "S110", "PLR0912", "PLR0915", "PIE810", "S608"]
+ignore = ["E501", "S101", "SIM118", "SIM108", "PLR2004", "PLR0913", "S110", "PLR0912", "PLR0915", "PIE810", "S608", "RUF012"]
 
 fix = true
 fixable = ["E", "F", "RUF100", "I001", "Q"]
