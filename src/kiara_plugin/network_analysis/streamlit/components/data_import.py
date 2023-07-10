@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class NetworkDataImportComponent(DataImportComponent):
 
     _component_name = "import_network_data"
-    _examples = [{"doc": "The default network_data onboarding component.", "args": {}}]
+    _examples = [{"doc": "The default network_data onboarding component.", "args": {}}]  # type: ignore
 
     @classmethod
     def get_data_type(cls) -> str:
