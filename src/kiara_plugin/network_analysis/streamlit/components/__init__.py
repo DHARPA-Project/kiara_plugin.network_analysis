@@ -37,18 +37,20 @@ class NetworkDataPreview(PreviewComponent):
 
         _value = self.api.get_value(options.value)
 
-        tab_names = ["nodes", "edges", "graph"]
+        if options.show_properties:
+            tab_names = ["Nodes", "Edges", "Graph", "Value properties"]
+        else:
+            tab_names = ["Nodes", "Edges", "Graph"]
 
         network_data: NetworkData = _value.data
         tabs = st.tabs(tab_names)
 
-        nodes_table = network_data.get_table(NODES_TABLE_NAME)
         with tabs[0]:
-
+            nodes_table = network_data.get_table(NODES_TABLE_NAME)
             _callback, _key = self._create_session_store_callback(
                 options, "preview", "network_data", "nodes"
             )
-            show_internal_columns = st.checkbox(
+            show_internal_columns = tabs[0].checkbox(
                 "Show computed columns", value=False, key=_key, on_change=_callback
             )
             if show_internal_columns:
@@ -60,18 +62,18 @@ class NetworkDataPreview(PreviewComponent):
                     if x not in [NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME]
                     and x.startswith("_")
                 )
-            st.dataframe(
+            tabs[0].dataframe(
                 nodes_table.to_pandas_dataframe(exclude_columns=exclude_columns),
                 use_container_width=True,
                 hide_index=True,
             )
 
-        edges_table = network_data.get_table(EDGES_TABLE_NAME)
         with tabs[1]:
+            edges_table = network_data.get_table(EDGES_TABLE_NAME)
             _callback, _key = self._create_session_store_callback(
                 options, "preview", "network_data", "edges"
             )
-            show_internal_columns = st.checkbox(
+            show_internal_columns = tabs[1].checkbox(
                 "Show computed columns", value=False, key=_key, on_change=_callback
             )
             if show_internal_columns:
@@ -84,7 +86,7 @@ class NetworkDataPreview(PreviewComponent):
                     not in [EDGE_ID_COLUMN_NAME, SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME]
                     and x.startswith("_")
                 )
-            st.dataframe(
+            tabs[1].dataframe(
                 edges_table.to_pandas_dataframe(exclude_columns=exclude_columns),
                 use_container_width=True,
                 hide_index=True,
@@ -96,7 +98,7 @@ class NetworkDataPreview(PreviewComponent):
                 options, "preview", "network_data", "graphs"
             )
             graph_types = ["non-directed", "directed"]
-            graph_type = st.radio(
+            graph_type = tabs[2].radio(
                 "Graph type", graph_types, key=_key, on_change=_callback
             )
             if graph_type == "non-directed":
@@ -121,3 +123,7 @@ class NetworkDataPreview(PreviewComponent):
 
             html = vis_graph.generate_html()
             components.html(html, height=435)
+        if options.show_properties:
+            with tabs[3]:
+                comp = self.get_component("display_value_properties")
+                comp.render_func(tabs[3])(value=options.value)
