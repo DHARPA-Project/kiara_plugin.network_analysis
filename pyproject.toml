@@ -50,11 +50,7 @@ dev_all = [
     "kiara[dev_all]"
 ]
 streamlit = [
-<<<<<<< ours
-    "kiara_plugin.streamlit",
-=======
     "kiara_plugin.streamlit"
->>>>>>> theirs
 ]
 
 [project.entry-points."kiara.plugin"]
