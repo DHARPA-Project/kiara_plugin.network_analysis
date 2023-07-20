@@ -67,3 +67,5 @@ tzap-data/
 .tzapignore
 .tzapinclude
 .tzap-data/
+.pixi
+dev.py
