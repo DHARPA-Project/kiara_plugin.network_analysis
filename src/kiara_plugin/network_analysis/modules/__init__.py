@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Mapping, Union
 
 from kiara.api import KiaraModule, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraProcessingException
@@ -28,7 +28,7 @@ class RedefineNetworkEdgesModule(KiaraModule):
     def create_inputs_schema(
         self,
     ) -> ValueMapSchema:
-        result = {
+        result: Mapping[str, Mapping[str, Any]] = {
             "network_data": {
                 "type": "network_data",
                 "doc": "The network data to flatten.",

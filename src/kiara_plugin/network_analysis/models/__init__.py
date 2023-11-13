@@ -255,7 +255,7 @@ class NetworkData(KiaraTables):
 
         node_columns = [NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME]
         for column_name, metadata in network_data.nodes.column_metadata.items():
-            attr_prop: Union[None, NetworkNodeAttributeMetadata] = metadata.get(
+            attr_prop: Union[None, NetworkNodeAttributeMetadata] = metadata.get(  # type: ignore
                 ATTRIBUTE_PROPERTY_KEY, None
             )
             if attr_prop is None or not attr_prop.computed_attribute:
@@ -271,7 +271,7 @@ class NetworkData(KiaraTables):
         edges_table = network_data.edges.arrow_table  # noqa
         edge_columns = [SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME]
         for column_name, metadata in network_data.edges.column_metadata.items():
-            attr_prop = metadata.get(ATTRIBUTE_PROPERTY_KEY, None)
+            attr_prop = metadata.get(ATTRIBUTE_PROPERTY_KEY, None)  # type: ignore
             if attr_prop is None or not attr_prop.computed_attribute:
                 edge_columns.append(column_name)
 
@@ -390,7 +390,7 @@ class NetworkData(KiaraTables):
         if incl_node_attributes is False:
             node_attr_names: List[str] = [NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME]
         else:
-            all_node_attr_names = self.nodes.column_names
+            all_node_attr_names: List[str] = self.nodes.column_names  # type: ignore
             if incl_node_attributes is True:
                 node_attr_names = [NODE_ID_COLUMN_NAME]
                 node_attr_names.extend((x for x in all_node_attr_names if x != NODE_ID_COLUMN_NAME))  # type: ignore
@@ -598,7 +598,7 @@ class NetworkData(KiaraTables):
         )
 
         if attach_node_id_map:
-            graph.attrs = {"node_id_map": node_map}
+            graph.attrs = {"node_id_map": node_map}  # type: ignore
 
         return graph
 

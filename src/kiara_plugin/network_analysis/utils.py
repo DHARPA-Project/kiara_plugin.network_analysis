@@ -162,7 +162,7 @@ def extract_networkx_edges_as_table(
 
 def augment_nodes_table_with_connection_counts(
     nodes_table: Union["pa.Table", "pl.DataFrame"],
-    edges_table: Union["pa.Table", "pl.Dataframe"],
+    edges_table: Union["pa.Table", "pl.DataFrame"],
 ) -> "pa.Table":
 
     import duckdb

@@ -241,8 +241,14 @@ plugins = [
     "pydantic.mypy"
 ]
 
-
 # mypy per-module options:
 [[tool.mypy.overrides]]
-module = ["placholder.dummy.*"]
+module = [
+    "kiara_plugin.streamlit.*",
+    "networkx.*",
+    "pyarrow.*",
+    "pyvis.*",
+    "ruamel.*",
+    "streamlit.*"
+]
 ignore_missing_imports = true

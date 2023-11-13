@@ -62,6 +62,11 @@ class NetworkDataType(TablesType):
                 augment_tables=False,
             )
 
+        if not isinstance(data, NetworkData):
+            raise KiaraException(
+                f"Can't parse object to network data: invalid type '{type(data)}'."
+            )
+
         return data
 
     def _validate(cls, value: Any) -> None:

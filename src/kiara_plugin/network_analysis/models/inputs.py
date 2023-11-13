@@ -14,7 +14,7 @@ class AttributeMapStrategy(KiaraModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate(cls, values: Dict[str, Any]):
+    def pre_validate_model(cls, values: Dict[str, Any]):
 
         if len(values) == 1 and DEFAULT_MODEL_KEY in values.keys():
 

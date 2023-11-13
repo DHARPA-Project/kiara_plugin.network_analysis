@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from kiara.api import KiaraModule, ValueMap, ValueMapSchema
 from kiara.exceptions import KiaraException
@@ -10,6 +10,9 @@ from kiara_plugin.network_analysis.defaults import (
 )
 from kiara_plugin.network_analysis.models import NetworkData
 from kiara_plugin.network_analysis.models.metadata import NetworkNodeAttributeMetadata
+
+if TYPE_CHECKING:
+    from kiara.models import KiaraModel
 
 KIARA_METADATA = {
     "authors": [
@@ -86,9 +89,9 @@ class ExtractLargestComponentModule(KiaraModule):
             omit_self_loops=False,
             attach_node_id_map=True,
         )
-        undir_components = rx.connected_components(undir_graph)
+        undir_components = rx.connected_components(undir_graph)  # type: ignore
 
-        nodes_columns_metadata = {
+        nodes_columns_metadata: Dict[str, Dict[str, KiaraModel]] = {
             COMPONENT_ID_COLUMN_NAME: {
                 ATTRIBUTE_PROPERTY_KEY: COMPONENT_COLUMN_METADATA
             }
@@ -115,7 +118,7 @@ class ExtractLargestComponentModule(KiaraModule):
 
         number_of_components = len(undir_components)
         is_connected = False
-        node_id_map = undir_graph.attrs["node_id_map"]
+        node_id_map = undir_graph.attrs["node_id_map"]  # type: ignore
 
         node_components = {}
         for idx, component in enumerate(
@@ -192,9 +195,9 @@ class CutPointsList(KiaraModule):
             attach_node_id_map=True,
         )
 
-        node_id_map = undir_graph.attrs["node_id_map"]
+        node_id_map = undir_graph.attrs["node_id_map"]  # type: ignore
 
-        cut_points = rx.articulation_points(undir_graph)
+        cut_points = rx.articulation_points(undir_graph)  # type: ignore
         translated_cut_points = [node_id_map[x] for x in cut_points]
         if not cut_points:
             raise NotImplementedError()
@@ -208,7 +211,7 @@ class CutPointsList(KiaraModule):
             IS_CUTPOINT_COLUMN_NAME, pa.array(cut_points_column, type=pa.bool_())
         )
 
-        nodes_columns_metadata = {
+        nodes_columns_metadata: Dict[str, Dict[str, KiaraModel]] = {
             IS_CUTPOINT_COLUMN_NAME: {
                 ATTRIBUTE_PROPERTY_KEY: CUT_POINTS_COLUMN_METADATA
             }
