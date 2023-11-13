@@ -175,7 +175,7 @@ class CutPointsList(KiaraModule):
             }
         }
 
-    def process(self, inputs, outputs):
+    def process(self, inputs, outputs) -> None:
 
         import pyarrow as pa
         import rustworkx as rx
@@ -199,7 +199,8 @@ class CutPointsList(KiaraModule):
         if not cut_points:
             raise NotImplementedError()
         cut_points_column = [
-            x in translated_cut_points for x in range(0, network_data.num_nodes)
+            x in translated_cut_points
+            for x in range(0, network_data.num_nodes)  # noqa: PIE808
         ]
 
         nodes = network_data.nodes.arrow_table

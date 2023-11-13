@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import ClassVar
 
-from pydantic import field_validator, Field
+from pydantic import Field, field_validator
 
 from kiara.models import KiaraModel
 from kiara.models.documentation import DocumentationMetadataModel

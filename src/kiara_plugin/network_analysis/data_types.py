@@ -2,7 +2,7 @@
 
 """This module contains the value type classes that are used in the ``kiara_plugin.network_analysis`` package.
 """
-from typing import Any, List, Mapping, Type, Union, ClassVar
+from typing import Any, ClassVar, List, Mapping, Type, Union
 
 from rich.console import Group
 
@@ -34,7 +34,7 @@ class NetworkDataType(TablesType):
 
     @classmethod
     def python_class(cls) -> Type:
-        return NetworkData
+        return NetworkData  # type: ignore
 
     def parse_python_obj(self, data: Any) -> NetworkData:
 

@@ -10,6 +10,7 @@ sub-class a pydantic BaseModel or implement custom base classes.
 """
 from typing import (
     TYPE_CHECKING,
+    ClassVar,
     Dict,
     Iterable,
     List,
@@ -17,7 +18,7 @@ from typing import (
     Protocol,
     Type,
     TypeVar,
-    Union, ClassVar,
+    Union,
 )
 
 from pydantic import BaseModel, Field
@@ -132,7 +133,7 @@ class NetworkData(KiaraTables):
                 nodes_table, edges_table
             )
 
-        network_data = cls.create_tables(
+        network_data: NetworkData = cls.create_tables(
             {NODES_TABLE_NAME: nodes_table, EDGES_TABLE_NAME: edges_table}
         )
 
@@ -356,7 +357,7 @@ class NetworkData(KiaraTables):
         import duckdb
 
         con = duckdb.connect()
-        edges = self.edges.arrow_table  # noqak
+        edges = self.edges.arrow_table  # noqa: F841
         if relation_name != EDGES_TABLE_NAME:
             sql_query = sql_query.replace(relation_name, EDGES_TABLE_NAME)
 
@@ -514,7 +515,7 @@ class NetworkData(KiaraTables):
 
         """
 
-        graph = graph_type()
+        graph: NETWORKX_GRAPH_TYPE = graph_type()
 
         def add_node(_node_id: int, **attrs):
             graph.add_node(_node_id, **attrs)

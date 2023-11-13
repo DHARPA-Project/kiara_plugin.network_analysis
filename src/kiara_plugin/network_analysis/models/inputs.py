@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict, Union, ClassVar
+from typing import Any, ClassVar, Dict, Union
 
-from pydantic import model_validator, Field
+from pydantic import Field, model_validator
 
 from kiara.models import KiaraModel
 from kiara_plugin.core_types.defaults import DEFAULT_MODEL_KEY

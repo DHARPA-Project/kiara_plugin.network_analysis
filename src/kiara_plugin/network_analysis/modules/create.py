@@ -398,7 +398,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
         )
 
         if nodes_arrow_dataframe is None:
-            new_node_ids = range(0, len(unique_node_ids_old))
+            new_node_ids = range(0, len(unique_node_ids_old))  # noqa: PIE808
             node_id_map = dict(zip(unique_node_ids_old, new_node_ids))
             # node_id_map = {
             #     node_id: new_node_id
@@ -421,7 +421,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
                 ~(unique_node_ids_old.is_in(unique_node_ids_nodes_table))
                 raise NotImplementedError("MISSING NODE IDS NOT IMPLEMENTED YET")
             else:
-                new_node_ids = range(0, len(id_column_old))
+                new_node_ids = range(0, len(id_column_old))  # noqa: PIE808
                 node_id_map = dict(zip(id_column_old, new_node_ids))
                 # node_id_map = {
                 #     node_id: new_node_id

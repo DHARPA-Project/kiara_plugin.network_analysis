@@ -24,7 +24,7 @@ Anthropological Research 33, 452-473 (1977)."
 
 See also: https://en.wikipedia.org/wiki/Zachary%27s_karate_club#cite_note-Data-3
 
-This is a **one-mode** network where nodes represent friends. It is **undirected** and **unweighted**. 
+This is a **one-mode** network where nodes represent friends. It is **undirected** and **unweighted**.
 - 34 nodes
 - 78 edges (undirected)
 
@@ -62,7 +62,7 @@ adjacencies for the novel "David Copperfield" by Charles Dickens, as
 described by M. Newman.  Nodes represent the most commonly occurring
 adjectives and nouns in the book.  Node values are 0 for adjectives and 1
 for nouns.  Edges connect any pair of words that occur in adjacent position
-in the text of the book.  
+in the text of the book.
 
 Please cite M. E. J. Newman, Finding community
 structure in networks using the eigenvectors of matrices, Preprint
@@ -91,14 +91,14 @@ Additional information on the network can be found in
 
   D. Lusseau, Evidence for social role in a dolphin social network,
   Preprint q-bio/0607048 (http://arxiv.org/abs/q-bio.PE/0607048)"
-  
+
 This data represents a **one-mode**, **undirected**, **unweighted** network.
-  
+
 - nodes 62
 - edges 159 (undirected)
-  
+
 ### football
- 
+
  "The file football.gml contains the network of American football games
 between Division IA colleges during regular season Fall 2000, as compiled
 by M. Girvan and M. Newman.  The nodes have values that indicate to which
@@ -168,8 +168,8 @@ These data can be cited (as an updated version of)
 
   M. E. J. Newman, The structure of scientific collaboration networks,
   Proc. Natl. Acad. Sci. USA 98, 404-409 (2001)."
-  
+
 This dataset represents a **one-mode** (scientists), **undirected**, **weighted** network.
- 
+
  - nodes 40421
  - edges 175692 (undirected)
