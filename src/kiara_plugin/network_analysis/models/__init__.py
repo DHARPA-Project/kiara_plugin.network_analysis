@@ -419,7 +419,7 @@ class NetworkData(KiaraTables):
         if incl_edge_attributes is False:
             edge_attr_names: List[str] = [SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME]
         else:
-            all_edge_attr_names = self.edges.column_names
+            all_edge_attr_names: List[str] = self.edges.column_names  # type: ignore
             if incl_edge_attributes is True:
                 edge_attr_names = [SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME]
                 edge_attr_names.extend(
