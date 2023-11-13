@@ -17,7 +17,7 @@ from typing import (
     Protocol,
     Type,
     TypeVar,
-    Union,
+    Union, ClassVar,
 )
 
 from pydantic import BaseModel, Field
@@ -89,7 +89,7 @@ class NetworkData(KiaraTables):
     By convention, kiara will add columns prefixed with an underscore if the values in it have internal 'meaning', normal/original attributes are stored in columns without that prefix.
     """
 
-    _kiara_model_id = "instance.network_data"
+    _kiara_model_id: ClassVar = "instance.network_data"
 
     @classmethod
     def create_network_data(
@@ -614,7 +614,7 @@ class GraphProperties(BaseModel):
 class NetworkGraphProperties(ValueMetadata):
     """Network data stats."""
 
-    _metadata_key = "network_data"
+    _metadata_key: ClassVar[str] = "network_data"
 
     number_of_nodes: int = Field(description="Number of nodes in the network graph.")
     properties_by_graph_type: Dict[  # type: ignore

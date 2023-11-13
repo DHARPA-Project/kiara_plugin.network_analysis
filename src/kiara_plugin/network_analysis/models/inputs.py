@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, ClassVar
 
-from pydantic import Field, root_validator
+from pydantic import model_validator, Field
 
 from kiara.models import KiaraModel
 from kiara_plugin.core_types.defaults import DEFAULT_MODEL_KEY
@@ -10,9 +10,10 @@ from kiara_plugin.network_analysis.defaults import AGGREGATION_FUNCTION_NAME
 
 class AttributeMapStrategy(KiaraModel):
 
-    _kiara_model_id = "input.attribute_map_strategy"
+    _kiara_model_id: ClassVar = "input.attribute_map_strategy"
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate(cls, values: Dict[str, Any]):
 
         if len(values) == 1 and DEFAULT_MODEL_KEY in values.keys():

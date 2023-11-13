@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from pydantic import Field, validator
+from typing import ClassVar
+
+from pydantic import field_validator, Field
 
 from kiara.models import KiaraModel
 from kiara.models.documentation import DocumentationMetadataModel
@@ -23,7 +25,7 @@ from kiara_plugin.network_analysis.defaults import (
 
 class NetworkNodeAttributeMetadata(KiaraModel):
 
-    _kiara_model_id = "metadata.network_node_attribute"
+    _kiara_model_id: ClassVar = "metadata.network_node_attribute"
 
     doc: DocumentationMetadataModel = Field(
         description="Explanation what this attribute is about.",
@@ -34,14 +36,15 @@ class NetworkNodeAttributeMetadata(KiaraModel):
         default=False,
     )
 
-    @validator("doc", pre=True)
+    @field_validator("doc", mode="before")
+    @classmethod
     def validate_doc(cls, value):
         return DocumentationMetadataModel.create(value)
 
 
 class NetworkEdgeAttributeMetadata(KiaraModel):
 
-    _kiara_model_id = "metadata.network_edge_attribute"
+    _kiara_model_id: ClassVar = "metadata.network_edge_attribute"
 
     doc: DocumentationMetadataModel = Field(
         description="Explanation what this attribute is about.",
@@ -52,7 +55,8 @@ class NetworkEdgeAttributeMetadata(KiaraModel):
         default=False,
     )
 
-    @validator("doc", pre=True)
+    @field_validator("doc", mode="before")
+    @classmethod
     def validate_doc(cls, value):
         return DocumentationMetadataModel.create(value)
 
