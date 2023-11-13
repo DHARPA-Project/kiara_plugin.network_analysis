@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python_version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       - name: "Set up Python ${{ matrix.python_version }}"
         uses: actions/setup-python@v4
@@ -52,22 +52,22 @@ jobs:
 #        uses: coverallsapp/github-action@v2
 
 # Uncomment this if you want to run mypy
-#  mypy-linux:
-#    name: mypy check on linux
-#    runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        python_version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-#    steps:
-#      - name: "Set up Python ${{ matrix.python_version }}"
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: "${{ matrix.python_version }}"
-#      - uses: actions/checkout@v3
-#      - name: install kiara_plugin.network_analysis
-#        run: pip install -U .[all,dev_testing]
-#      - name: Test with mypy
-#        run: make mypy
+  mypy-linux:
+    name: mypy check on linux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ["3.8", "3.9", "3.10", "3.11"]
+    steps:
+      - name: "Set up Python ${{ matrix.python_version }}"
+        uses: actions/setup-python@v4
+        with:
+          python-version: "${{ matrix.python_version }}"
+      - uses: actions/checkout@v3
+      - name: install kiara_plugin.network_analysis
+        run: pip install -U .[all,dev_testing]
+      - name: Test with mypy
+        run: make mypy
 
   linting-linux:
     runs-on: ubuntu-latest
@@ -96,8 +96,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - test-linux
-#      - mypy-linux
-#      - linting-linux
+      - mypy-linux
+      - linting-linux
     steps:
       - name: Set up Python 3.11
         uses: actions/setup-python@v4
@@ -138,8 +138,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - test-linux
-      # - mypy-linux   # uncomment if this step is enabled
-      # - linting-linux   # uncomment if this step is enabled
+      - mypy-linux   # uncomment if this step is enabled
+      - linting-linux   # uncomment if this step is enabled
     steps:
       - name: "Set up Python 3.11"
         uses: actions/setup-python@v4
