@@ -52,7 +52,6 @@ src/kiara_plugin/network_analysis/version.txt
 public
 site
 .dephell_report
-.direnv
 .mypy_cache
 .env
 docs/api-documentation.md
@@ -68,4 +67,5 @@ tzap-data/
 .tzapinclude
 .tzap-data/
 .pixi
+pixi.lock
 dev.py

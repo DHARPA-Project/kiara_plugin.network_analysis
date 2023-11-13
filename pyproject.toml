@@ -1,10 +1,27 @@
 [build-system]
 requires = [
-    "setuptools>=63",
-    "setuptools_scm[toml]>7.0.0",
+    "setuptools>=64",
+    "setuptools_scm[toml]>=8",
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
+[options]
+packages = { find = { where = "src", exclude = ["tests"] } }
+include_package_data = true
+package_dir = { "" = "src" }
+zip_safe = false
+
+[tool.aliases]
+build = "bdist_wheel"
+release = "build upload"
+
+[tool.bdist_wheel]
+universal = 0
+
+[tool.devpi.upload]
+no-vcs = 1
+formats = ["sdist", "bdist_wheel"]
 
 [project]
 name = "kiara_plugin.network_analysis"
@@ -26,11 +43,13 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11"
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
 ]
 dependencies = [
-    "kiara>=0.4.48",
-    "kiara-plugin.tabular>=0.4.29",
+    "kiara>=0.5.1,<0.6.0",
+    "kiara_plugin.core_types>=0.5.0,<0.6.0",
+    "kiara-plugin.tabular>=0.5.0,<0.6.0",
     "rustworkx>=0.13.0, <0.14.0",
     "pyvis>=0.3.0",
 ]
@@ -100,6 +119,36 @@ write_to = "src/kiara_plugin/network_analysis/version.txt"
 pythonpath = [
     "src"
 ]
+addopts = "--verbose"
+norecursedirs = [
+    "dist",
+    "build",
+    ".tox"
+]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["kiara_plugin.network_analysis"]
+relative_files = true
+
+[tool.coverage.paths]
+source = [
+    "src/",
+    "*/site-packages/"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self\\.debug",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if typing.TYPE_CHECKING:",
+]
 
 [tool.ruff]
 line-length = 88
@@ -132,11 +181,6 @@ ignore = ["E501", "S101", "SIM118", "SIM108", "PLR2004", "PLR0913", "S110", "PLR
 fix = true
 fixable = ["E", "F", "RUF100", "I001", "Q"]
 
-
-#fixable = ["E", "F", "RUF100", "I001"]
-# Enable Pyflakes `E` and `F` codes by default.
-
-# Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
     ".direnv",
@@ -186,3 +230,19 @@ reportMissingTypeStubs = false
 
 executionEnvironments = [
 ]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+mypy_path = "src"
+namespace_packages = false
+plugins = [
+    "pydantic.mypy"
+]
+
+
+# mypy per-module options:
+[[tool.mypy.overrides]]
+module = ["placholder.dummy.*"]
+ignore_missing_imports = true

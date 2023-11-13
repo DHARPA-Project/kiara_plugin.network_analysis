@@ -63,13 +63,13 @@ except Exception:
 
 
 def get_version():
-    from pkg_resources import DistributionNotFound, get_distribution
+    from importlib.metadata import PackageNotFoundError, version
 
     try:
         # Change here if project is renamed and does not equal the package name
         dist_name = __name__
-        __version__ = get_distribution(dist_name).version
-    except DistributionNotFound:
+        __version__ = version(dist_name)
+    except PackageNotFoundError:
 
         try:
             version_file = os.path.join(os.path.dirname(__file__), "version.txt")
