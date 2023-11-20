@@ -2,6 +2,6 @@
 Changelog
 =========
 
-## Version 0.0.1 (Upcoming)
+## Version 0.5.1 (Upcoming)
 
-- first release of *kiara_plugin.network_analysis*
+- rename 'network_data.extract_components' to `network_data.calculate_components`

@@ -81,9 +81,9 @@ class EdgesCallback(Protocol):
 
 
 class NetworkData(KiaraTables):
-    """A helper class to access and query network datasets.
+    """A wrapper class to access and query network datasets.
 
-    This class provides different ways to access the underlying network data, most notably via sql and as networkx Graph object.
+    This class provides different ways to access the underlying network data, most notably via sql and as rustworkx (also networkx) Graph object.
 
     Internally, network data is stored as 2 Arrow tables with the edges stored in a table called 'edges' and the nodes in a table called 'nodes'. The edges table must have (at least) the following columns: '_source', '_target'. The nodes table must have (at least) the following columns: '_id' (integer), '_label' (string).
 
@@ -106,7 +106,17 @@ class NetworkData(KiaraTables):
         This method requires the nodes to have an "_id' column (int) as well as a '_label' one (utf8).
         The edges table needs at least a '_source' (int) and '_target' (int) column.
 
-        This method will augment both tables with additional columns that are required for the internal representation (weights, degrees).
+        This method can augment both tables with additional columns that are required for the internal representation (id, counts, etc).
+
+        If you specify additional metadata, it will be attached to the columns of the tables. This is useful if you want to add metadata that was part of the original data, and that you want to be available when the data is used in a network analysis (for example existing weight data). The format of that additional metadata is a dict of dicts, with the
+        root key the column name, the second key the property name, and the value the property value.
+
+        Arguments:
+            nodes_table: the table containing the nodes data
+            edges_table: the table containing the edges data
+            augment_tables: whether to augment the tables with pre-processed edge/node metadata (in most cases you want to do this, except if you know the metadata is already present and correct)
+            nodes_column_metadata: additional metadata to attach to the nodes table columns
+            edges_column_metadata: additional metadata to attach to the edges table columns
         """
 
         from kiara_plugin.network_analysis.models.metadata import (
@@ -249,6 +259,14 @@ class NetworkData(KiaraTables):
     def from_filtered_nodes(
         cls, network_data: "NetworkData", nodes_list: List[int]
     ) -> "NetworkData":
+        """Create a new, filtered instance of this class using a source network, and a list of node ids to include.
+
+        Nodes/edges containing a node id not in the list will be removed from the resulting network data.
+
+        Arguments:
+            network_data: the source network data
+            nodes_list: the list of node ids to include in the filtered network data
+        """
 
         import duckdb
         import polars as pl
@@ -304,7 +322,14 @@ class NetworkData(KiaraTables):
         label_attr_name: Union[str, None] = None,
         ignore_node_attributes: Union[Iterable[str], None] = None,
     ) -> "NetworkData":
-        """Create a `NetworkData` instance from a networkx Graph object."""
+        """Create a `NetworkData` instance from a networkx Graph object.
+
+        Arguments:
+            graph: the networkx graph instance
+            label_attr_name: the name of the node attribute that contains the node label (if None, the node id is used as label)
+            ignore_node_attributes: a list of node attributes that should be ignored and not added to the table
+
+        """
 
         # TODO: should we also index nodes/edges attributes?
 

@@ -33,14 +33,14 @@ CUT_POINTS_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=COMPONENT_COLUMN_T
 
 
 class ExtractLargestComponentModule(KiaraModule):
-    """Extract the largest connected component from this network data.
+    """Calculate component information for this network data.
 
     This module analyses network data and checks if it contains clusters, and if so, how many. If all nodes are connected, all nodes will have '0' as value in the component_id field.
 
     Otherwise, the nodes will be assigned 'component_id'-s according to the component they belong to, with the  largest component having '0' as component_id, the second largest '1' and so on. If two components have the same size, who gets the higher component_id is not determinate.
     """
 
-    _module_type_name = "network_data.extract_components"
+    _module_type_name = "network_data.calculate_components"
 
     def create_inputs_schema(
         self,
