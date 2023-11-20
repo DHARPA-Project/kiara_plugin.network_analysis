@@ -143,6 +143,7 @@ def from_filtered_nodes(
 ) -> "NetworkData":
 ```
 
+TODO: more example code?
 
 ## Assembling a `network_data` value in a workflow
 
@@ -194,7 +195,7 @@ This assumes the user has already imported at least a table containing edge data
 The second option of creating a `network_data` value is to use the `create.network_data.from.file` operation, which takes a (raw) `file` as input. This file needs to contain network data in one of the supported formats (e.g. 'gml, 'gexf', 'graphml', ... -- use 'explain' on the operation to get the latest list of supported formats).
 
 
-## Other perations for `network_data` values
+## Other operations for `network_data` values
 
 The following operations are available for `network_data` values. Use the `operation explain` command to get more information about them.
 
