@@ -205,7 +205,7 @@ Those operations take an existing `network_data` instance and export it as afile
 
 ### `network_data.calculate_components`
 
-Add a `_component_id` column to the nodes table indicating which (separate) component it belongs to, for single component networks thie value will be '0' for every node.
+Add a `component_id` column to the nodes table indicating which (separate) component it belongs to, for single component networks thie value will be '0' for every node.
 
 ### `network_data_filter.component`
 

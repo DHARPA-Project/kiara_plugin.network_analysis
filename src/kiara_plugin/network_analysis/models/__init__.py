@@ -93,6 +93,44 @@ class NetworkData(KiaraTables):
     _kiara_model_id: ClassVar = "instance.network_data"
 
     @classmethod
+    def create_augmented(
+        cls,
+        network_data: "NetworkData",
+        additional_edges_columns: Union[None, Dict[str, "pa.Array"]] = None,
+        additional_nodes_columns: Union[None, Dict[str, "pa.Array"]] = None,
+        nodes_column_metadata: Union[Dict[str, Dict[str, KiaraModel]], None] = None,
+        edges_column_metadata: Union[Dict[str, Dict[str, KiaraModel]], None] = None,
+    ) -> "NetworkData":
+        """Create a new network_data instance, augmented with additional columns.
+
+        This won't re-compute any of the automatically generated columns (starting with '_').
+        """
+
+        nodes_table = network_data.nodes.arrow_table
+        edges_table = network_data.edges.arrow_table
+
+        # nodes_table = pa.Table.from_arrays(orig_nodes_table.columns, schema=orig_nodes_table.schema)
+        # edges_table = pa.Table.from_arrays(orig_edges_table.columns, schema=orig_edges_table.schema)
+
+        if additional_edges_columns is not None:
+            for col_name, col_data in additional_edges_columns.items():
+                edges_table = edges_table.append_column(col_name, col_data)
+
+        if additional_nodes_columns is not None:
+            for col_name, col_data in additional_nodes_columns.items():
+                nodes_table = nodes_table.append_column(col_name, col_data)
+
+        new_network_data = NetworkData.create_network_data(
+            nodes_table=nodes_table,
+            edges_table=edges_table,
+            augment_tables=False,
+            nodes_column_metadata=nodes_column_metadata,
+            edges_column_metadata=edges_column_metadata,
+        )
+
+        return new_network_data
+
+    @classmethod
     def create_network_data(
         cls,
         nodes_table: "pa.Table",
@@ -579,7 +617,7 @@ class NetworkData(KiaraTables):
             incl_node_attributes: if True, all node attributes are included in the graph, if False, none are, otherwise the specified attributes are included
             incl_edge_attributes: if True, all edge attributes are included in the graph, if False, none are, otherwise the specified attributes are included
             omit_self_loops: if False, self-loops are included in the graph, otherwise they are not added to the resulting graph (nodes that are only connected to themselves are still included)
-            attach_node_id_map: if True, add the dict describing how the graph node ids (key) are mapped to the original node id of the network data, under the 'node_id_map' key in the graph's attributes
+            attach_node_id_map: if True, add the dict describing how the rustworkx graph node ids (key) are mapped to the original node id of the network data, under the 'node_id_map' key in the graph's attributes
         """
 
         from bidict import bidict

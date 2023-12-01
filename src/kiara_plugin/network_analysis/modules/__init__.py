@@ -17,6 +17,7 @@ KIARA_METADATA = {
         {"name": "Markus Binsteiner", "email": "markus@frkl.io"},
     ],
     "description": "Modules related to extracting components from network data.",
+    "tags": ["network", "network analysis", "network_graphs"],
 }
 
 
@@ -24,6 +25,14 @@ class RedefineNetworkEdgesModule(KiaraModule):
     """Redefine edges by merging duplicate edges and applying aggregation functions to certain edge attributes."""
 
     _module_type_name = "network_data.redefine_edges"
+
+    KIARA_METADATA = {
+        "references": {
+            "discussion": {
+                "url": "https://github.com/DHARPA-Project/kiara_plugin.network_analysis/discussions/23"
+            }
+        }
+    }
 
     def create_inputs_schema(
         self,

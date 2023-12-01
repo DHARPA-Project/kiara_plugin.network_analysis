@@ -32,7 +32,7 @@ CUT_POINTS_TEXT = """Whether the node is a cut point or not."""
 CUT_POINTS_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=COMPONENT_COLUMN_TEXT, computed_attribute=True)  # type: ignore
 
 
-class ExtractLargestComponentModule(KiaraModule):
+class CalculateComponentModule(KiaraModule):
     """Calculate component information for this network data.
 
     This module analyses network data and checks if it contains clusters, and if so, how many. If all nodes are connected, all nodes will have '0' as value in the component_id field.
