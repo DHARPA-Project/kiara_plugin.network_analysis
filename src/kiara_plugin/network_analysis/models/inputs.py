@@ -10,7 +10,7 @@ from kiara_plugin.network_analysis.defaults import AGGREGATION_FUNCTION_NAME
 
 class AttributeMapStrategy(KiaraModel):
 
-    _kiara_model_id: ClassVar = "input.attribute_map_strategy"
+    _kiara_model_id: ClassVar = "input.network_analysis_attribute_map_transformation"
 
     @model_validator(mode="before")
     @classmethod
@@ -21,10 +21,16 @@ class AttributeMapStrategy(KiaraModel):
             token = values[DEFAULT_MODEL_KEY]
             source_column_name = None
             if "=" in token:
+
                 target_column_name, func_token = token.split("=", maxsplit=1)
+
                 if "(" in func_token:
 
                     func, source_column_name = func_token.split("(", maxsplit=1)
+                    if source_column_name == ")":
+                        raise ValueError(
+                            f"Invalid function definition, empty source column name: {func_token}. Use like: `{func}(YOUR_SOURCE_COLUMN_NAME)"
+                        )
                     source_column_name = source_column_name.strip()
                     func = func.strip()
                     if not source_column_name.endswith(")"):
@@ -34,7 +40,8 @@ class AttributeMapStrategy(KiaraModel):
 
                     source_column_name = source_column_name[:-1]
                 else:
-                    func = func_token.strip()
+                    source_column_name = func_token.strip()
+                    func = None
 
             else:
                 target_column_name = token
