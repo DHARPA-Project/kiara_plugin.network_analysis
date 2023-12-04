@@ -149,7 +149,8 @@ class RedefineNetworkEdgesModule(KiaraModule):
         network_data_obj = inputs.get_value_obj("network_data")
         network_data: NetworkData = network_data_obj.data
 
-        # edges_table = network_data.edges.arrow_table
+        # needed for sql query later
+        edges_table = network_data.edges.arrow_table  # noqa
 
         attr_map_strategies: Union[
             None, KiaraModelList[AttributeMapStrategy]
