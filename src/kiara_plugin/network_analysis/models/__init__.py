@@ -46,6 +46,8 @@ from kiara_plugin.network_analysis.defaults import (
     OUT_DIRECTED_MULTI_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
+    UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME,
+    UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
     GraphType,
 )
 from kiara_plugin.network_analysis.utils import (
@@ -61,9 +63,6 @@ if TYPE_CHECKING:
     import pyarrow as pa
     import rustworkx as rx
 
-    from kiara_plugin.network_analysis.models.metadata import (
-        NetworkNodeAttributeMetadata,
-    )
     from kiara_plugin.tabular.models.table import KiaraTable
 
 NETWORKX_GRAPH_TYPE = TypeVar("NETWORKX_GRAPH_TYPE", bound="nx.Graph")
@@ -171,6 +170,8 @@ class NetworkData(KiaraTables):
             NODE_COUNT_IN_EDGES_MULTI_COLUMN_METADATA,
             NODE_COUNT_OUT_EDGES_COLUMN_METADATA,
             NODE_COUNT_OUT_EDGES_MULTI_COLUMN_METADATA,
+            NODE_DEGREE_COLUMN_METADATA,
+            NODE_DEGREE_MULTI_COLUMN_METADATA,
             NODE_ID_COLUMN_METADATA,
             NODE_LABEL_COLUMN_METADATA,
         )
@@ -179,6 +180,17 @@ class NetworkData(KiaraTables):
             edges_table = augment_edges_table_with_id_and_weights(edges_table)
             nodes_table = augment_nodes_table_with_connection_counts(
                 nodes_table, edges_table
+            )
+
+        if edges_table.column(SOURCE_COLUMN_NAME).null_count > 0:
+            raise KiaraException(
+                msg="Can't assemble network data.",
+                details="Source column in edges table contains null values.",
+            )
+        if edges_table.column(TARGET_COLUMN_NAME).null_count > 0:
+            raise KiaraException(
+                msg="Can't assemble network data.",
+                details="Target column in edges table contains null values.",
             )
 
         network_data: NetworkData = cls.create_tables(
@@ -248,9 +260,21 @@ class NetworkData(KiaraTables):
             overwrite_existing=False,
         )
         network_data.nodes.set_column_metadata(
+            UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_DEGREE_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
             CONNECTIONS_MULTI_COLUMN_NAME,
             ATTRIBUTE_PROPERTY_KEY,
             NODE_COUND_EDGES_MULTI_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
+            UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_DEGREE_MULTI_COLUMN_METADATA,
             overwrite_existing=False,
         )
         network_data.nodes.set_column_metadata(

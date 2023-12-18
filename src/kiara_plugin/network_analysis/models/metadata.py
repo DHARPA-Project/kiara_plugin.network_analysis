@@ -20,6 +20,7 @@ from kiara_plugin.network_analysis.defaults import (
     NODE_COUNT_OUT_EDGES_TEXT,
     NODE_ID_TEXT,
     NODE_LABEL_TEXT,
+    UNWEIGHTED_DEGREE_CENTRALITY_TEXT,
 )
 
 
@@ -65,7 +66,14 @@ NODE_ID_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_ID_TEXT, compute
 NODE_LABEL_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_LABEL_TEXT, computed_attribute=True)  # type: ignore
 
 NODE_COUNT_EDGES_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_COUNT_EDGES_TEXT, computed_attribute=True)  # type: ignore
+NODE_DEGREE_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
+    doc=UNWEIGHTED_DEGREE_CENTRALITY_TEXT, computed_attribute=True
+)  # type: ignore
 NODE_COUND_EDGES_MULTI_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_COUNT_EDGES_MULTI_TEXT, computed_attribute=True)  # type: ignore
+NODE_DEGREE_MULTI_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
+    doc=UNWEIGHTED_DEGREE_CENTRALITY_TEXT, computed_attribute=True
+)  # type: ignore
+
 NODE_COUNT_IN_EDGES_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_COUNT_IN_EDGES_TEXT, computed_attribute=True)  # type: ignore
 NODE_COUNT_IN_EDGES_MULTI_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_COUNT_IN_EDGES_MULTI_TEXT, computed_attribute=True)  # type: ignore
 NODE_COUNT_OUT_EDGES_COLUMN_METADATA = NetworkEdgeAttributeMetadata(doc=NODE_COUNT_OUT_EDGES_TEXT, computed_attribute=True)  # type: ignore

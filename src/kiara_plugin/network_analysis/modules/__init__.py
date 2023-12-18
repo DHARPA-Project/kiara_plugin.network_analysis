@@ -32,8 +32,8 @@ The main use cases for this::
   - let the user specify columns that will be included in the 'group_by' clause of the generated sql query (in which case we don't create a not-multigraph, but a multigraph with a different set of parallel edges)
   - rename existing edge attributes
 
-By default, this operation does not copy existing any attributes, so every edge attribute that should be contained in the resulting, new network_data instance needs to be specified in the 'columns' input.
-Automatically computed columns (those that start with '_') can be used as source columns, but need to be renamed to not start with "_".
+By default, this operation does not copy existing any attributes, so every edge attribute that should be contained in the resulting, new network_data instance needs to be specified in the 'attributes' input.
+Automatically computed attributes/columns (those that start with '_') can be used as source columns, but need to be renamed to not start with "_".
 
 If no target_column is specified, the original source column name is used. If no transform function is specified, the column data is copied as is.
 
@@ -52,13 +52,13 @@ If no target_column is specified, the original source column name is used. If no
 In the commandline, *kiara* will parse each input string as a column transformation. If the string does not contain a '=', the column will not be renamed, and the default transformation will be applied (COUNT).
 
 ```
-kiara run network_data.redefine_edges network_data=simple columns=weight
+kiara run network_data.redefine_edges network_data=simple attributes=weight
 ```
 
 If you want to use a transformation or rename an attribute, you can specify the details after a '=':
 
 ```
-kiara run network_data.redefine_edges network_data=simple 'columns=new_time_column_name=time' 'columns=sum_weight=SUM(weight)'
+kiara run network_data.redefine_edges network_data=simple 'attributes=new_time_column_name=time' 'attributes=sum_weight=SUM(weight)'
 ```
 
 This example would copy all contents of the original 'time' column to a new column named 'new_time_column_name' (with a list of all 'time' values of a specific source/target combination), and create a column 'sum_weight' that contains the sum of all 'weight' values of duplicate edges.
@@ -67,7 +67,8 @@ If using this operation from Python or some other way, the 'column' inputs for t
 
 ```
 inputs:
-  columns:
+  network_data: ...
+  attributes:
     - target_column_name: weight
       source_column_name: weight
       transform_function: sum
@@ -80,7 +81,8 @@ and
 
 ```
 inputs:
-  columns:
+  network_data: ...
+  attributes:
     - target_column_name: new_time_column_name
       source_column_name: time
       transform_function: list
@@ -120,7 +122,7 @@ class RedefineNetworkEdgesModule(KiaraModule):
                 "type": "network_data",
                 "doc": "The network data to flatten.",
             },
-            "columns": {
+            "attributes": {
                 "type": "kiara_model_list",
                 "type_config": {
                     "kiara_model_id": "input.network_analysis_attribute_map_transformation"
@@ -154,7 +156,7 @@ class RedefineNetworkEdgesModule(KiaraModule):
 
         attr_map_strategies: Union[
             None, KiaraModelList[AttributeMapStrategy]
-        ] = inputs.get_value_data("columns")
+        ] = inputs.get_value_data("attributes")
 
         if attr_map_strategies:
 

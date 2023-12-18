@@ -122,12 +122,12 @@ EDGE_COUNT_DUP_DIRECTED_TEXT = """The number of edges that have the same source/
 """
 EDGE_IDX_DUP_DIRECTED_TEXT = """A unique index for this edge within its set of duplicates, if the network_data is interpreted as directed multi graph.
 
-This is a unique integer identifier in combination with (_source/_target), counting up from 0. The order of the edges within this set is not guaranteed.
+This is a unique integer identifier in combination with (_source/_target), counting up from 1. The order of the edges within this set is not guaranteed.
 """
 EDGE_COUNT_DUP_UNDIRECTED_TEXT = """The number of edges that have the same source/target combination as this (incl. this), if the network_data is interpreted as undirected multi graph."""
 EDGE_IDX_DUP_UNDIRECTED_TEXT = """A unique index for this edge within its set of duplicates, if the network_data is interpreted as undirected multi graph.
 
-This is a unique integer identifier in combination with (_source/_target), counting up from 0. The order of the edges within this set is not guaranteed.
+This is a unique integer identifier in combination with (_source/_target), counting up from 1. The order of the edges within this set is not guaranteed.
 """
 
 
@@ -151,3 +151,12 @@ ALLOWED_AGGREGATION_FUNCTIONS = {
     "sum": "Calculates the sum value for all tuples in arg.",
 }
 AGGREGATION_FUNCTION_NAME = Literal[tuple(ALLOWED_AGGREGATION_FUNCTIONS.keys())]  # type: ignore
+
+
+DEFAULT_UNWEIGHTED_NODE_DEGREE_COLUMN_NAME = "_degree_unweighted"
+UNWEIGHTED_NODE_DEGREE_TEXT = (
+    """The degree of a node is the number of edges connected to the node."""
+)
+UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME = "_degree_centrality"
+UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME = "_degree_centrality_multi"
+UNWEIGHTED_DEGREE_CENTRALITY_TEXT = """The degree centrality values are normalized by dividing the degree of a node by the maximum possible degree in a simple graph n-1 where n is the number of nodes in the graph. For multigraphs or graphs with self loops the maximum degree might be higher than n-1 and values of degree centrality greater than 1 are possible."""

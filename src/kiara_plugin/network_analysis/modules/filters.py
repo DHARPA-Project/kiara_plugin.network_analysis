@@ -58,10 +58,10 @@ class TableFiltersModule(FilterModule):
 
             raise KiaraProcessingException(msg)
 
-        network_data.nodes.arrow_table.column(component_column).type
+        # network_data.nodes.arrow_table.column(component_column).type
         # filter_item = pa.scalar(component_id, type=pa.int32())
 
-        query = f"select {NODE_ID_COLUMN_NAME} from nodes where {component_column} = {component_id}"
+        query = f"select {NODE_ID_COLUMN_NAME} from nodes where {component_column} = '{component_id}'"
         node_result = network_data.query_nodes(query)
 
         network_data = NetworkData.from_filtered_nodes(

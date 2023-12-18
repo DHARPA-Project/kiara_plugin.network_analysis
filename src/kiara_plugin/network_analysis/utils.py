@@ -30,6 +30,8 @@ from kiara_plugin.network_analysis.defaults import (
     OUT_DIRECTED_MULTI_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
+    UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME,
+    UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
 )
 
 if TYPE_CHECKING:
@@ -178,11 +180,16 @@ def augment_nodes_table_with_connection_counts(
     else:
         other_columns = ""
 
+    # we can avoid 'COUNT(*)' calls in the following  query
+    nodes_table_rows = len(nodes_table)
+    print(nodes_table_rows)
+
     query = f"""
     SELECT
          {NODE_ID_COLUMN_NAME},
          {LABEL_COLUMN_NAME},
          COALESCE(e1.{IN_DIRECTED_COLUMN_NAME}, 0) + COALESCE(e3.{OUT_DIRECTED_COLUMN_NAME}, 0) as {CONNECTIONS_COLUMN_NAME},
+         (COALESCE(e1._in_edges, 0) + COALESCE(e3._out_edges, 0)) / {nodes_table_rows} AS _degree_centrality,
          COALESCE(e2.{IN_DIRECTED_MULTI_COLUMN_NAME}, 0) + COALESCE(e4.{OUT_DIRECTED_MULTI_COLUMN_NAME}, 0) as {CONNECTIONS_MULTI_COLUMN_NAME},
          COALESCE(e1.{IN_DIRECTED_COLUMN_NAME}, 0) as {IN_DIRECTED_COLUMN_NAME},
          COALESCE(e2.{IN_DIRECTED_MULTI_COLUMN_NAME}, 0) as {IN_DIRECTED_MULTI_COLUMN_NAME},
@@ -205,7 +212,28 @@ def augment_nodes_table_with_connection_counts(
         ORDER BY {NODE_ID_COLUMN_NAME}
     """
 
-    result = duckdb.sql(query)
+    print(query)
+    nodes_table_result = duckdb.sql(query)
+
+    centrality_query = f"""
+    SELECT
+         {NODE_ID_COLUMN_NAME},
+         {LABEL_COLUMN_NAME},
+         {CONNECTIONS_COLUMN_NAME},
+         {CONNECTIONS_COLUMN_NAME} / (SELECT COUNT(*) FROM nodes_table_result) AS {UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME},
+         {CONNECTIONS_MULTI_COLUMN_NAME},
+         {CONNECTIONS_MULTI_COLUMN_NAME} / (SELECT COUNT(*) FROM nodes_table_result) AS {UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME},
+         {IN_DIRECTED_COLUMN_NAME},
+         {IN_DIRECTED_MULTI_COLUMN_NAME},
+         {OUT_DIRECTED_COLUMN_NAME},
+         {OUT_DIRECTED_MULTI_COLUMN_NAME}
+         {other_columns}
+    FROM nodes_table_result
+    """
+    print(centrality_query)
+
+    result = duckdb.sql(centrality_query)
+
     nodes_table_augmented = result.arrow()
     return nodes_table_augmented
 
@@ -242,4 +270,5 @@ def augment_edges_table_with_id_and_weights(
 
     result = duckdb.sql(query)
     edges_table_augmented = result.arrow()
+
     return edges_table_augmented
