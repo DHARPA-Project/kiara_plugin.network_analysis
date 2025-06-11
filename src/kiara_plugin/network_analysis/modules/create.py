@@ -430,7 +430,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
                 new_idx_series = pl.Series(
                     name=NODE_ID_COLUMN_NAME, values=new_node_ids
                 )
-                nodes_arrow_dataframe.insert_at_idx(0, new_idx_series)
+                nodes_arrow_dataframe.insert_column(0, new_idx_series)
 
                 if not label_column_name:
                     label_column_name = NODE_ID_COLUMN_NAME
@@ -448,13 +448,13 @@ class AssembleGraphFromTablesModule(KiaraModule):
                         f"Label column '{label_column_name}' contains null values. This is not allowed."
                     )
 
-                nodes_arrow_dataframe = nodes_arrow_dataframe.insert_at_idx(
+                nodes_arrow_dataframe = nodes_arrow_dataframe.insert_column(
                     1, label_column
                 )
 
         # TODO: deal with different types if node ids are strings or integers
         try:
-            source_column_mapped = source_column_old.map_dict(
+            source_column_mapped = source_column_old.replace_strict(
                 node_id_map, default=None
             ).rename(SOURCE_COLUMN_NAME)
         except Exception:
@@ -468,7 +468,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
             )
 
         try:
-            target_column_mapped = target_column_old.map_dict(
+            target_column_mapped = target_column_old.replace_strict(
                 node_id_map, default=None
             ).rename(TARGET_COLUMN_NAME)
         except Exception:
@@ -481,8 +481,8 @@ class AssembleGraphFromTablesModule(KiaraModule):
                 "The target column contains values that are not mapped in the nodes table."
             )
 
-        edges_arrow_dataframe.insert_at_idx(0, source_column_mapped)
-        edges_arrow_dataframe.insert_at_idx(1, target_column_mapped)
+        edges_arrow_dataframe.insert_column(0, source_column_mapped)
+        edges_arrow_dataframe.insert_column(1, target_column_mapped)
 
         edges_arrow_dataframe = edges_arrow_dataframe.drop(edges_source_column_name)
         edges_arrow_dataframe = edges_arrow_dataframe.drop(edges_target_column_name)

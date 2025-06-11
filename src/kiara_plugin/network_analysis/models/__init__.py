@@ -364,12 +364,12 @@ class NetworkData(KiaraTables):
 
         repl_map = dict(zip(old_idx_column.to_list(), nodes_idx_colum))
         nodes_result = nodes_result.with_columns(
-            pl.col(NODE_ID_COLUMN_NAME).map_dict(repl_map)
+            pl.col(NODE_ID_COLUMN_NAME).replace_strict(repl_map, default=None)
         )
 
         edges_result = edges_result.with_columns(
-            pl.col(SOURCE_COLUMN_NAME).map_dict(repl_map),
-            pl.col(TARGET_COLUMN_NAME).map_dict(repl_map),
+            pl.col(SOURCE_COLUMN_NAME).replace_strict(repl_map, default=None),
+            pl.col(TARGET_COLUMN_NAME).replace_strict(repl_map, default=None),
         )
 
         filtered = NetworkData.create_network_data(
