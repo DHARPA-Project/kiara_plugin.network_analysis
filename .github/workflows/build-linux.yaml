@@ -108,12 +108,12 @@ jobs:
           version: "0.5.9"
           use-cache: true
       - name: install Python
-        run: uv python install ${{ matrix.python_version }}
+        run: uv python install 3.13
       - name: create lockfile
         if: hashFiles('uv.lock') == ''
-        run: uv lock --python ${{ matrix.python_version }}
+        run: uv lock --python 3.13
       - name: install the project
-        run: uv sync --locked --dev --python ${{ matrix.python_version }}
+        run: uv sync --locked --dev --python 3.13
       - name: create packages
         run: uv run python -m build
       - name: upload artifacts
@@ -153,12 +153,12 @@ jobs:
           version: "0.5.9"
           use-cache: true
       - name: install Python
-        run: uv python install ${{ matrix.python_version }}
+        run: uv python install 3.13
       - name: create lockfile
         if: hashFiles('uv.lock') == ''
-        run: uv lock --python ${{ matrix.python_version }}
+        run: uv lock --python 3.13
       - name: install the project
-        run: uv sync --locked --dev --python ${{ matrix.python_version }}
+        run: uv sync --locked --dev --python 3.13
       - name: install kiara_plugin.develop
         run: uv add git+https://github.com/DHARPA-project/kiara_plugin.develop --branch develop
       - name: build conda package
@@ -191,12 +191,12 @@ jobs:
           version: "0.5.9"
           use-cache: true
       - name: install Python
-        run: uv python install ${{ matrix.python_version }}
+        run: uv python install 3.13
       - name: create lockfile
         if: hashFiles('uv.lock') == ''
-        run: uv lock --python ${{ matrix.python_version }}
+        run: uv lock --python 3.13
       - name: install the project
-        run: uv sync --locked --dev --python ${{ matrix.python_version }}
+        run: uv sync --locked --dev --python 3.13
       - name: install kiara_plugin.develop
         run: uv add git+https://github.com/DHARPA-project/kiara_plugin.develop --branch develop
       - name: release conda package
