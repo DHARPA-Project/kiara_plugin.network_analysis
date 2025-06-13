@@ -160,7 +160,7 @@ jobs:
       - name: install the project
         run: uv sync --locked --dev --python 3.13
       - name: install kiara_plugin.develop
-        run: uv add git+https://github.com/DHARPA-project/kiara_plugin.develop --branch develop
+        run: uv add --dev git+https://github.com/DHARPA-project/kiara_plugin.develop --branch develop
       - name: build conda package
         run: uv run kiara build conda pkg --channel dharpa --channel conda-forge --patch-data ci/conda/conda-pkg-patch.yaml --output-folder build-dir .
       - name: upload artifacts
@@ -198,7 +198,7 @@ jobs:
       - name: install the project
         run: uv sync --locked --dev --python 3.13
       - name: install kiara_plugin.develop
-        run: uv add git+https://github.com/DHARPA-project/kiara_plugin.develop --branch develop
+        run: uv add --dev git+https://github.com/DHARPA-project/kiara_plugin.develop --branch develop
       - name: release conda package
         run: uv run kiara build conda publish --user dharpa --channel main --token ${{ secrets.ANACONDA_PUSH_TOKEN }} build-dir
 
