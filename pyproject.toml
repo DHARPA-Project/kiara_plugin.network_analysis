@@ -1,36 +1,18 @@
 [build-system]
 requires = [
-    "setuptools>=64",
-    "setuptools_scm[toml]>=8",
-    "wheel"
+    "hatchling>=1.18.0",
+    "hatch-vcs>=0.3.0",
 ]
-build-backend = "setuptools.build_meta"
-
-[options]
-packages = { find = { where = "src", exclude = ["tests"] } }
-include_package_data = true
-package_dir = { "" = "src" }
-zip_safe = false
-
-[tool.aliases]
-build = "bdist_wheel"
-release = "build upload"
-
-[tool.bdist_wheel]
-universal = 0
-
-[tool.devpi.upload]
-no-vcs = 1
-formats = ["sdist", "bdist_wheel"]
+build-backend = "hatchling.build"
 
 [project]
 name = "kiara_plugin.network_analysis"
-description = "kiara data types and modules for network analysis"
+description = "Network-related data-types, modules and pipelines for kiara."
 authors = [
-    {name = "Markus Binsteiner", email = "markus@frkl.io"}
+    {name = "Markus Binsteiner", email = "markus@frkl.dev"}
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = ["kiara"]
 license = {text = "MPL-2.0"}
 classifiers = [
@@ -40,36 +22,22 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12"
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13"
 ]
 dependencies = [
-    "kiara>=0.5.6,<0.6.0",
-    "kiara_plugin.core_types>=0.5.0,<0.6.0",
-    "kiara-plugin.tabular>=0.5.1,<0.6.0",
-    "rustworkx>=0.16.0, <0.17.0",
-    "pyvis>=0.3.0",
+    "kiara>=0.5.14,<0.6.0",
+    "kiara_plugin.core_types>=0.5.2,<0.6.0",
 ]
 dynamic = ["version"]
 
-[project.optional-dependencies]
-dev_documentation = [
-    "kiara[dev_documentation]"
-]
-dev_testing = [
-    "kiara[dev_testing]",
-]
-dev_utils = [
+[dependency-groups]
+dev = [
     "kiara[dev_utils]",
-]
-dev_all = [
-    "kiara[dev_all]"
-]
-streamlit = [
-    "kiara_plugin.streamlit"
+    "just-bin"
 ]
 
 [project.entry-points."kiara.plugin"]
@@ -87,8 +55,6 @@ network_analysis = "kiara_plugin.network_analysis:find_modules"
 [project.entry-points."kiara.pipelines"]
 network_analysis = "kiara_plugin.network_analysis:find_pipelines"
 
-[project.entry-points."kiara.streamlit_components"]
-streamlit = "kiara_plugin.network_analysis:find_kiara_streamlit_components"
 
 [project.urls]
 homepage = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
@@ -112,8 +78,15 @@ exclude = '''
 )/
 '''
 
-[tool.setuptools_scm]
-write_to = "src/kiara_plugin/network_analysis/version.txt"
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/kiara_plugin/network_analysis/version.txt"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kiara_plugin"]
 
 [tool.pytest.ini_options]
 pythonpath = [
@@ -155,6 +128,40 @@ line-length = 88
 
 src = ["src", "tests"]
 
+fix = true
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "docs",
+    ".venv"
+]
+
+# Assume Python 3.10.
+target-version = "py310"
+
+[tool.ruff.lint]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+fixable = ["E", "F", "RUF100", "I001", "Q", "D"]
+
 select = [
     "E",
     "F",
@@ -176,60 +183,20 @@ select = [
     "PLW",
     "PIE",
 ]
-ignore = ["E501", "S101", "SIM118", "SIM108", "PLR2004", "PLR0913", "S110", "PLR0912", "PLR0915", "PIE810", "S608", "RUF012"]
 
-fix = true
-fixable = ["E", "F", "RUF100", "I001", "Q"]
-
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-]
+ignore = ["E501", "S101", "SIM118", "SIM108", "PLR2004", "PLR0913", "S110", "PIE810", "PLR0911", "PLR0915", "PLR0912", "D", "D401", "PLW0603", "PLR5501", "PLW2901", "S603", "S608", "ISC001", "PLC0206", "RUF022"]
 per-file-ignores = { }
 
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+[tool.ruff.lint.isort]
+known-first-party = ["kiara", "kiara_plugin"]
 
-# Assume Python 3.10.
-target-version = "py310"
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
 max-complexity = 10
 
-[tool.ruff.isort]
-known-first-party = ["kiara", "kiara_plugin"]
-
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
-
-[tool.pyright]
-include = ["src"]
-exclude = ["**/__pycache__"]
-ignore = []
-
-reportMissingImports = true
-reportMissingTypeStubs = false
-
-executionEnvironments = [
-]
 
 [tool.mypy]
 python_version = "3.9"
@@ -241,14 +208,35 @@ plugins = [
     "pydantic.mypy"
 ]
 
+
 # mypy per-module options:
 [[tool.mypy.overrides]]
 module = [
-    "kiara_plugin.streamlit.*",
-    "networkx.*",
+    "appdirs.*",
     "pyarrow.*",
-    "pyvis.*",
-    "ruamel.*",
-    "streamlit.*"
+    "ruamel.*"
 ]
 ignore_missing_imports = true
+
+[tool.pixi.project]
+channels = ["dharpa", "conda-forge"]
+platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
+
+[tool.pixi.dependencies]
+pip = ">=24.0,<25"
+
+[tool.pixi.pypi-dependencies]
+network_analysis = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+#dev = { features = ["dev_utils"], solve-group = "default" }
+
+[tool.pixi.tasks]
+pre-commit-check = "pre-commit run --all-files"
+tests = "py.test"
+mypy = "mypy  --namespace-packages --explicit-package-base src/kiara_plugin/network_analysis"
+kiara = "kiara"
+show-versions = "kiara --version"
+delete-context = "kiara context delete"
+install-dev-dependencies = "pip install --upgrade -e '.[dev_utils]'"

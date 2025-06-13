@@ -1,0 +1,9 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: d8403b9
+_src_path: gh:DHARPA-Project/kiara_plugin_template
+anaconda_user: dharpa
+email: markus@frkl.dev
+full_name: Markus Binsteiner
+github_user: DHARPA-Project
+project_name: network_analysis
+project_short_description: Network-related data-types, modules and pipelines for kiara.

@@ -1,18 +1,18 @@
 channels:
-  - conda-forge
   - dharpa
+  - conda-forge
 
 host_requirements:
-  - pip
   - python
-  - setuptools<=63
-  - setuptools_scm
+  - pip
+  - hatchling
+  - hatch_vcs
 
 test:
   imports:
     - kiara_plugin.network_analysis
   source_files:
-    - tests
-    - examples
+    - tests/
+    - examples/
   commands:
     - kiara module list

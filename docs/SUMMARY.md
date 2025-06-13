@@ -1,5 +1,0 @@
-* [Home](index.md)
-* [Package contents](info/)
-* [Usage](usage.md)
-* [Development](development.md)
-* [API reference](reference/)

@@ -1,3 +1,0 @@
-network_data::properties::metadata.network_data::number_of_self_loops: 1
-network_data::properties::metadata.network_data::number_of_nodes: 276
-network_data::properties::metadata.network_data::properties_by_graph_type::undirected::number_of_edges: 313

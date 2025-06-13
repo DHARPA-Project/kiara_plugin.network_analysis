@@ -2,7 +2,6 @@
 
 """Top-level package for kiara_plugin.network_analysis."""
 
-
 import os
 
 from kiara.utils.class_loading import (
@@ -14,10 +13,11 @@ from kiara.utils.class_loading import (
 )
 
 __author__ = """Markus Binsteiner"""
-__email__ = "markus@frkl.io"
+__email__ = "markus@frkl.dev"
+
 
 KIARA_METADATA = {
-    "authors": [],
+    "authors": [{"name": __author__, "email": __email__}],
     "description": "Kiara modules for: network_analysis",
     "references": {
         "source_repo": {
@@ -51,16 +51,6 @@ find_pipelines: KiaraEntryPointItem = (
     KIARA_METADATA,
 )
 
-try:
-    from kiara_plugin.streamlit import find_kiara_streamlit_components_under
-
-    find_kiara_streamlit_components: KiaraEntryPointItem = (
-        find_kiara_streamlit_components_under,
-        "kiara_plugin.network_analysis.streamlit.components",
-    )
-except Exception:
-    find_kiara_streamlit_components = list
-
 
 def get_version():
     from importlib.metadata import PackageNotFoundError, version
@@ -70,7 +60,6 @@ def get_version():
         dist_name = __name__
         __version__ = version(dist_name)
     except PackageNotFoundError:
-
         try:
             version_file = os.path.join(os.path.dirname(__file__), "version.txt")
 
@@ -80,7 +69,7 @@ def get_version():
             else:
                 __version__ = "unknown"
 
-        except (Exception):
+        except Exception:
             pass
 
         if __version__ is None:

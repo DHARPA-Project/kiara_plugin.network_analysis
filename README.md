@@ -7,7 +7,7 @@
 
 # [**kiara**](https://dharpa.org/kiara.documentation) plugin: (network_analysis)
 
-kiara data types and modules for network analysis
+Network-related data-types, modules and pipelines for kiara.
 
  - Documentation: [https://DHARPA-Project.github.io/kiara_plugin.network_analysis](https://DHARPA-Project.github.io/kiara_plugin.network_analysis)
  - Code: [https://github.com/DHARPA-Project/kiara_plugin.network_analysis](https://github.com/DHARPA-Project/kiara_plugin.network_analysis)
@@ -21,86 +21,42 @@ TODO
 
 ### Requirements
 
-- Python (version >= 3.8)
-- pip, virtualenv
+- uv ( https://docs.astral.sh/uv/ )
 - git
 - make (on Linux / Mac OS X -- optional)
 
+### Check out the source code
+
+```
+git clone https://github.com/DHARPA-Project/kiara_plugin.network_analysis
+```
 
 ### Prepare development environment
 
-If you only want to work on the modules, and not the core *Kiara* codebase, follow the instructions below. Otherwise, please
-check the notes on how to setup a *Kiara* development environment under (TODO).
+The recommended way to setup a development environment is to use [uv](https://docs.astral.sh/uv/). Check out [their install instructions](https://docs.astral.sh/uv/getting-started/installation/).
 
-#### Linux & Mac OS X (using make)
+Once you have `uv` installed, you can either run `kiara` using the `uv run` command:
 
-For *NIX-like operating system, setting up a development environment is relatively easy:
+```
+uv run kiara module list
+```
 
-```console
-git clone https://github.com/DHARPA-Project/kiara_plugin.network_analysis.git
-cd kiara_plugin.network_analysis
-python3 -m venv .venv
+or, activate the virtual environment and run `kiara` directly:
+
+```
+uv sync  # to make sure the virtualenv exists (and is up to date)
 source .venv/bin/activate
-make init
+kiara module list
 ```
 
-#### Windows (or manual pip install)
+### Running pre-defined development-related tasks
 
-It's impossible to lay out all the ways Python can be installed on a machine, and virtual- (or conda-)envs can be created, so I'll assume you know how to do this.
-One simple way is to install the [Anaconda (individual edition)](https://docs.anaconda.com/anaconda/install/index.html), then use the Anaconda navigator to create a new environment, install the 'git' package in it (if your system does not already have it), and use the 'Open Terminal' option of that environment to start up a terminal that has that virtual-/conda-environment activated.
+The included `Makefile` file includes some useful tasks that help with development. This requires `uv` and the `make` tool to be
+installed, which should be the case for Linux & Mac OS X systems.
 
-Once that is done, `cd` into a directory where you want this project folder to live, and do:
-
-```console
-# make sure your virtual env is activated!!!
-git clone https://github.com/DHARPA-Project/kiara_plugin.network_analysis.git
-cd kiara_plugin.network_analysis
-pip install --extra-index-url https://pypi.fury.io/dharpa/ -U -e .[all_dev]
-```
-
-#### Try it out
-
-After this is done, you should be able to run the included example module via:
-
-```console
-kiara run network_analysis_example text_1="xxx" text_2="yyy"
-...
-...
-```
-
-### Re-activate the development environment
-
-The 'prepare' step from above only has to be done once. After that, to re-enable your virtual environment,
-you'll need to navigate to the directory again (wherever that is, in your case), and run the ``source`` command from before again:
-
-```console
-cd path/to/kiara_plugin.network_analysis
-source .venv/bin/activate  # if it isn't activated already, for example by the Anaconda navigator
-kiara --help  # or whatever, point is, kiara should be available for you now,
-```
-
-### ``make`` targets (Linux & Mac OS X)
-
-- ``init``: init development project (install project & dev dependencies into virtualenv, as well as pre-commit git hook)
-- ``update-dependencies``: update development dependencies (mainly the core ``kiara`` package from git)
-- ``flake``: run *flake8* tests
-- ``mypy``: run mypy tests
-- ``test``: run unit tests
-- ``docs``: create static documentation pages (under ``build/site``)
-- ``serve-docs``: serve documentation pages (incl. auto-reload) for getting direct feedback when working on documentation
-- ``clean``: clean build directories
-
-For details (and other, minor targets), check the ``Makefile``.
-
-
-### Running tests
-
-``` console
-> make test
-# or
-> make coverage
-```
-
+- `make test`: runs the unit tests
+- `make mypy`: run mypy checks
+- `make ruff`: run the `ruff` linter on the source code
 
 ## Copyright & license
 

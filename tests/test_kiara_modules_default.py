@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `kiara_plugin.network_analysis` package."""
+"""Tests for `kiara_plugin.develop` package."""
 
 import pytest  # noqa
 
-import kiara_plugin.network_analysis
+import kiara_plugin.develop
 
 
 def test_assert():
-
-    assert kiara_plugin.network_analysis.get_version() is not None
+    assert kiara_plugin.develop.get_version() is not None

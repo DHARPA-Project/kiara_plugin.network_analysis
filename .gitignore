@@ -62,10 +62,6 @@ onefile.spec
 *_complete.zsh.zwc
 ci/conda/**/build
 ci/conda/kiara_plugin.network_analysis/meta.yaml
-tzap-data/
-.tzapignore
-.tzapinclude
-.tzap-data/
 .pixi
 pixi.lock
-dev.py
+output/
