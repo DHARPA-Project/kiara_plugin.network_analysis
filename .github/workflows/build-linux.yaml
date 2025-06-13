@@ -117,7 +117,7 @@ jobs:
       - name: create packages
         run: uv run python -m build
       - name: upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-dists
           path: dist/
