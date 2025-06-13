@@ -6,7 +6,7 @@ host_requirements:
   - python
   - pip
   - hatchling
-  - hatch_vcs
+  - hatch-vcs
 
 test:
   imports:

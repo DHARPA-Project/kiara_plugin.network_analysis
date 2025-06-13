@@ -37,7 +37,6 @@ dynamic = ["version"]
 [dependency-groups]
 dev = [
     "kiara[dev_utils]",
-    "just-bin",
     "pytest-cov>=4.1.0",
 ]
 
