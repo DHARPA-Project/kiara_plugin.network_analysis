@@ -28,13 +28,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-<<<<<<< before updating
-      - name: "Set up Python"
-        uses: actions/setup-python@v5
-        with:
-          python-version: "${{ matrix.python-version }}"
-=======
->>>>>>> after updating
       - name: Create lockfile
         run: uv lock
       - name: Install the project
