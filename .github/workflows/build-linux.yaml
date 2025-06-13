@@ -20,19 +20,20 @@ jobs:
       matrix:
         python_version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.5.9"
-          python-version: "${{ matrix.python-version }}"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install Python
+      - name: install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.9"
+          use-cache: true
+      - name: install Python
         run: uv python install ${{ matrix.python_version }}
-      - name: Create lockfile
+      - name: create lockfile
+        if: hashFiles('uv.lock') == ''
         run: uv lock --python ${{ matrix.python_version }}
-      - name: Install the project
+      - name: install the project
         run: uv sync --locked --dev --python ${{ matrix.python_version }}
       - name: test with pytest
         run: uv run pytest --cov-report=xml --cov=kiara_plugin.network_analysis tests
@@ -62,18 +63,21 @@ jobs:
       matrix:
         python_version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.5.9"
-          python-version: "${{ matrix.python-version }}"
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install the project
-        run: uv sync --locked --dev
+      - name: install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.9"
+          use-cache: true
+      - name: install Python
+        run: uv python install ${{ matrix.python_version }}
+      - name: create lockfile
+        if: hashFiles('uv.lock') == ''
+        run: uv lock --python ${{ matrix.python_version }}
+      - name: install the project
+        run: uv sync --locked --dev --python ${{ matrix.python_version }}
       - name: Test with mypy
         run: make mypy
 
@@ -95,16 +99,21 @@ jobs:
     name: build python package
     runs-on: ubuntu-latest
     steps:
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.5.9"
-          python-version: "${{ matrix.python-version }}"
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.9"
+          use-cache: true
+      - name: install Python
+        run: uv python install ${{ matrix.python_version }}
+      - name: create lockfile
+        if: hashFiles('uv.lock') == ''
+        run: uv lock --python ${{ matrix.python_version }}
+      - name: install the project
+        run: uv sync --locked --dev --python ${{ matrix.python_version }}
       - name: create packages
         run: uv run python -m build
       - name: upload artifacts
@@ -135,20 +144,25 @@ jobs:
     name: conda package build (and upload if release)
     runs-on: ubuntu-latest
     steps:
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.5.9"
-          python-version: "${{ matrix.python-version }}"
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.9"
+          use-cache: true
+      - name: install Python
+        run: uv python install ${{ matrix.python_version }}
+      - name: create lockfile
+        if: hashFiles('uv.lock') == ''
+        run: uv lock --python ${{ matrix.python_version }}
+      - name: install the project
+        run: uv sync --locked --dev --python ${{ matrix.python_version }}
       - name: install kiara_plugin.develop
-        run: pip install -U git+https://github.com/DHARPA-project/kiara_plugin.develop@develop
+        run: uv add git+https://github.com/DHARPA-project/kiara_plugin.develop --branch develop
       - name: build conda package
-        run: kiara build conda pkg --channel dharpa --channel conda-forge --patch-data ci/conda/conda-pkg-patch.yaml --output-folder build-dir .
+        run: uv run kiara build conda pkg --channel dharpa --channel conda-forge --patch-data ci/conda/conda-pkg-patch.yaml --output-folder build-dir .
       - name: upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -166,25 +180,27 @@ jobs:
       - build_python_package
       - build_conda_package
     steps:
-      - name: "Set up Python 3.12"
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: pip cache
-        id: pip-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-3.12
-      - name: install kiara_plugin.develop
-        run: pip install kiara_plugin.develop
       - name: Retrieve build distributions
         uses: actions/download-artifact@v4
         with:
           name: conda-pkgs
           path: build-dir/
+      - name: install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.9"
+          use-cache: true
+      - name: install Python
+        run: uv python install ${{ matrix.python_version }}
+      - name: create lockfile
+        if: hashFiles('uv.lock') == ''
+        run: uv lock --python ${{ matrix.python_version }}
+      - name: install the project
+        run: uv sync --locked --dev --python ${{ matrix.python_version }}
+      - name: install kiara_plugin.develop
+        run: uv add git+https://github.com/DHARPA-project/kiara_plugin.develop --branch develop
       - name: release conda package
-        run: kiara build conda publish --user dharpa --channel main --token ${{ secrets.ANACONDA_PUSH_TOKEN }} build-dir
+        run: uv run kiara build conda publish --user dharpa --channel main --token ${{ secrets.ANACONDA_PUSH_TOKEN }} build-dir
 
   merge_tag_to_main:
     name: merge current tag to main branch
