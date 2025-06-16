@@ -1,0 +1,8 @@
+operation: "${this_dir}/../pipelines/create_network_graph.yaml"
+inputs:
+  edges_file: "${this_dir}/../data/simple_networks/two_components/SampleEdges.csv"
+  nodes_file: "${this_dir}/../data/simple_networks/two_components/SampleNodes.csv"
+doc: |
+  Create a simple 6 node network with 2 components.
+save:
+  network_data: simple_disconnected

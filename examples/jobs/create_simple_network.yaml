@@ -1,0 +1,6 @@
+operation: "${this_dir}/../pipelines/create_network_graph.yaml"
+inputs:
+  edges_file: "${this_dir}/../data/simple_networks/connected/SampleEdges.csv"
+  nodes_file: "${this_dir}/../data/simple_networks/connected/SampleNodes.csv"
+save:
+  network_data: simple_network

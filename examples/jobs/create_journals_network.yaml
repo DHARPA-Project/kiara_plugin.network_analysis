@@ -1,0 +1,11 @@
+operation: "${this_dir}/../pipelines/create_network_graph.yaml"
+inputs:
+  edges_file: "${this_dir}/../data/journals/JournalEdges1902.csv"
+  nodes_file: "${this_dir}/../data/journals/JournalNodes1902.csv"
+doc: |
+    Create a network graph of historical medical Journals and the relations between them.
+
+    Input will be taken from 2 csv files, containing nodes and edges, respectively.
+
+save:
+  network_data: journals_network

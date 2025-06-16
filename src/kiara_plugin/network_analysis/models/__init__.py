@@ -59,6 +59,7 @@ from kiara_plugin.network_analysis.utils import (
 from kiara_plugin.tabular.models.tables import KiaraTables
 
 if TYPE_CHECKING:
+    from kiara_plugin.network_analysis.models.metadata import NetworkNodeAttributeMetadata
     import networkx as nx
     import pyarrow as pa
     import rustworkx as rx
@@ -80,13 +81,39 @@ class EdgesCallback(Protocol):
 
 
 class NetworkData(KiaraTables):
-    """A wrapper class to access and query network datasets.
+    """A flexible, graph-type agnostic wrapper class for network datasets.
 
-    This class provides different ways to access the underlying network data, most notably via sql and as rustworkx (also networkx) Graph object.
+    This class provides a unified interface for working with network data that can represent
+    any type of graph structure: directed, undirected, simple, or multi-graphs. The design
+    philosophy emphasizes flexibility and performance while maintaining a clean, intuitive API.
 
-    Internally, network data is stored as 2 Arrow tables with the edges stored in a table called 'edges' and the nodes in a table called 'nodes'. The edges table must have (at least) the following columns: '_source', '_target'. The nodes table must have (at least) the following columns: '_id' (integer), '_label' (string).
+    **Design Philosophy:**
+    - **Graph Type Agnostic**: Supports all graph types (directed/undirected, simple/multi)
+      within the same data structure without requiring type-specific conversions
+    - **Efficient Storage**: Uses Apache Arrow tables for high-performance columnar storage
+    - **Flexible Querying**: Provides SQL-based querying capabilities alongside programmatic access
+    - **Seamless Export**: Easy conversion to NetworkX and RustWorkX graph objects, other representations possible in the future
+    - **Metadata Rich**: Automatically computes and stores graph statistics and properties
 
-    By convention, kiara will add columns prefixed with an underscore if the values in it have internal 'meaning', normal/original attributes are stored in columns without that prefix.
+    **Internal Structure:**
+    The network data is stored as two Arrow tables:
+    - **nodes table**: Contains node information with required columns '_node_id' (int) and '_label' (str)
+    - **edges table**: Contains edge information with required columns '_source' (int) and '_target' (int)
+
+    Additional computed columns (prefixed with '_') provide graph statistics for different interpretations:
+    - Degree counts for directed/undirected graphs
+    - Multi-edge counts and indices
+    - Centrality measures
+
+    **Graph Type Support:**
+    - **Simple Graphs**: Single edges between node pairs
+    - **Multi-graphs**: Multiple edges between the same node pairs
+    - **Directed Graphs**: One-way edges with source → target semantics
+    - **Undirected Graphs**: Bidirectional edges
+    - **Mixed Types**: The same data can be interpreted as different graph types
+
+    **Note:** Column names prefixed with '_' have internal meaning and are automatically
+    computed. Original attributes from source data are stored without the prefix.
     """
 
     _kiara_model_id: ClassVar = "instance.network_data"
@@ -100,9 +127,35 @@ class NetworkData(KiaraTables):
         nodes_column_metadata: Union[Dict[str, Dict[str, KiaraModel]], None] = None,
         edges_column_metadata: Union[Dict[str, Dict[str, KiaraModel]], None] = None,
     ) -> "NetworkData":
-        """Create a new network_data instance, augmented with additional columns.
+        """Create a new NetworkData instance with additional columns.
 
-        This won't re-compute any of the automatically generated columns (starting with '_').
+        This method creates a new NetworkData instance by adding extra columns to an existing
+        instance without recomputing the automatically generated internal columns (those
+        prefixed with '_'). This is useful for adding derived attributes or analysis results.
+
+        Args:
+            network_data: The source NetworkData instance to augment
+            additional_edges_columns: Dictionary mapping column names to PyArrow Arrays
+                for new edge attributes
+            additional_nodes_columns: Dictionary mapping column names to PyArrow Arrays
+                for new node attributes
+            nodes_column_metadata: Additional metadata to attach to nodes table columns
+            edges_column_metadata: Additional metadata to attach to edges table columns
+
+        Returns:
+            NetworkData: A new NetworkData instance with the additional columns
+
+        Example:
+            ```python
+            import pyarrow as pa
+
+            # Add a weight column to edges
+            weights = pa.array([1.0, 2.5, 0.8] * (network_data.num_edges // 3))
+            augmented = NetworkData.create_augmented(
+                network_data,
+                additional_edges_columns={"weight": weights}
+            )
+            ```
         """
 
         nodes_table = network_data.nodes.arrow_table
@@ -138,22 +191,77 @@ class NetworkData(KiaraTables):
         nodes_column_metadata: Union[Dict[str, Dict[str, KiaraModel]], None] = None,
         edges_column_metadata: Union[Dict[str, Dict[str, KiaraModel]], None] = None,
     ) -> "NetworkData":
-        """Create a `NetworkData` instance from two Arrow tables.
+        """Create a NetworkData instance from PyArrow tables.
 
-        This method requires the nodes to have an "_id' column (int) as well as a '_label' one (utf8).
-        The edges table needs at least a '_source' (int) and '_target' (int) column.
+        This is the primary factory method for creating NetworkData instances from raw tabular data.
+        It supports all graph types and automatically computes necessary metadata for efficient
+        graph operations.
 
-        This method can augment both tables with additional columns that are required for the internal representation (id, counts, etc).
+        **Required Table Structure:**
 
-        If you specify additional metadata, it will be attached to the columns of the tables. This is useful if you want to add metadata that was part of the original data, and that you want to be available when the data is used in a network analysis (for example existing weight data). The format of that additional metadata is a dict of dicts, with the
-        root key the column name, the second key the property name, and the value the property value.
+        Nodes table must contain:
+        - '_node_id' (int): Unique integer identifier for each node
+        - '_label' (str): Human-readable label for the node
 
-        Arguments:
-            nodes_table: the table containing the nodes data
-            edges_table: the table containing the edges data
-            augment_tables: whether to augment the tables with pre-processed edge/node metadata (in most cases you want to do this, except if you know the metadata is already present and correct)
-            nodes_column_metadata: additional metadata to attach to the nodes table columns
-            edges_column_metadata: additional metadata to attach to the edges table columns
+        Edges table must contain:
+        - '_source' (int): Source node ID (must exist in nodes table)
+        - '_target' (int): Target node ID (must exist in nodes table)
+
+        **Automatic Augmentation:**
+        When `augment_tables=True` (default), the method automatically adds computed columns:
+
+        For edges:
+        - '_edge_id': Unique edge identifier
+        - '_count_dup_directed': Count of parallel edges (directed interpretation)
+        - '_idx_dup_directed': Index within parallel edge group (directed)
+        - '_count_dup_undirected': Count of parallel edges (undirected interpretation)
+        - '_idx_dup_undirected': Index within parallel edge group (undirected)
+
+        For nodes:
+        - '_count_edges': Total edge count (simple graph interpretation)
+        - '_count_edges_multi': Total edge count (multi-graph interpretation)
+        - '_in_edges': Incoming edge count (directed, simple)
+        - '_out_edges': Outgoing edge count (directed, simple)
+        - '_in_edges_multi': Incoming edge count (directed, multi)
+        - '_out_edges_multi': Outgoing edge count (directed, multi)
+        - '_degree_centrality': Normalized degree centrality
+        - '_degree_centrality_multi': Normalized degree centrality (multi-graph)
+
+        Args:
+            nodes_table: PyArrow table containing node data
+            edges_table: PyArrow table containing edge data
+            augment_tables: Whether to compute and add internal metadata columns.
+                Set to False only if you know the metadata is already present and correct.
+            nodes_column_metadata: Additional metadata to attach to nodes table columns.
+                Format: {column_name: {property_name: property_value}}
+            edges_column_metadata: Additional metadata to attach to edges table columns.
+                Format: {column_name: {property_name: property_value}}
+
+        Returns:
+            NetworkData: A new NetworkData instance
+
+        Raises:
+            KiaraException: If required columns are missing or contain null values
+
+        Example:
+            ```python
+            import pyarrow as pa
+
+            # Create simple graph data
+            nodes = pa.table({
+                '_node_id': [0, 1, 2],
+                '_label': ['A', 'B', 'C'],
+                'type': ['person', 'person', 'organization']
+            })
+
+            edges = pa.table({
+                '_source': [0, 1, 2],
+                '_target': [1, 2, 0],
+                'relationship': ['friend', 'works_for', 'sponsors']
+            })
+
+            network_data = NetworkData.create_network_data(nodes, edges)
+            ```
         """
 
         from kiara_plugin.network_analysis.models.metadata import (
@@ -384,13 +492,40 @@ class NetworkData(KiaraTables):
         label_attr_name: Union[str, None] = None,
         ignore_node_attributes: Union[Iterable[str], None] = None,
     ) -> "NetworkData":
-        """Create a `NetworkData` instance from a networkx Graph object.
+        """Create a NetworkData instance from any NetworkX graph type.
 
-        Arguments:
-            graph: the networkx graph instance
-            label_attr_name: the name of the node attribute that contains the node label (if None, the node id is used as label)
-            ignore_node_attributes: a list of node attributes that should be ignored and not added to the table
+        This method provides seamless conversion from NetworkX graphs to NetworkData,
+        preserving all node and edge attributes while automatically handling different
+        graph types (Graph, DiGraph, MultiGraph, MultiDiGraph).
 
+        **Graph Type Support:**
+        - **nx.Graph**: Converted to undirected simple graph representation
+        - **nx.DiGraph**: Converted to directed simple graph representation
+        - **nx.MultiGraph**: Converted with multi-edge support (undirected)
+        - **nx.MultiDiGraph**: Converted with multi-edge support (directed)
+
+        **Attribute Handling:**
+        All NetworkX node and edge attributes are preserved as columns in the resulting
+        tables, except those starting with '_' (reserved for internal use).
+
+        Args:
+            graph: Any NetworkX graph instance (Graph, DiGraph, MultiGraph, MultiDiGraph)
+            label_attr_name: Name of the node attribute to use as the node label.
+                If None, the node ID is converted to string and used as label.
+                Can also be an iterable of attribute names to try in order.
+            ignore_node_attributes: List of node attribute names to exclude from
+                the resulting nodes table
+
+        Returns:
+            NetworkData: A new NetworkData instance representing the graph
+
+        Raises:
+            KiaraException: If node/edge attributes contain names starting with '_'
+
+        Note:
+            Node IDs in the original NetworkX graph are mapped to sequential integers
+            starting from 0 in the NetworkData representation. The original node IDs
+            are preserved as the '_label' if no label_attr_name is specified.
         """
 
         # TODO: should we also index nodes/edges attributes?
@@ -411,36 +546,97 @@ class NetworkData(KiaraTables):
 
     @property
     def edges(self) -> "KiaraTable":
-        """Return the edges table."""
+        """Access the edges table containing all edge data and computed statistics.
 
+        The edges table contains both original edge attributes and computed columns:
+        - '_edge_id': Unique edge identifier
+        - '_source', '_target': Node IDs for edge endpoints
+        - '_count_dup_*': Parallel edge counts for different graph interpretations
+        - '_idx_dup_*': Indices within parallel edge groups
+        - Original edge attributes (without '_' prefix)
+
+        Returns:
+            KiaraTable: The edges table with full schema and data access methods
+        """
         return self.tables[EDGES_TABLE_NAME]
 
     @property
     def nodes(self) -> "KiaraTable":
-        """Return the nodes table."""
+        """Access the nodes table containing all node data and computed statistics.
 
+        The nodes table contains both original node attributes and computed columns:
+        - '_node_id': Unique node identifier (sequential integers from 0)
+        - '_label': Human-readable node label
+        - '_count_edges*': Edge counts for different graph interpretations
+        - '_in_edges*', '_out_edges*': Directional edge counts
+        - '_degree_centrality*': Normalized degree centrality measures
+        - Original node attributes (without '_' prefix)
+
+        Returns:
+            KiaraTable: The nodes table with full schema and data access methods
+        """
         return self.tables[NODES_TABLE_NAME]
 
     @property
-    def num_nodes(self):
-        """Return the number of nodes in the network data."""
+    def num_nodes(self) -> int:
+        """Get the total number of nodes in the network.
 
+        Returns:
+            int: Number of nodes in the network
+        """
         return self.nodes.num_rows
 
     @property
-    def num_edges(self):
-        """Return the number of edges in the network data."""
+    def num_edges(self) -> int:
+        """Get the total number of edges in the network.
 
+        Note: This returns the total number of edge records, which includes
+        all parallel edges in multi-graph interpretations.
+
+        Returns:
+            int: Total number of edges (including parallel edges)
+        """
         return self.edges.num_rows
 
     def query_edges(
         self, sql_query: str, relation_name: str = EDGES_TABLE_NAME
     ) -> "pa.Table":
-        """Query the edges table using SQL.
+        """Execute SQL queries on the edges table for flexible data analysis.
 
-        The table name to use in the query defaults to 'edges', but can be changed using the 'relation_name' argument.
+        This method provides direct SQL access to the edges table, enabling complex
+        queries and aggregations. All computed edge columns are available for querying.
+
+        **Available Columns:**
+        - '_edge_id': Unique edge identifier
+        - '_source', '_target': Node IDs for edge endpoints
+        - '_count_dup_directed': Number of parallel edges (directed interpretation)
+        - '_idx_dup_directed': Index within parallel edge group (directed)
+        - '_count_dup_undirected': Number of parallel edges (undirected interpretation)
+        - '_idx_dup_undirected': Index within parallel edge group (undirected)
+        - Original edge attributes (names without '_' prefix)
+
+        Args:
+            sql_query: SQL query string. Use 'edges' as the table name in your query.
+            relation_name: Alternative table name to use in the query (default: 'edges').
+                If specified, all occurrences of this name in the query will be replaced
+                with 'edges'.
+
+        Returns:
+            pa.Table: Query results as a PyArrow table
+
+        Example:
+            ```python
+            # Find edges with high multiplicity
+            parallel_edges = network_data.query_edges(
+                "SELECT _source, _target, _count_dup_directed FROM edges WHERE _count_dup_directed > 1"
+            )
+
+            # Get edge statistics
+            stats = network_data.query_edges(
+                "SELECT COUNT(*) as total_edges, AVG(_count_dup_directed) as avg_multiplicity FROM edges"
+            )
+            ```
         """
-
         import duckdb
 
         con = duckdb.connect()
@@ -454,11 +650,46 @@ class NetworkData(KiaraTables):
     def query_nodes(
         self, sql_query: str, relation_name: str = NODES_TABLE_NAME
     ) -> "pa.Table":
-        """Query the nodes table using SQL.
+        """Execute SQL queries on the nodes table for flexible data analysis.
 
-        The table name to use in the query defaults to 'nodes', but can be changed using the 'relation_name' argument.
+        This method provides direct SQL access to the nodes table, enabling complex
+        queries and aggregations. All computed node statistics are available for querying.
+
+        **Available Columns:**
+        - '_node_id': Unique node identifier
+        - '_label': Human-readable node label
+        - '_count_edges': Total edge count (simple graph interpretation)
+        - '_count_edges_multi': Total edge count (multi-graph interpretation)
+        - '_in_edges': Incoming edge count (directed, simple)
+        - '_out_edges': Outgoing edge count (directed, simple)
+        - '_in_edges_multi': Incoming edge count (directed, multi)
+        - '_out_edges_multi': Outgoing edge count (directed, multi)
+        - '_degree_centrality': Normalized degree centrality (simple)
+        - '_degree_centrality_multi': Normalized degree centrality (multi)
+        - Original node attributes (names without '_' prefix)
+
+        Args:
+            sql_query: SQL query string. Use 'nodes' as the table name in your query.
+            relation_name: Alternative table name to use in the query (default: 'nodes').
+                If specified, all occurrences of this name in the query will be replaced
+                with 'nodes'.
+
+        Returns:
+            pa.Table: Query results as a PyArrow table
+
+        Example:
+            ```python
+            # Find high-degree nodes
+            hubs = network_data.query_nodes(
+                "SELECT _node_id, _label, _count_edges FROM nodes WHERE _count_edges > 10 ORDER BY _count_edges DESC"
+            )
+
+            # Get centrality statistics
+            centrality_stats = network_data.query_nodes(
+                "SELECT AVG(_degree_centrality) as avg_centrality, MAX(_degree_centrality) as max_centrality FROM nodes"
+            )
+            ```
         """
-
         import duckdb
 
         con = duckdb.connect()
@@ -592,14 +823,44 @@ class NetworkData(KiaraTables):
         incl_edge_attributes: Union[bool, str, Iterable[str]] = False,
         omit_self_loops: bool = False,
     ) -> NETWORKX_GRAPH_TYPE:
-        """Return the network data as a networkx graph object.
+        """Export the network data as a NetworkX graph object.
 
-        Arguments:
-            graph_type: the networkx Graph class to use
-            incl_node_attributes: if True, all node attributes are included in the graph, if False, none are, otherwise the specified attributes are included
-            incl_edge_attributes: if True, all edge attributes are included in the graph, if False, none are, otherwise the specified attributes are included
-            omit_self_loops: if False, self-loops are included in the graph, otherwise they are not added to the resulting graph (nodes that are only connected to themselves are still included)
+        This method converts the NetworkData to any NetworkX graph type, providing
+        flexibility to work with the data using NetworkX's extensive algorithm library.
+        The conversion preserves node and edge attributes as specified.
 
+        **Supported Graph Types:**
+        - **nx.Graph**: Undirected simple graph (parallel edges are merged)
+        - **nx.DiGraph**: Directed simple graph (parallel edges are merged)
+        - **nx.MultiGraph**: Undirected multigraph (parallel edges preserved)
+        - **nx.MultiDiGraph**: Directed multigraph (parallel edges preserved)
+
+        **Attribute Handling:**
+        Node and edge attributes can be selectively included in the exported graph.
+        Internal columns (prefixed with '_') are available but typically excluded
+        from exports to maintain clean NetworkX compatibility.
+
+        Args:
+            graph_type: NetworkX graph class to instantiate (nx.Graph, nx.DiGraph, etc.)
+            incl_node_attributes: Controls which node attributes to include:
+                - False: No attributes (only node IDs)
+                - True: All attributes (including computed columns)
+                - str: Single attribute name to include
+                - Iterable[str]: List of specific attributes to include
+            incl_edge_attributes: Controls which edge attributes to include:
+                - False: No attributes
+                - True: All attributes (including computed columns)
+                - str: Single attribute name to include
+                - Iterable[str]: List of specific attributes to include
+            omit_self_loops: If True, edges where source equals target are excluded
+
+        Returns:
+            NETWORKX_GRAPH_TYPE: NetworkX graph instance of the specified type
+
+        Note:
+            When exporting to simple graph types (Graph, DiGraph), parallel edges
+            are automatically merged. Use MultiGraph or MultiDiGraph to preserve
+            all edge instances.
         """
 
         graph: NETWORKX_GRAPH_TYPE = graph_type()
@@ -629,19 +890,52 @@ class NetworkData(KiaraTables):
         omit_self_loops: bool = False,
         attach_node_id_map: bool = False,
     ) -> RUSTWORKX_GRAPH_TYPE:
-        """
-        Return the network data as a rustworkx graph object.
+        """Export the network data as a RustWorkX graph object.
 
-        Be aware that the node ids in the rustworks graph might not match up with the values of the _node_id column of
-        the original network_data. The original _node_id will be set as an attribute (`_node_id`) on the nodes.
+        RustWorkX provides high-performance graph algorithms implemented in Rust with
+        Python bindings. This method converts NetworkData to RustWorkX format while
+        handling the differences in node ID management between the two systems.
 
-        Arguments:
-            graph_type: the rustworkx Graph class to use
-            multigraph: if True, a Multi(Di)Graph is returned, otherwise a normal (Di)Graph
-            incl_node_attributes: if True, all node attributes are included in the graph, if False, none are, otherwise the specified attributes are included
-            incl_edge_attributes: if True, all edge attributes are included in the graph, if False, none are, otherwise the specified attributes are included
-            omit_self_loops: if False, self-loops are included in the graph, otherwise they are not added to the resulting graph (nodes that are only connected to themselves are still included)
-            attach_node_id_map: if True, add the dict describing how the rustworkx graph node ids (key) are mapped to the original node id of the network data, under the 'node_id_map' key in the graph's attributes
+        **Supported Graph Types:**
+        - **rx.PyGraph**: Undirected graph (with optional multigraph support)
+        - **rx.PyDiGraph**: Directed graph (with optional multigraph support)
+
+        **Node ID Mapping:**
+        RustWorkX uses sequential integer node IDs starting from 0, which may differ
+        from the original NetworkData node IDs. The original '_node_id' values are
+        preserved as node attributes, and an optional mapping can be attached to
+        the graph for reference.
+
+        **Performance Benefits:**
+        RustWorkX graphs offer significant performance advantages for:
+        - Large-scale graph algorithms
+        - Parallel processing
+        - Memory-efficient operations
+        - High-performance centrality calculations
+
+        Args:
+            graph_type: RustWorkX graph class (rx.PyGraph or rx.PyDiGraph)
+            multigraph: If True, parallel edges are preserved; if False, they are merged
+            incl_node_attributes: Controls which node attributes to include:
+                - False: No attributes (only node data structure)
+                - True: All attributes (including computed columns)
+                - str: Single attribute name to include
+                - Iterable[str]: List of specific attributes to include
+            incl_edge_attributes: Controls which edge attributes to include:
+                - False: No attributes
+                - True: All attributes (including computed columns)
+                - str: Single attribute name to include
+                - Iterable[str]: List of specific attributes to include
+            omit_self_loops: If True, self-loops (edges where source == target) are excluded
+            attach_node_id_map: If True, adds a 'node_id_map' attribute to the graph
+                containing the mapping from RustWorkX node IDs to original NetworkData node IDs
+
+        Returns:
+            RUSTWORKX_GRAPH_TYPE: RustWorkX graph instance of the specified type
+
+        Note:
+            The original NetworkData '_node_id' values are always included in the
+            node data dictionary, regardless of the incl_node_attributes setting.
         """
 
         from bidict import bidict
@@ -688,7 +982,6 @@ class NetworkData(KiaraTables):
             graph.attrs = {"node_id_map": node_map}  # type: ignore
 
         return graph
-
 
 class GraphProperties(BaseModel):
     """Properties of graph data, if interpreted as a specific graph type."""

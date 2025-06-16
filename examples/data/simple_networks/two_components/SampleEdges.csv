@@ -1,0 +1,15 @@
+source,target,time,weight
+A,B,January,2
+B,A,January,5
+B,C,February,15
+B,C,March,2
+B,B,December,2
+C,D,January,1
+B,C,January,6
+A,A,March,1
+C,B,April,9
+A,D,June,3
+A,B,November,7
+E,E,December,1
+E,F,December,29
+F,E,February,2
