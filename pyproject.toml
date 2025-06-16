@@ -205,7 +205,8 @@ python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 mypy_path = "src"
-namespace_packages = false
+namespace_packages = true
+explicit_package_bases = true
 plugins = [
     "pydantic.mypy"
 ]

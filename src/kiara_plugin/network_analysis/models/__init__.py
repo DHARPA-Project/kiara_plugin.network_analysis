@@ -8,6 +8,7 @@ other type of models -- that is attached to data, as well as *kiara* modules.
 Metadata models must be a sub-class of [kiara.metadata.MetadataModel][kiara.metadata.MetadataModel]. Other models usually
 sub-class a pydantic BaseModel or implement custom base classes.
 """
+
 from typing import (
     TYPE_CHECKING,
     ClassVar,
@@ -59,11 +60,13 @@ from kiara_plugin.network_analysis.utils import (
 from kiara_plugin.tabular.models.tables import KiaraTables
 
 if TYPE_CHECKING:
-    from kiara_plugin.network_analysis.models.metadata import NetworkNodeAttributeMetadata
     import networkx as nx
     import pyarrow as pa
     import rustworkx as rx
 
+    from kiara_plugin.network_analysis.models.metadata import (
+        NetworkNodeAttributeMetadata,
+    )
     from kiara_plugin.tabular.models.table import KiaraTable
 
 NETWORKX_GRAPH_TYPE = TypeVar("NETWORKX_GRAPH_TYPE", bound="nx.Graph")
@@ -71,13 +74,11 @@ RUSTWORKX_GRAPH_TYPE = TypeVar("RUSTWORKX_GRAPH_TYPE", "rx.PyGraph", "rx.PyDiGra
 
 
 class NodesCallback(Protocol):
-    def __call__(self, _node_id: int, **kwargs) -> None:
-        ...
+    def __call__(self, _node_id: int, **kwargs) -> None: ...
 
 
 class EdgesCallback(Protocol):
-    def __call__(self, _source: int, _target: int, **kwargs) -> None:
-        ...
+    def __call__(self, _source: int, _target: int, **kwargs) -> None: ...
 
 
 class NetworkData(KiaraTables):
@@ -584,7 +585,7 @@ class NetworkData(KiaraTables):
         Returns:
             int: Number of nodes in the network
         """
-        return self.nodes.num_rows
+        return self.nodes.num_rows  # type: ignore
 
     @property
     def num_edges(self) -> int:
@@ -596,7 +597,7 @@ class NetworkData(KiaraTables):
         Returns:
             int: Total number of edges (including parallel edges)
         """
-        return self.edges.num_rows
+        return self.edges.num_rows  # type: ignore
 
     def query_edges(
         self, sql_query: str, relation_name: str = EDGES_TABLE_NAME
@@ -711,7 +712,9 @@ class NetworkData(KiaraTables):
             all_node_attr_names: List[str] = self.nodes.column_names  # type: ignore
             if incl_node_attributes is True:
                 node_attr_names = [NODE_ID_COLUMN_NAME]
-                node_attr_names.extend((x for x in all_node_attr_names if x != NODE_ID_COLUMN_NAME))  # type: ignore
+                node_attr_names.extend(
+                    (x for x in all_node_attr_names if x != NODE_ID_COLUMN_NAME)
+                )  # type: ignore
             elif isinstance(incl_node_attributes, str):
                 if incl_node_attributes not in all_node_attr_names:
                     raise KiaraException(
@@ -962,7 +965,6 @@ class NetworkData(KiaraTables):
             #     raise Exception("Internal error: node ids don't match")
 
         def add_edge(_source: int, _target: int, **attrs):
-
             source = node_map[_source]
             target = node_map[_target]
             if not attrs:
@@ -982,6 +984,7 @@ class NetworkData(KiaraTables):
             graph.attrs = {"node_id_map": node_map}  # type: ignore
 
         return graph
+
 
 class GraphProperties(BaseModel):
     """Properties of graph data, if interpreted as a specific graph type."""
@@ -1017,7 +1020,6 @@ class NetworkGraphProperties(ValueMetadata):
 
     @classmethod
     def create_value_metadata(cls, value: Value) -> "NetworkGraphProperties":
-
         network_data: NetworkData = value.data
 
         num_rows = network_data.num_nodes

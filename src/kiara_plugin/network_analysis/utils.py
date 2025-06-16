@@ -155,7 +155,7 @@ def extract_networkx_edges_as_table(
                 )
 
             v = edge_data.get(k, None)
-            edge_columns.setdefault(k, []).append(v)
+            edge_columns.setdefault(k, []).append(v)  # type: ignore
 
     edges_table = pa.Table.from_pydict(mapping=edge_columns)
 
@@ -166,7 +166,6 @@ def augment_nodes_table_with_connection_counts(
     nodes_table: Union["pa.Table", "pl.DataFrame"],
     edges_table: Union["pa.Table", "pl.DataFrame"],
 ) -> "pa.Table":
-
     import duckdb
 
     try:
@@ -182,7 +181,6 @@ def augment_nodes_table_with_connection_counts(
 
     # we can avoid 'COUNT(*)' calls in the following  query
     nodes_table_rows = len(nodes_table)
-    print(nodes_table_rows)
 
     query = f"""
     SELECT
@@ -212,8 +210,7 @@ def augment_nodes_table_with_connection_counts(
         ORDER BY {NODE_ID_COLUMN_NAME}
     """
 
-    print(query)
-    nodes_table_result = duckdb.sql(query)
+    nodes_table_result = duckdb.sql(query)  # noqa
 
     centrality_query = f"""
     SELECT
@@ -230,7 +227,6 @@ def augment_nodes_table_with_connection_counts(
          {other_columns}
     FROM nodes_table_result
     """
-    print(centrality_query)
 
     result = duckdb.sql(centrality_query)
 
@@ -239,7 +235,7 @@ def augment_nodes_table_with_connection_counts(
 
 
 def augment_edges_table_with_id_and_weights(
-    edges_table: Union["pa.Table", "pl.DataFrame"]
+    edges_table: Union["pa.Table", "pl.DataFrame"],
 ) -> "pa.Table":
     """Augment the edges table with additional pre-computed columns for directed and undirected weights.."""
 

@@ -2,10 +2,6 @@
 
 """This module contains the value type classes that are used in the ``kiara_plugin.network_analysis`` package."""
 
-# -*- coding: utf-8 -*-
-
-"""This module contains the value type classes that are used in the ``kiara_plugin.network_analysis`` package.
-"""
 from typing import Any, ClassVar, List, Mapping, Type, Union
 
 from rich.console import Group
@@ -54,7 +50,6 @@ class NetworkDataType(TablesType):
 
     @classmethod
     def type_doc(cls) -> str:
-
         if cls._cached_doc:
             return cls._cached_doc
 
@@ -80,40 +75,40 @@ class NetworkDataType(TablesType):
         edge_properties[EDGE_ID_COLUMN_NAME] = EDGE_ID_COLUMN_METADATA.doc.full_doc
         edge_properties[SOURCE_COLUMN_NAME] = EDGE_SOURCE_COLUMN_METADATA.doc.full_doc
         edge_properties[TARGET_COLUMN_NAME] = EDGE_TARGET_COLUMN_METADATA.doc.full_doc
-        edge_properties[
-            COUNT_DIRECTED_COLUMN_NAME
-        ] = EDGE_COUNT_DUP_DIRECTED_COLUMN_METADATA.doc.full_doc
-        edge_properties[
-            COUNT_IDX_DIRECTED_COLUMN_NAME
-        ] = EDGE_IDX_DUP_DIRECTED_COLUMN_METADATA.doc.full_doc
-        edge_properties[
-            COUNT_UNDIRECTED_COLUMN_NAME
-        ] = EDGE_COUNT_DUP_UNDIRECTED_COLUMN_METADATA.doc.full_doc
-        edge_properties[
-            COUNT_IDX_UNDIRECTED_COLUMN_NAME
-        ] = EDGE_IDX_DUP_UNDIRECTED_COLUMN_METADATA.doc.full_doc
+        edge_properties[COUNT_DIRECTED_COLUMN_NAME] = (
+            EDGE_COUNT_DUP_DIRECTED_COLUMN_METADATA.doc.full_doc
+        )
+        edge_properties[COUNT_IDX_DIRECTED_COLUMN_NAME] = (
+            EDGE_IDX_DUP_DIRECTED_COLUMN_METADATA.doc.full_doc
+        )
+        edge_properties[COUNT_UNDIRECTED_COLUMN_NAME] = (
+            EDGE_COUNT_DUP_UNDIRECTED_COLUMN_METADATA.doc.full_doc
+        )
+        edge_properties[COUNT_IDX_UNDIRECTED_COLUMN_NAME] = (
+            EDGE_IDX_DUP_UNDIRECTED_COLUMN_METADATA.doc.full_doc
+        )
 
         properties_node = {}
         properties_node[NODE_ID_COLUMN_NAME] = NODE_ID_COLUMN_METADATA.doc.full_doc
         properties_node[LABEL_COLUMN_NAME] = NODE_LABEL_COLUMN_METADATA.doc.full_doc
-        properties_node[
-            CONNECTIONS_COLUMN_NAME
-        ] = NODE_COUNT_EDGES_COLUMN_METADATA.doc.full_doc
-        properties_node[
-            CONNECTIONS_MULTI_COLUMN_NAME
-        ] = NODE_COUND_EDGES_MULTI_COLUMN_METADATA.doc.full_doc
-        properties_node[
-            IN_DIRECTED_COLUMN_NAME
-        ] = NODE_COUNT_IN_EDGES_COLUMN_METADATA.doc.full_doc
-        properties_node[
-            IN_DIRECTED_MULTI_COLUMN_NAME
-        ] = NODE_COUNT_IN_EDGES_MULTI_COLUMN_METADATA.doc.full_doc
-        properties_node[
-            OUT_DIRECTED_COLUMN_NAME
-        ] = NODE_COUNT_OUT_EDGES_COLUMN_METADATA.doc.full_doc
-        properties_node[
-            OUT_DIRECTED_MULTI_COLUMN_NAME
-        ] = NODE_COUNT_OUT_EDGES_MULTI_COLUMN_METADATA.doc.full_doc
+        properties_node[CONNECTIONS_COLUMN_NAME] = (
+            NODE_COUNT_EDGES_COLUMN_METADATA.doc.full_doc
+        )
+        properties_node[CONNECTIONS_MULTI_COLUMN_NAME] = (
+            NODE_COUND_EDGES_MULTI_COLUMN_METADATA.doc.full_doc
+        )
+        properties_node[IN_DIRECTED_COLUMN_NAME] = (
+            NODE_COUNT_IN_EDGES_COLUMN_METADATA.doc.full_doc
+        )
+        properties_node[IN_DIRECTED_MULTI_COLUMN_NAME] = (
+            NODE_COUNT_IN_EDGES_MULTI_COLUMN_METADATA.doc.full_doc
+        )
+        properties_node[OUT_DIRECTED_COLUMN_NAME] = (
+            NODE_COUNT_OUT_EDGES_COLUMN_METADATA.doc.full_doc
+        )
+        properties_node[OUT_DIRECTED_MULTI_COLUMN_NAME] = (
+            NODE_COUNT_OUT_EDGES_MULTI_COLUMN_METADATA.doc.full_doc
+        )
 
         edge_properties_str = "\n\n".join(
             f"***{key}***:\n\n{value}" for key, value in edge_properties.items()
@@ -142,7 +137,6 @@ The 'nodes' table contains the following columns:
         return cls._cached_doc
 
     def parse_python_obj(self, data: Any) -> NetworkData:
-
         if isinstance(data, KiaraTables):
             if EDGES_TABLE_NAME not in data.tables.keys():
                 raise KiaraException(
@@ -215,7 +209,6 @@ The 'nodes' table contains the following columns:
     def pretty_print_as__terminal_renderable(
         self, value: Value, render_config: Mapping[str, Any]
     ) -> Any:
-
         max_rows = render_config.get(
             "max_no_rows", DEFAULT_PRETTY_PRINT_CONFIG["max_no_rows"]
         )
