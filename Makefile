@@ -43,7 +43,7 @@ ruff:
 	uv run ruff check --fix src/
 
 test: ## run tests quickly with the default Python
-	uv run py.test tests
+	uv run pytest tests
 
 doc:
 	uv run pdoc kiara_plugin.network_analysis
