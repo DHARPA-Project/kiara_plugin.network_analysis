@@ -56,7 +56,8 @@ installed, which should be the case for Linux & Mac OS X systems.
 
 - `make test`: runs the unit tests
 - `make mypy`: run mypy checks
-- `make ruff`: run the `ruff` linter on the source code
+- `make lint`: run the `ruff` linter on the source code
+- `make format`: run the `ruff` formatter on the source code (similar to `black`)
 
 ## Copyright & license
 

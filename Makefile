@@ -39,8 +39,11 @@ init: clean ## initialize a development environment (to be run in virtualenv)
 mypy: ## run mypy
 	uv run mypy src/
 
-ruff:
+lint:
 	uv run ruff check --fix src/
+
+format:
+	uv run ruff format src/
 
 test: ## run tests quickly with the default Python
 	uv run pytest tests

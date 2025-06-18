@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import marimo
 
 __generated_with = "0.13.15"
@@ -103,6 +104,18 @@ def _(kiara_network_data, prepare_altair_graph):
     chart = prepare_altair_graph(kiara_network_data)
 
     chart
+    return
+
+
+@app.cell
+def _(kiara_network_data):
+    kiara_network_data.data.nodes_table
+    return
+
+
+@app.cell
+def _(kiara_network_data):
+    kiara_network_data.data.nodes.arrow_table
     return
 
 

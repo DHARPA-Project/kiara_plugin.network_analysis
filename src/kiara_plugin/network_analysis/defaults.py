@@ -8,7 +8,7 @@ SOURCE_COLUMN_NAME = "_source"
 TARGET_COLUMN_NAME = "_target"
 LABEL_COLUMN_NAME = "_label"
 
-COMPONENT_ID_COLUMN_NAME = "component_id"
+COMPONENT_ID_COLUMN_NAME = "_component_id"
 IS_CUTPOINT_COLUMN_NAME = "is_cut_point"
 
 EDGES_TABLE_NAME = "edges"

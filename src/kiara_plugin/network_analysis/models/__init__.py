@@ -30,6 +30,7 @@ from kiara.models.values.value import Value
 from kiara.models.values.value_metadata import ValueMetadata
 from kiara_plugin.network_analysis.defaults import (
     ATTRIBUTE_PROPERTY_KEY,
+    COMPONENT_ID_COLUMN_NAME,
     CONNECTIONS_COLUMN_NAME,
     CONNECTIONS_MULTI_COLUMN_NAME,
     COUNT_DIRECTED_COLUMN_NAME,
@@ -54,6 +55,7 @@ from kiara_plugin.network_analysis.defaults import (
 from kiara_plugin.network_analysis.utils import (
     augment_edges_table_with_id_and_weights,
     augment_nodes_table_with_connection_counts,
+    augment_tables_with_component_ids,
     extract_networkx_edges_as_table,
     extract_networkx_nodes_as_table,
 )
@@ -244,25 +246,6 @@ class NetworkData(KiaraTables):
         Raises:
             KiaraException: If required columns are missing or contain null values
 
-        Example:
-            ```python
-            import pyarrow as pa
-
-            # Create simple graph data
-            nodes = pa.table({
-                '_node_id': [0, 1, 2],
-                '_label': ['A', 'B', 'C'],
-                'type': ['person', 'person', 'organization']
-            })
-
-            edges = pa.table({
-                '_source': [0, 1, 2],
-                '_target': [1, 2, 0],
-                'relationship': ['friend', 'works_for', 'sponsors']
-            })
-
-            network_data = NetworkData.create_network_data(nodes, edges)
-            ```
         """
 
         from kiara_plugin.network_analysis.models.metadata import (
@@ -289,6 +272,9 @@ class NetworkData(KiaraTables):
             edges_table = augment_edges_table_with_id_and_weights(edges_table)
             nodes_table = augment_nodes_table_with_connection_counts(
                 nodes_table, edges_table
+            )
+            nodes_table, edges_table = augment_tables_with_component_ids(
+                nodes_table=nodes_table, edges_table=edges_table
             )
 
         if edges_table.column(SOURCE_COLUMN_NAME).null_count > 0:
@@ -995,6 +981,16 @@ class GraphProperties(BaseModel):
     )
 
 
+class ComponentProperties(BaseModel):
+    """Properties of a connected component."""
+
+    component_id: int = Field(description="The id of the component.")
+    number_of_nodes: int = Field(description="The number of nodes in the component.")
+    number_of_associated_edge_rows: int = Field(
+        description="The number of edge rows associated to the component."
+    )
+
+
 class NetworkGraphProperties(ValueMetadata):
     """Network data stats."""
 
@@ -1013,6 +1009,12 @@ class NetworkGraphProperties(ValueMetadata):
     number_of_self_loops: int = Field(
         description="Number of edges where source and target point to the same node."
     )
+    number_of_components: int = Field(
+        description="Number of connected components in the network graph."
+    )
+    components: Dict[int, ComponentProperties] = Field(
+        description="Properties of the components of the network graph."
+    )
 
     @classmethod
     def retrieve_supported_data_types(cls) -> Iterable[str]:
@@ -1020,6 +1022,8 @@ class NetworkGraphProperties(ValueMetadata):
 
     @classmethod
     def create_value_metadata(cls, value: Value) -> "NetworkGraphProperties":
+        import duckdb
+
         network_data: NetworkData = value.data
 
         num_rows = network_data.num_nodes
@@ -1073,9 +1077,47 @@ class NetworkGraphProperties(ValueMetadata):
             GraphType.UNDIRECTED_MULTI.value: undirected_multi_props,
         }
 
+        nodes_table = network_data.nodes.arrow_table  # noqa
+        edges_table = network_data.edges.arrow_table  # noqa
+
+        components_query_nodes = f"""
+            SELECT
+                {COMPONENT_ID_COLUMN_NAME}, COUNT(*)
+            FROM
+                nodes_table
+            GROUP BY {COMPONENT_ID_COLUMN_NAME}
+        """
+        nodes_result = duckdb.query(components_query_nodes)
+        nodes_data = nodes_result.fetchall()
+        nodes_data = {row[0]: row[1] for row in nodes_data}
+
+        components_query_edges = f"""
+            SELECT
+                {COMPONENT_ID_COLUMN_NAME}, COUNT(*)
+            FROM
+                edges_table
+            GROUP BY {COMPONENT_ID_COLUMN_NAME}
+        """
+        edges_result = duckdb.query(components_query_edges)
+        edges_data = edges_result.fetchall()
+        edges_data = {row[0]: row[1] for row in edges_data}
+
+        components_data = {}
+        for component_id, num_nodes in nodes_data.items():
+            num_edges = edges_data.get(component_id, 0)
+            components_data[component_id] = ComponentProperties(
+                component_id=component_id,
+                number_of_nodes=num_nodes,
+                number_of_associated_edge_rows=num_edges,
+            )
+
+        number_of_components = len(components_data)
+
         result = cls(
             number_of_nodes=num_rows,
             properties_by_graph_type=props,
             number_of_self_loops=num_self_loops,
+            number_of_components=number_of_components,
+            components={k: components_data[k] for k in sorted(components_data.keys())},
         )
         return result

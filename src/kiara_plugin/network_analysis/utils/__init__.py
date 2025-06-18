@@ -13,8 +13,11 @@ from typing import (
     Union,
 )
 
+import duckdb
+
 from kiara.exceptions import KiaraException
 from kiara_plugin.network_analysis.defaults import (
+    COMPONENT_ID_COLUMN_NAME,
     CONNECTIONS_COLUMN_NAME,
     CONNECTIONS_MULTI_COLUMN_NAME,
     COUNT_DIRECTED_COLUMN_NAME,
@@ -273,10 +276,116 @@ def augment_edges_table_with_id_and_weights(
     return edges_table_augmented
 
 
+def augment_tables_with_component_ids(
+    nodes_table: "pa.Table", edges_table: "pa.Table"
+) -> Tuple["pa.Table", "pa.Table"]:
+    """Augment the nodes and edges table with a component id column.
+
+    The component id is a unique id for each connected component in the graph. The id of thte component is
+    assigned in a deterministic way, based on the size of the components. The largest component gets id 0, the
+    second largest 1, and so on.
+
+    Should 2 components have the same amount of nodes, the component id is not deterministic anymore.
+    """
+
+    import polars as pl
+    import pyarrow as pa
+    import rustworkx as rx
+
+    # create rustworkx graph
+    graph = rx.PyGraph(multigraph=False)
+
+    nodes_df = pl.from_arrow(nodes_table)
+    for row in nodes_df.select(NODE_ID_COLUMN_NAME).rows(named=True):
+        node_id = row[NODE_ID_COLUMN_NAME]
+        graph_node_id = graph.add_node(node_id)
+        assert node_id == graph_node_id
+
+    edges_df = pl.from_arrow(edges_table)
+    for row in edges_df.select(SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME).rows(named=True):
+        if row[SOURCE_COLUMN_NAME] == row[TARGET_COLUMN_NAME]:
+            continue
+
+        source_id = row[SOURCE_COLUMN_NAME]
+        target_id = row[TARGET_COLUMN_NAME]
+
+        graph.add_edge(source_id, target_id, None)
+
+    components = rx.connected_components(graph)
+    nodes_idx = 0
+    for col_name in nodes_table.column_names:
+        if col_name.startswith("_"):
+            nodes_idx += 1
+            continue
+
+    if len(components) == 1:
+        components_column_nodes = pa.array([0] * len(nodes_table), type=pa.int64())
+        nodes = nodes_table.add_column(
+            nodes_idx, COMPONENT_ID_COLUMN_NAME, components_column_nodes
+        )
+        components_column_edges = pa.array([0] * len(edges_table), type=pa.int64())
+
+        edges_idx = 0
+        for col_name in edges_table.column_names:
+            if col_name.startswith("_"):
+                edges_idx += 1
+                continue
+        edges = edges_table.add_column(
+            edges_idx, COMPONENT_ID_COLUMN_NAME, components_column_edges
+        )
+        return nodes, edges
+
+    node_components = {}
+    for idx, component in enumerate(sorted(components, key=len, reverse=True)):
+        for node_id in component:
+            node_components[node_id] = idx
+
+    if len(node_components) != graph.num_nodes():
+        raise KiaraException(
+            "Number of nodes in component map does not match number of nodes in network data. This is most likely a bug."
+        )
+
+    components_column_nodes = pa.array(
+        (node_components[node_id] for node_id in sorted(node_components.keys())),
+        type=pa.int64(),
+    )
+    nodes = nodes_table.add_column(
+        nodes_idx, COMPONENT_ID_COLUMN_NAME, components_column_nodes
+    )
+
+    try:
+        column_names = edges_table.column_names  # type: ignore
+    except Exception:
+        column_names = edges_table.columns  # type: ignore
+
+    computed_attr_columns = [x for x in column_names if x.startswith("_")]
+    computed_columns = ", ".join(computed_attr_columns)
+    edge_attr_columns = [x for x in column_names if not x.startswith("_")]
+    if edge_attr_columns:
+        other_columns = ", " + ", ".join(edge_attr_columns)
+    else:
+        other_columns = ""
+
+    # a query that looks up the value of a SOURCE_COLUMN_NAME in edges_table in the
+    # NODE_ID_COLUMN_NAME of nodes, and returns the component id from the nodes table
+    query = f"""
+    SELECT
+        {computed_columns},
+        n.{COMPONENT_ID_COLUMN_NAME} as {COMPONENT_ID_COLUMN_NAME}
+        {other_columns}
+    FROM edges_table e
+    JOIN nodes n ON e.{SOURCE_COLUMN_NAME} = n.{NODE_ID_COLUMN_NAME}
+    """
+
+    edges = duckdb.sql(query)
+
+    return nodes, edges.arrow()
+
+
 def extract_network_data(network_data: Union["Value", "NetworkData"]) -> "NetworkData":
     from kiara.models.values.value import Value
 
     if isinstance(network_data, Value):
         assert network_data.data_type_name == "network_data"
-        return network_data.data  # type: ignore
+        network_data = network_data.data
     return network_data
