@@ -231,10 +231,12 @@ plugins = [
 # mypy per-module options:
 [[tool.mypy.overrides]]
 module = [
+    "altair.*",
     "appdirs.*",
+    "marimo.*",
     "pyarrow.*",
+    "plotly.*",
     "ruamel.*",
-    "plotly.*"
 ]
 ignore_missing_imports = true
 
