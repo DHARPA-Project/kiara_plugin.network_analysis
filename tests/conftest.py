@@ -13,7 +13,7 @@ import os
 import tempfile
 import uuid
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
+from typing import Any, Dict, List
 
 import pytest
 from _pytest.compat import NotSetType
@@ -36,6 +36,7 @@ EXAMPLE_DATAS = [
     DATA_DIR / "simple_networks" / "connected",
     DATA_DIR / "simple_networks" / "two_components",
 ]
+
 
 def create_temp_dir():
     session_id = str(uuid.uuid4())
@@ -101,14 +102,12 @@ def example_job_test(request, kiara_api_init_example) -> JobTest:
     job_test = JobTest(kiara_api=kiara_api_init_example, job_desc=job_desc, tests=tests)
     return job_test
 
-def list_network_datas(datas: List[Path]) -> Dict[str, Any]:
 
+def list_network_datas(datas: List[Path]) -> Dict[str, Any]:
     import networkx as nx
     import pandas as pd
-    import rustworkx as rx
 
     for data in datas:
-
         result = {"id": data.name}
 
         if data.is_dir():
@@ -122,24 +121,33 @@ def list_network_datas(datas: List[Path]) -> Dict[str, Any]:
             # Create an empty graph
             networkx_graph = nx.Graph()
             networkx_digraph = nx.DiGraph()
+            networkx_multigraph = nx.MultiGraph()
+            networkx_multidigraph = nx.MultiDiGraph()
 
             # Add nodes with attributes
             for _, row in nodes_df.iterrows():
-                node_id = row['Id']
+                node_id = row["Id"]
                 # Add all other columns as node attributes
-                attrs = {col: row[col] for col in nodes_df.columns if col != 'Id'}
+                attrs = {col: row[col] for col in nodes_df.columns if col != "Id"}
                 networkx_graph.add_node(node_id, **attrs)
                 networkx_digraph.add_node(node_id, **attrs)
+                networkx_multigraph.add_node(node_id, **attrs)
+                networkx_multidigraph.add_node(node_id, **attrs)
 
             # Add edges with attributes
             for _, row in edges_df.iterrows():
-                source = row['source']
-                target = row['target']
+                source = row["source"]
+                target = row["target"]
                 # Add all other columns as edge attributes
-                attrs = {col: row[col] for col in edges_df.columns if col not in ['source', 'target']}
+                attrs = {
+                    col: row[col]
+                    for col in edges_df.columns
+                    if col not in ["source", "target"]
+                }
                 networkx_graph.add_edge(source, target, **attrs)
                 networkx_digraph.add_edge(source, target, **attrs)
-
+                networkx_multigraph.add_edge(source, target, **attrs)
+                networkx_multidigraph.add_edge(source, target, **attrs)
 
             pipeline_file = EXAMPLES_DIR / "pipelines" / "create_network_graph.yaml"
             inputs = {
@@ -153,12 +161,41 @@ def list_network_datas(datas: List[Path]) -> Dict[str, Any]:
 
             result["networkx_graph"] = networkx_graph
             result["networkx_digraph"] = networkx_digraph
+            result["networkx_multigraph"] = networkx_multigraph
+            result["networkx_multidigraph"] = networkx_multidigraph
+
             result["kiara_job"] = job_desc
             result["kiara_job_result_name"] = "network_data"
-        else:
-            raise NotImplementedError()
+        elif data.is_file():
+            if data.suffix == ".gexf":
+                networkx_graph = nx.read_gexf(data)
+
+                result["networkx_graph"] = networkx_graph
+                result["networkx_digraph"] = networkx_digraph
+
+            elif data.suffix == ".gml":
+                networkx_graph = nx.read_gml(data)
+
+            else:
+                raise NotImplementedError()
+
+            result["networkx_graph"] = networkx_graph
+            result["networkx_digraph"] = networkx_digraph
+
+            operation = "create.network_data.from.file"
+            inputs = {
+                "file": data.as_posix(),
+            }
+            job_desc = {
+                "operation": operation,
+                "inputs": inputs,
+            }
+
+            result["kiara_job"] = job_desc
+            result["kiara_job_result_name"] = "network_data"
 
         yield result
+
 
 def get_data_alias(data: Dict[str, Any]) -> str:
     if isinstance(data, NotSetType):
@@ -169,13 +206,15 @@ def get_data_alias(data: Dict[str, Any]) -> str:
 
 @pytest.fixture(params=list_network_datas(EXAMPLE_DATAS), ids=get_data_alias)
 def example_data(request, kiara_api) -> KiaraAPI:
-
     kiara_job_desc = request.param["kiara_job"]
-    kiara_result = kiara_api.run_job(**kiara_job_desc, comment=f"test_{request.param['id']}")
+    kiara_result = kiara_api.run_job(
+        **kiara_job_desc, comment=f"test_{request.param['id']}"
+    )
 
     result = dict(request.param)
     result["kiara_network_data"] = kiara_result[request.param["kiara_job_result_name"]]
     return result
+
 
 @pytest.fixture
 def example_data_folder() -> Path:

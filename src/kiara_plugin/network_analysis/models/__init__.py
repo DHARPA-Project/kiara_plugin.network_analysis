@@ -724,7 +724,7 @@ class NetworkData(KiaraTables):
             else:
                 node_attr_names = [NODE_ID_COLUMN_NAME]
                 for attr_name in incl_node_attributes:
-                    if incl_node_attributes not in all_node_attr_names:
+                    if attr_name not in all_node_attr_names:
                         raise KiaraException(
                             f"Can't include node attribute {incl_node_attributes}: not part of the available attributes ({', '.join(all_node_attr_names)})."
                         )
@@ -763,7 +763,7 @@ class NetworkData(KiaraTables):
             else:
                 edge_attr_names = [SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME]
                 for attr_name in incl_edge_attributes:
-                    if incl_edge_attributes not in all_edge_attr_names:
+                    if attr_name not in all_edge_attr_names:
                         raise KiaraException(
                             f"Can't include edge attribute {incl_edge_attributes}: not part of the available attributes ({', '.join(all_edge_attr_names)})."
                         )

@@ -40,6 +40,9 @@ if TYPE_CHECKING:
     import pyarrow as pa
     from sqlalchemy import MetaData, Table  # noqa
 
+    from kiara.models.values.value import Value
+    from kiara_plugin.network_analysis.models import NetworkData
+
 
 def extract_networkx_nodes_as_table(
     graph: "nx.Graph",
@@ -268,3 +271,12 @@ def augment_edges_table_with_id_and_weights(
     edges_table_augmented = result.arrow()
 
     return edges_table_augmented
+
+
+def extract_network_data(network_data: Union["Value", "NetworkData"]) -> "NetworkData":
+    from kiara.models.values.value import Value
+
+    if isinstance(network_data, Value):
+        assert network_data.data_type_name == "network_data"
+        network_data = network_data.data
+    return network_data

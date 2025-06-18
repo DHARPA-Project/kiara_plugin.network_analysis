@@ -29,9 +29,13 @@ classifiers = [
     "Programming Language :: Python :: 3.13"
 ]
 dependencies = [
+    "graphviz>=0.21",
     "kiara>=0.5.14,<0.6.0",
     "kiara_plugin.core_types>=0.5.2,<0.6.0",
     "kiara_plugin.tabular>=0.5.6,<0.6.0",
+    "matplotlib>=3.10.3",
+    "pillow>=11.2.1",
+    "pydot>=4.0.0",
     "rustworkx>=0.16.0",
 ]
 dynamic = ["version"]
@@ -62,6 +66,17 @@ network_analysis = "kiara_plugin.network_analysis:find_pipelines"
 homepage = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
 documentation = "https://DHARPA-Project.github.io/kiara_plugin.network_analysis"
 repository = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
+
+[project.optional-dependencies]
+marimo = [
+    "altair>=5.5.0",
+    "marimo>=0.13.15",
+    "plotly>=6.1.2",
+]
+
+jupyter = [
+    "jupyter"
+]
 
 [tool.black]
 include = '\.pyi?$'
