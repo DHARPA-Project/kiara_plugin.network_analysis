@@ -208,7 +208,12 @@ def prepare_plotly_graph(network_data: Union["Value", "NetworkData", None]):
             "reversescale": True,
             "color": [],
             "size": 10,
-            "colorbar": {"thickness": 15, "len": 0.5, "x": 1.02, "title": "Node Connections"},
+            "colorbar": {
+                "thickness": 15,
+                "len": 0.5,
+                "x": 1.02,
+                "title": "Node Connections",
+            },
             "line": {"width": 2},
         },
     )

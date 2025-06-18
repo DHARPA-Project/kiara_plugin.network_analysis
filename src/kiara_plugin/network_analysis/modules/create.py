@@ -219,7 +219,6 @@ class AssembleGraphFromTablesModule(KiaraModule):
         return outputs
 
     def process(self, inputs: ValueMap, outputs: ValueMap, job_log: JobLog) -> None:
-
         import polars as pl
 
         # process nodes
@@ -234,7 +233,6 @@ class AssembleGraphFromTablesModule(KiaraModule):
         # id to the new, internal, integer-based one
 
         if nodes.is_set:
-
             job_log.add_log("processing nodes table")
 
             nodes_table: KiaraTable = nodes.data

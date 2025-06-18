@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from enum import Enum
 from typing import Literal
 
@@ -156,5 +157,3 @@ UNWEIGHTED_NODE_DEGREE_TEXT = (
 UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME = "_degree_centrality"
 UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME = "_degree_centrality_multi"
 UNWEIGHTED_DEGREE_CENTRALITY_TEXT = """The degree centrality values are normalized by dividing the degree of a node by the maximum possible degree in a simple graph n-1 where n is the number of nodes in the graph. For multigraphs or graphs with self loops the maximum degree might be higher than n-1 and values of degree centrality greater than 1 are possible."""
-
-

@@ -25,7 +25,6 @@ from kiara_plugin.network_analysis.defaults import (
 
 
 class NetworkNodeAttributeMetadata(KiaraModel):
-
     _kiara_model_id: ClassVar = "metadata.network_node_attribute"
 
     doc: DocumentationMetadataModel = Field(
@@ -44,7 +43,6 @@ class NetworkNodeAttributeMetadata(KiaraModel):
 
 
 class NetworkEdgeAttributeMetadata(KiaraModel):
-
     _kiara_model_id: ClassVar = "metadata.network_edge_attribute"
 
     doc: DocumentationMetadataModel = Field(
@@ -62,26 +60,48 @@ class NetworkEdgeAttributeMetadata(KiaraModel):
         return DocumentationMetadataModel.create(value)
 
 
-NODE_ID_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_ID_TEXT, computed_attribute=True)  # type: ignore
-NODE_LABEL_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_LABEL_TEXT, computed_attribute=True)  # type: ignore
+NODE_ID_COLUMN_METADATA = NetworkNodeAttributeMetadata(
+    doc=NODE_ID_TEXT, computed_attribute=True
+)  # type: ignore
+NODE_LABEL_COLUMN_METADATA = NetworkNodeAttributeMetadata(
+    doc=NODE_LABEL_TEXT, computed_attribute=True
+)  # type: ignore
 
-NODE_COUNT_EDGES_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_COUNT_EDGES_TEXT, computed_attribute=True)  # type: ignore
+NODE_COUNT_EDGES_COLUMN_METADATA = NetworkNodeAttributeMetadata(
+    doc=NODE_COUNT_EDGES_TEXT, computed_attribute=True
+)  # type: ignore
 NODE_DEGREE_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
     doc=UNWEIGHTED_DEGREE_CENTRALITY_TEXT, computed_attribute=True
 )  # type: ignore
-NODE_COUND_EDGES_MULTI_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_COUNT_EDGES_MULTI_TEXT, computed_attribute=True)  # type: ignore
+NODE_COUND_EDGES_MULTI_COLUMN_METADATA = NetworkNodeAttributeMetadata(
+    doc=NODE_COUNT_EDGES_MULTI_TEXT, computed_attribute=True
+)  # type: ignore
 NODE_DEGREE_MULTI_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
     doc=UNWEIGHTED_DEGREE_CENTRALITY_TEXT, computed_attribute=True
 )  # type: ignore
 
-NODE_COUNT_IN_EDGES_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_COUNT_IN_EDGES_TEXT, computed_attribute=True)  # type: ignore
-NODE_COUNT_IN_EDGES_MULTI_COLUMN_METADATA = NetworkNodeAttributeMetadata(doc=NODE_COUNT_IN_EDGES_MULTI_TEXT, computed_attribute=True)  # type: ignore
-NODE_COUNT_OUT_EDGES_COLUMN_METADATA = NetworkEdgeAttributeMetadata(doc=NODE_COUNT_OUT_EDGES_TEXT, computed_attribute=True)  # type: ignore
-NODE_COUNT_OUT_EDGES_MULTI_COLUMN_METADATA = NetworkEdgeAttributeMetadata(doc=NODE_COUNT_OUT_EDGES_MULTI_TEXT, computed_attribute=True)  # type: ignore
+NODE_COUNT_IN_EDGES_COLUMN_METADATA = NetworkNodeAttributeMetadata(
+    doc=NODE_COUNT_IN_EDGES_TEXT, computed_attribute=True
+)  # type: ignore
+NODE_COUNT_IN_EDGES_MULTI_COLUMN_METADATA = NetworkNodeAttributeMetadata(
+    doc=NODE_COUNT_IN_EDGES_MULTI_TEXT, computed_attribute=True
+)  # type: ignore
+NODE_COUNT_OUT_EDGES_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
+    doc=NODE_COUNT_OUT_EDGES_TEXT, computed_attribute=True
+)  # type: ignore
+NODE_COUNT_OUT_EDGES_MULTI_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
+    doc=NODE_COUNT_OUT_EDGES_MULTI_TEXT, computed_attribute=True
+)  # type: ignore
 
-EDGE_ID_COLUMN_METADATA = NetworkEdgeAttributeMetadata(doc="The unique id for the edge.", computed_attribute=True)  # type: ignore
-EDGE_SOURCE_COLUMN_METADATA = NetworkEdgeAttributeMetadata(doc=EDGE_SOURCE_TEXT, computed_attribute=True)  # type: ignore
-EDGE_TARGET_COLUMN_METADATA = NetworkEdgeAttributeMetadata(doc=EDGE_TARGET_TEXT, computed_attribute=True)  # type: ignore
+EDGE_ID_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
+    doc="The unique id for the edge.", computed_attribute=True
+)  # type: ignore
+EDGE_SOURCE_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
+    doc=EDGE_SOURCE_TEXT, computed_attribute=True
+)  # type: ignore
+EDGE_TARGET_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
+    doc=EDGE_TARGET_TEXT, computed_attribute=True
+)  # type: ignore
 
 EDGE_COUNT_DUP_DIRECTED_COLUMN_METADATA = NetworkEdgeAttributeMetadata(
     doc=EDGE_COUNT_DUP_DIRECTED_TEXT, computed_attribute=True
