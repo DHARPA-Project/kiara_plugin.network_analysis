@@ -21,7 +21,7 @@ def prepare_mpl_graph_jupyter(network_data: Union[Value, NetworkData, None]):
         graph = network_data.as_rustworkx_graph(
             rx.PyGraph, incl_node_attributes=[LABEL_COLUMN_NAME]
         )
-        mpl_draw(graph, with_labels=True, labels=lambda node: node[LABEL_COLUMN_NAME])
+        mpl_draw(graph, with_labels=True, labels=lambda node: node[LABEL_COLUMN_NAME])  # type: ignore
         plt.title("Network Graph (Matplotlib + RustWorkX)")
     else:
         plt.text(
@@ -41,7 +41,6 @@ def prepare_mpl_graph_jupyter(network_data: Union[Value, NetworkData, None]):
 def prepare_plotly_graph_jupyter(network_data: Union[Value, NetworkData, None]):
     """Prepare Plotly graph for Jupyter notebook."""
     if network_data is None:
-        print("No network data available for visualization")
         return None
 
     import plotly.graph_objects as go
@@ -77,7 +76,7 @@ def prepare_plotly_graph_jupyter(network_data: Union[Value, NetworkData, None]):
     edge_trace = go.Scatter(
         x=edge_x,
         y=edge_y,
-        line=dict(width=0.5, color="#888"),
+        line={"width": 0.5, "color": "#888"},
         hoverinfo="none",
         mode="lines",
     )
@@ -89,15 +88,15 @@ def prepare_plotly_graph_jupyter(network_data: Union[Value, NetworkData, None]):
         mode="markers",
         hoverinfo="text",
         text=node_info,
-        marker=dict(
-            showscale=True,
-            colorscale="YlGnBu",
-            reversescale=True,
-            color=[],
-            size=10,
-            colorbar=dict(thickness=15, len=0.5, x=1.02, title="Node Connections"),
-            line=dict(width=2),
-        ),
+        marker={
+            "showscale": True,
+            "colorscale": "YlGnBu",
+            "reversescale": True,
+            "color": [],
+            "size": 10,
+            "colorbar": {"thickness": 15, "len": 0.5, "x": 1.02, "title": "Node Connections"},
+            "line": {"width": 2},
+        },
     )
 
     # Color nodes by number of connections
@@ -112,28 +111,28 @@ def prepare_plotly_graph_jupyter(network_data: Union[Value, NetworkData, None]):
     fig = go.Figure(
         data=[edge_trace, node_trace],
         layout=go.Layout(
-            title=dict(
-                text="Interactive Network Graph (RustWorkX + Plotly)",
-                font=dict(size=16),
-            ),
+            title={
+                "text": "Interactive Network Graph (RustWorkX + Plotly)",
+                "font": {"size": 16},
+            },
             showlegend=False,
             hovermode="closest",
-            margin=dict(b=20, l=5, r=5, t=40),
+            margin={"b": 20, "l": 5, "r": 5, "t": 40},
             annotations=[
-                dict(
-                    text="Hover over nodes to see details",
-                    showarrow=False,
-                    xref="paper",
-                    yref="paper",
-                    x=0.005,
-                    y=-0.002,
-                    xanchor="left",
-                    yanchor="bottom",
-                    font=dict(color="#888", size=12),
-                )
+                {
+                    "text": "Hover over nodes to see details",
+                    "showarrow": False,
+                    "xref": "paper",
+                    "yref": "paper",
+                    "x": 0.005,
+                    "y": -0.002,
+                    "xanchor": "left",
+                    "yanchor": "bottom",
+                    "font": {"color": "#888", "size": 12},
+                }
             ],
-            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            xaxis={"showgrid": False, "zeroline": False, "showticklabels": False},
+            yaxis={"showgrid": False, "zeroline": False, "showticklabels": False},
         ),
     )
 
@@ -143,7 +142,6 @@ def prepare_plotly_graph_jupyter(network_data: Union[Value, NetworkData, None]):
 def prepare_altair_graph_jupyter(network_data: Union[Value, NetworkData, None]):
     """Prepare Altair graph for Jupyter notebook."""
     if network_data is None:
-        print("No network data available for visualization")
         return None
 
     import altair as alt

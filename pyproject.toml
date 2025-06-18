@@ -232,7 +232,8 @@ plugins = [
 module = [
     "appdirs.*",
     "pyarrow.*",
-    "ruamel.*"
+    "ruamel.*",
+    "plotly.*"
 ]
 ignore_missing_imports = true
 

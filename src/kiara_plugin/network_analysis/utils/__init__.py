@@ -278,5 +278,5 @@ def extract_network_data(network_data: Union["Value", "NetworkData"]) -> "Networ
 
     if isinstance(network_data, Value):
         assert network_data.data_type_name == "network_data"
-        network_data = network_data.data
+        return network_data.data  # type: ignore
     return network_data
