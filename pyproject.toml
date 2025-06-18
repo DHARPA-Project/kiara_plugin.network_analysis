@@ -44,6 +44,7 @@ dynamic = ["version"]
 dev = [
     "kiara[dev_utils]",
     "pytest-cov>=4.1.0",
+    "types-networkx",
 ]
 
 [project.entry-points."kiara.plugin"]
