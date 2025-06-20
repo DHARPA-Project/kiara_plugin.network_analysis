@@ -2,30 +2,27 @@
 
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.14.0"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
     from kiara.api import KiaraAPI
-    from kiara.interfaces.cli import terminal_print
     import marimo as mo
-    import rustworkx as rx
-    from rustworkx.visualization import graphviz_draw, mpl_draw
-    import matplotlib.pyplot as plt
-    from kiara_plugin.network_analysis.utils.notebooks.marimo import prepare_mpl_graph, prepare_altair_graph, prepare_plotly_graph
-    from kiara_plugin.network_analysis.defaults import LABEL_COLUMN_NAME
+    from kiara_plugin.network_analysis import guess_node_id_column_name, guess_node_label_column_name, guess_source_column_name, guess_target_column_name, NetworkData, prepare_altair_graph
 
 
     kiara = KiaraAPI.instance()
     kiara.set_active_context("network_analysis", create=True)
     return (
+        guess_node_id_column_name,
+        guess_node_label_column_name,
+        guess_source_column_name,
+        guess_target_column_name,
         kiara,
         mo,
         prepare_altair_graph,
-        prepare_mpl_graph,
-        prepare_plotly_graph,
     )
 
 
@@ -56,66 +53,122 @@ def _(kiara):
 
 
 @app.cell
-def _(create_table, edges_file, nodes_file):
-    nodes_table = create_table(file=nodes_file)
-    if nodes_table is not None:
-        print("Nodes table set!")
-    else:
-        print("Nodes table not set!")
-
-
+def _(create_table, edges_file):
     edges_table = create_table(file=edges_file)
-    if edges_table is not None:
-        print("Edges table set!")
-    else:
-        print("Edges table not set!")
-    return edges_table, nodes_table
+    return (edges_table,)
 
 
 @app.cell
-def _(edges_table, kiara, nodes_table):
+def _(edges_table, guess_source_column_name, guess_target_column_name, mo):
     if edges_table is not None:
+        pre_selected_source = guess_source_column_name(edges_table)
+        options_source = edges_table.data.column_names
+        text_source = "Select the column containing the edge sources"
+
+        pre_selected_target = guess_target_column_name(edges_table)
+        options_target = edges_table.data.column_names
+        text_target = "Select the column containing the edge targets"
+    else:
+        pre_selected_source = None
+        options_source = []
+        text_source = "No edges imported yet"
+        pre_selected_target = None
+        options_target = []
+        text_target = "No edges imported yet"
+
+    source_column_name_dropdown = mo.ui.dropdown(options=options_source, value=pre_selected_source)
+    target_column_name_dropdown = mo.ui.dropdown(options=options_target, value=pre_selected_target)
+
+    edge_input = mo.vstack([mo.md(text_source), source_column_name_dropdown, mo.md(text_target), target_column_name_dropdown])
+    return edge_input, source_column_name_dropdown, target_column_name_dropdown
+
+
+@app.cell
+def _(create_table, nodes_file):
+    nodes_table = create_table(file=nodes_file)
+    return (nodes_table,)
+
+
+@app.cell
+def _(
+    guess_node_id_column_name,
+    guess_node_label_column_name,
+    mo,
+    nodes_table,
+):
+    if nodes_table is not None:
+        pre_selected_id = guess_node_id_column_name(nodes_table)
+        options_id = nodes_table.data.column_names
+        text_id = "Select the column containing the node ids"
+
+        pre_selected_label = guess_node_label_column_name(nodes_table)
+        options_label = nodes_table.data.column_names
+        text_label = "Select the column containing the node labels"
+    else:
+        pre_selected_id = None
+        options_id = []
+        text_id = "No nodes imported yet"
+
+        pre_selected_label = None
+        options_label = []
+        text_label = "No nodes imported yet"
+
+    node_id_column_name_dropdown = mo.ui.dropdown(options=options_id, value=pre_selected_id)
+    node_label_column_name_dropdown = mo.ui.dropdown(options=options_label, value=pre_selected_label)
+
+    node_input = mo.vstack([mo.md(text_id), node_id_column_name_dropdown, mo.md(text_label), node_label_column_name_dropdown])
+    return (
+        node_id_column_name_dropdown,
+        node_input,
+        node_label_column_name_dropdown,
+    )
+
+
+@app.cell
+def _(edge_input, mo, node_input):
+    mo.hstack([edge_input, node_input])
+    return
+
+
+@app.cell
+def _(
+    edges_table,
+    kiara,
+    node_id_column_name_dropdown,
+    node_label_column_name_dropdown,
+    nodes_table,
+    source_column_name_dropdown,
+    target_column_name_dropdown,
+):
+    if edges_table is not None:
+        node_id_column = node_id_column_name_dropdown.value
+        node_label_column = node_label_column_name_dropdown.value
+        source_column = source_column_name_dropdown.value
+        target_column = target_column_name_dropdown.value
         assemble_inputs = {
             "edges": edges_table,
-            "nodes": nodes_table
+            "nodes": nodes_table,
+            "id_column": node_id_column,
+            "label_column": node_label_column,
+            "source_column": source_column,
+            "target_column": target_column
         }
-        kiara_network_data = kiara.run_job("assemble.network_data", inputs=assemble_inputs)["network_data"]
+        assemble_job_result = kiara.run_job("assemble.network_data", inputs=assemble_inputs)
+        kiara_network_data = assemble_job_result["network_data"]
     else:
         kiara_network_data = None
     return (kiara_network_data,)
 
 
 @app.cell
-def _(kiara_network_data, prepare_mpl_graph):
-    chart_mpl = prepare_mpl_graph(kiara_network_data)
-    chart_mpl
-    return
-
-
-@app.cell
-def _(kiara_network_data, prepare_plotly_graph):
-    fig = prepare_plotly_graph(kiara_network_data)
-    fig
-    return
-
-
-@app.cell
-def _(kiara_network_data, prepare_altair_graph):
-    chart = prepare_altair_graph(kiara_network_data)
-
-    chart
-    return
-
-
-@app.cell
-def _(kiara_network_data):
-    kiara_network_data.data.nodes_table
-    return
-
-
-@app.cell
-def _(kiara_network_data):
-    kiara_network_data.data.nodes.arrow_table
+def _(kiara_network_data, mo, prepare_altair_graph):
+    if kiara_network_data is not None:
+        chart = prepare_altair_graph(kiara_network_data)
+        tabs = {"Graph": chart, "Edges": kiara_network_data.data.edges.arrow_table, "Nodes": kiara_network_data.data.nodes.arrow_table}
+    else:
+        msg = mo.md("No graph created (yet).")
+        tabs = {"Graph": msg, "Edges": msg, "Nodes": msg}
+    mo.ui.tabs(tabs)
     return
 
 

@@ -11,6 +11,26 @@ from kiara.utils.class_loading import (
     find_kiara_modules_under,
     find_pipeline_base_path_for_module,
 )
+from kiara_plugin.network_analysis.data_types import NetworkDataType
+from kiara_plugin.network_analysis.models import NetworkData
+from kiara_plugin.network_analysis.utils import (
+    guess_node_id_column_name,
+    guess_node_label_column_name,
+    guess_source_column_name,
+    guess_target_column_name,
+)
+from kiara_plugin.network_analysis.utils.notebooks.marimo import prepare_altair_graph
+
+__all__ = [
+    "get_version",
+    "guess_node_id_column_name",
+    "guess_node_label_column_name",
+    "guess_source_column_name",
+    "guess_target_column_name",
+    "NetworkData",
+    "NetworkDataType",
+    "prepare_altair_graph",
+]
 
 __author__ = """Markus Binsteiner"""
 __email__ = "markus@frkl.dev"

@@ -27,11 +27,15 @@ from kiara_plugin.network_analysis.defaults import (
     EDGE_ID_COLUMN_NAME,
     IN_DIRECTED_COLUMN_NAME,
     IN_DIRECTED_MULTI_COLUMN_NAME,
+    LABEL_ALIAS_NAMES,
     LABEL_COLUMN_NAME,
+    NODE_ID_ALIAS_NAMES,
     NODE_ID_COLUMN_NAME,
     OUT_DIRECTED_COLUMN_NAME,
     OUT_DIRECTED_MULTI_COLUMN_NAME,
+    SOURCE_COLUMN_ALIAS_NAMES,
     SOURCE_COLUMN_NAME,
+    TARGET_COLUMN_ALIAS_NAMES,
     TARGET_COLUMN_NAME,
     UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME,
     UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
@@ -45,6 +49,7 @@ if TYPE_CHECKING:
 
     from kiara.models.values.value import Value
     from kiara_plugin.network_analysis.models import NetworkData
+    from kiara_plugin.tabular.models import KiaraTable
 
 
 def extract_networkx_nodes_as_table(
@@ -389,3 +394,69 @@ def extract_network_data(network_data: Union["Value", "NetworkData"]) -> "Networ
         assert network_data.data_type_name == "network_data"
         network_data = network_data.data
     return network_data
+
+
+def guess_column_name(
+    table: Union["pa.Table", "KiaraTable", "Value"], suggestions: List[str]
+) -> Union[str, None]:
+    column_names: Union[List[str], None] = None
+
+    if hasattr(table, "column_names"):
+        column_names = table.column_names
+    else:
+        from kiara.models.values.value import Value
+
+        if isinstance(table, Value):
+            table_instance = table.data
+            if hasattr(table_instance, "column_names"):
+                column_names = table_instance.column_names
+
+    if not column_names:
+        return None
+
+    for suggestion in suggestions:
+        if suggestion in column_names:
+            return suggestion
+
+    for suggestion in suggestions:
+        for column_name in column_names:
+            if suggestion.lower() == column_name.lower():
+                return column_name
+
+    return None
+
+
+def guess_node_id_column_name(
+    nodes_table: Union["pa.Table", "KiaraTable", "Value"],
+    suggestions: Union[None, List[str]] = None,
+) -> Union[str, None]:
+    if suggestions is None:
+        suggestions = NODE_ID_ALIAS_NAMES
+    return guess_column_name(table=nodes_table, suggestions=suggestions)
+
+
+def guess_node_label_column_name(
+    nodes_table: Union["pa.Table", "KiaraTable", "Value"],
+    suggestions: Union[None, List[str]] = None,
+) -> Union[str, None]:
+    if suggestions is None:
+        suggestions = LABEL_ALIAS_NAMES
+    return guess_column_name(table=nodes_table, suggestions=suggestions)
+
+
+def guess_source_column_name(
+    edges_table: Union["pa.Table", "KiaraTable", "Value"],
+    suggestions: Union[None, List[str]] = None,
+) -> Union[str, None]:
+    if suggestions is None:
+        suggestions = SOURCE_COLUMN_ALIAS_NAMES
+    return guess_column_name(table=edges_table, suggestions=suggestions)
+
+
+def guess_target_column_name(
+    edges_table: Union["pa.Table", "KiaraTable", "Value"],
+    suggestions: Union[None, List[str]] = None,
+) -> Union[str, None]:
+    if suggestions is None:
+        suggestions = TARGET_COLUMN_ALIAS_NAMES
+    return guess_column_name(table=edges_table, suggestions=suggestions)

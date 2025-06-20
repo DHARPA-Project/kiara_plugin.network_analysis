@@ -71,7 +71,7 @@ repository = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
 [project.optional-dependencies]
 marimo = [
     "altair>=5.5.0",
-    "marimo>=0.13.15",
+    "marimo>=0.14.0",
     "plotly>=6.1.2",
 ]
 

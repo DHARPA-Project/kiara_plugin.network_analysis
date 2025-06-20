@@ -26,6 +26,12 @@ from kiara_plugin.network_analysis.defaults import (
     TARGET_COLUMN_NAME,
 )
 from kiara_plugin.network_analysis.models import NetworkData
+from kiara_plugin.network_analysis.utils import (
+    guess_node_id_column_name,
+    guess_node_label_column_name,
+    guess_source_column_name,
+    guess_target_column_name,
+)
 from kiara_plugin.tabular.models.table import KiaraTable
 
 KIARA_METADATA = {
@@ -246,16 +252,16 @@ class AssembleGraphFromTablesModule(KiaraModule):
             if id_column_name is None:
                 # try to auto-detect the id column
                 column_names_to_test = self.get_config_value("node_id_column_aliases")
-                for col_name in nodes_column_names:
-                    if col_name.lower() in column_names_to_test:
-                        id_column_name = col_name
-                        break
+                id_column_name = guess_node_id_column_name(
+                    nodes_table=nodes_table, suggestions=column_names_to_test
+                )
 
-                job_log.add_log(f"auto-detected id column: {id_column_name}")
                 if id_column_name is None:
                     raise KiaraProcessingException(
                         f"Could not auto-determine id column name. Please specify one manually, using one of: {', '.join(nodes_column_names)}"
                     )
+                else:
+                    job_log.add_log(f"auto-detected id column: {id_column_name}")
 
             if id_column_name not in nodes_column_names:
                 raise KiaraProcessingException(
@@ -274,20 +280,22 @@ class AssembleGraphFromTablesModule(KiaraModule):
             # the label is optional, if not specified, we try to auto-detect it. If not possible, we will use the (stringified) id column as label.
             label_column_name = inputs.get_value_data("label_column")
             if label_column_name is None:
-                job_log.add_log("auto-detecting label column")
                 column_names_to_test = self.get_config_value("label_column_aliases")
-                for col_name in nodes_column_names:
-                    if col_name.lower() in column_names_to_test:
-                        label_column_name = col_name
-                        job_log.add_log(
-                            f"auto-detected label column: {label_column_name}"
-                        )
-                        break
-
-            if label_column_name and label_column_name not in nodes_column_names:
-                raise KiaraProcessingException(
-                    f"Could not find id column '{id_column_name}' in the nodes table. Please specify a valid column name manually, using one of: {', '.join(nodes_column_names)}"
+                label_column_name = guess_node_label_column_name(
+                    nodes_table=nodes_table, suggestions=column_names_to_test
                 )
+
+                if label_column_name and label_column_name not in nodes_column_names:
+                    raise KiaraProcessingException(
+                        f"Could not find id column '{id_column_name}' in the nodes table. Please specify a valid column name manually, using one of: {', '.join(nodes_column_names)}"
+                    )
+
+                if label_column_name is not None:
+                    job_log.add_log(f"auto-detected label column: {label_column_name}")
+                else:
+                    job_log.add_log(
+                        "no label column found, will use id column as label"
+                    )
 
             nodes_arrow_dataframe = nodes_table.to_polars_dataframe()
 
@@ -307,26 +315,24 @@ class AssembleGraphFromTablesModule(KiaraModule):
         edges_column_names = edges_arrow_dataframe.columns
 
         if edges_source_column_name is None:
-            job_log.add_log("auto-detecting source column")
             column_names_to_test = self.get_config_value("source_column_aliases")
-            for item in edges_column_names:
-                if item.lower() in column_names_to_test:
-                    edges_source_column_name = item
-                    job_log.add_log(
-                        f"auto-detected source column: {edges_source_column_name}"
-                    )
-                    break
+            edges_source_column_name = guess_source_column_name(
+                edges_table=edges_table, suggestions=column_names_to_test
+            )
+            if edges_target_column_name is not None:
+                job_log.add_log(
+                    f"auto-detected source column: {edges_source_column_name}"
+                )
 
         if edges_target_column_name is None:
-            job_log.add_log("auto-detecting target column")
             column_names_to_test = self.get_config_value("target_column_aliases")
-            for item in edges_column_names:
-                if item.lower() in column_names_to_test:
-                    edges_target_column_name = item
-                    job_log.add_log(
-                        f"auto-detected target column: {edges_target_column_name}"
-                    )
-                    break
+            edges_target_column_name = guess_target_column_name(
+                edges_table=edges_table, suggestions=column_names_to_test
+            )
+            if edges_target_column_name is not None:
+                job_log.add_log(
+                    f"auto-detected target column: {edges_target_column_name}"
+                )
 
         if not edges_source_column_name or not edges_target_column_name:
             if not edges_source_column_name and not edges_target_column_name:
