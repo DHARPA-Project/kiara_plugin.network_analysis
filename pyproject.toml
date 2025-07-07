@@ -64,6 +64,16 @@ network_analysis = "kiara_plugin.network_analysis:find_modules"
 [project.entry-points."kiara.pipelines"]
 network_analysis = "kiara_plugin.network_analysis:find_pipelines"
 
+[project.optional-dependencies]
+
+jupyter = [
+    "kiara[jupyter]"
+]
+
+marimo = [
+    "kiara[marimo]"
+]
+
 
 [project.urls]
 homepage = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
