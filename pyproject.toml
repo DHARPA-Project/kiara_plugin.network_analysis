@@ -81,6 +81,10 @@ jupyter = [
     "jupyter"
 ]
 
+[tool.uv.sources]
+kiara = { git = "https://github.com/DHARPA-Project/kiara.git", branch = "develop" }
+
+
 [tool.black]
 include = '\.pyi?$'
 exclude = '''
