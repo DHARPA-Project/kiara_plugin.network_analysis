@@ -208,13 +208,6 @@ def _(filtered_network_data, kiara_network_data, mo, prepare_altair_graph):
     return
 
 
-@app.cell
-def _(filtered_network_data):
-    from kiara_plugin.notebooks.widgets.value import ValueWidget
-    value_widget = ValueWidget(value=filtered_network_data)
-    value_widget
-    return
-
 
 if __name__ == "__main__":
     app.run()
