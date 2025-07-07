@@ -2,7 +2,7 @@
 
 import marimo
 
-__generated_with = "0.14.6"
+__generated_with = "0.14.10"
 app = marimo.App(width="medium")
 
 
@@ -42,10 +42,10 @@ def _(mo):
 
 @app.cell
 def _(kiara):
-    def create_table(file):
+    def create_table(file, table_type: str):
         if file.name():
-            kiara_file = kiara.run_job("create.file.from.bytes", inputs={"file_name": file.name(), "bytes": file.contents()})["file"]
-            kiara_table = kiara.run_job("create.table.from.file", inputs={"file": kiara_file})["table"]
+            kiara_file = kiara.run_job("create.file.from.bytes", inputs={"file_name": file.name(), "bytes": file.contents()}, comment=f"Import {table_type} data.")["file"]
+            kiara_table = kiara.run_job("create.table.from.file", inputs={"file": kiara_file}, comment=f"Create {table_type} table.")["table"]
         else:
             kiara_table = None
         return kiara_table
@@ -54,7 +54,7 @@ def _(kiara):
 
 @app.cell
 def _(create_table, edges_file):
-    edges_table = create_table(file=edges_file)
+    edges_table = create_table(file=edges_file, table_type="edges")
     return (edges_table,)
 
 
@@ -85,7 +85,7 @@ def _(edges_table, guess_source_column_name, guess_target_column_name, mo):
 
 @app.cell
 def _(create_table, nodes_file):
-    nodes_table = create_table(file=nodes_file)
+    nodes_table = create_table(file=nodes_file, table_type="nodes")
     return (nodes_table,)
 
 
@@ -153,7 +153,7 @@ def _(
             "source_column": source_column,
             "target_column": target_column
         }
-        assemble_job_result = kiara.run_job("assemble.network_data", inputs=assemble_inputs)
+        assemble_job_result = kiara.run_job("assemble.network_data", inputs=assemble_inputs, comment="Assemble network data.")
         kiara_network_data = assemble_job_result["network_data"]
     else:
         kiara_network_data = None
@@ -187,7 +187,7 @@ def _(filter_input_dropdown, kiara, kiara_network_data):
             "component_id": component_id_to_use
         }
         filtered_network_data = kiara.run_job(
-        "network_data_filter.select_component", inputs=filter_inputs
+        "network_data_filter.select_component", inputs=filter_inputs, comment=f"Filter component with id {component_id_to_use}."
     )["value"]
     else:
         print("NOT")
@@ -207,6 +207,10 @@ def _(filtered_network_data, kiara_network_data, mo, prepare_altair_graph):
     mo.ui.tabs(tabs)
     return
 
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":

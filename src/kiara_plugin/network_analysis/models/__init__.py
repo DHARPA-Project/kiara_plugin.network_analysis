@@ -981,7 +981,7 @@ class NetworkData(KiaraTables):
         SELECT DISTINCT {COMPONENT_ID_COLUMN_NAME} FROM nodes_table
         """
 
-        result: Set[int] = {(x[0] for x in duckdb.sql(query).fetchall())}  # type: ignore
+        result: Set[int] = set([x[0] for x in duckdb.sql(query).fetchall()])
         return result
 
 
