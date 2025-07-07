@@ -45,6 +45,8 @@ dev = [
     "kiara[dev_utils]",
     "pytest-cov>=4.1.0",
     "types-networkx",
+    "marimo>=0.14.0",
+
 ]
 
 [project.entry-points."kiara.plugin"]
