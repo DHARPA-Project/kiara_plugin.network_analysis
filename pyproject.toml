@@ -42,7 +42,7 @@ dynamic = ["version"]
 
 [dependency-groups]
 dev = [
-    "kiara[dev_utils]",
+    "kiara[dev_utils,marimo]",
     "pytest-cov>=4.1.0",
     "types-networkx",
     "marimo>=0.14.0",
@@ -72,7 +72,6 @@ jupyter = [
 
 marimo = [
     "kiara[marimo]",
-    "altair>=5.5.0,<6.0.0",
 ]
 
 
