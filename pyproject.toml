@@ -71,7 +71,8 @@ jupyter = [
 ]
 
 marimo = [
-    "kiara[marimo]"
+    "kiara[marimo]",
+    "altair>=5.5.0,<6.0.0",
 ]
 
 
