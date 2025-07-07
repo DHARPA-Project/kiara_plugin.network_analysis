@@ -80,17 +80,6 @@ homepage = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
 documentation = "https://DHARPA-Project.github.io/kiara_plugin.network_analysis"
 repository = "https://github.com/DHARPA-Project/kiara_plugin.network_analysis"
 
-[project.optional-dependencies]
-marimo = [
-    "altair>=5.5.0",
-    "marimo>=0.14.0",
-    "plotly>=6.1.2",
-]
-
-jupyter = [
-    "jupyter"
-]
-
 [tool.uv.sources]
 kiara = { git = "https://github.com/DHARPA-Project/kiara.git", branch = "develop" }
 
