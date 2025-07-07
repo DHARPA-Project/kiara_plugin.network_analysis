@@ -2,7 +2,7 @@
 
 import marimo
 
-__generated_with = "0.14.0"
+__generated_with = "0.14.6"
 app = marimo.App(width="medium")
 
 
@@ -161,14 +161,58 @@ def _(
 
 
 @app.cell
-def _(kiara_network_data, mo, prepare_altair_graph):
+def _(kiara_network_data, mo):
+    filter_component_switch = mo.ui.switch(label="Filter component", disabled=kiara_network_data is None)
+    filter_component_switch
+    return (filter_component_switch,)
+
+
+@app.cell
+def _(filter_component_switch, kiara_network_data, mo):
+    if filter_component_switch.value:
+        component_options = sorted(kiara_network_data.data.component_ids)
+        filter_input_dropdown = mo.ui.dropdown(options=component_options, value=0)
+    else:
+        filter_input_dropdown = None
+    filter_input_dropdown
+    return (filter_input_dropdown,)
+
+
+@app.cell
+def _(filter_input_dropdown, kiara, kiara_network_data):
+    if filter_input_dropdown is not None:
+        component_id_to_use = filter_input_dropdown.value
+        filter_inputs = {
+            "value": kiara_network_data,
+            "component_id": component_id_to_use
+        }
+        filtered_network_data = kiara.run_job(
+        "network_data_filter.select_component", inputs=filter_inputs
+    )["value"]
+    else:
+        print("NOT")
+        filtered_network_data = kiara_network_data
+
+    return (filtered_network_data,)
+
+
+@app.cell
+def _(filtered_network_data, kiara_network_data, mo, prepare_altair_graph):
     if kiara_network_data is not None:
-        chart = prepare_altair_graph(kiara_network_data)
-        tabs = {"Graph": chart, "Edges": kiara_network_data.data.edges.arrow_table, "Nodes": kiara_network_data.data.nodes.arrow_table}
+        chart = prepare_altair_graph(filtered_network_data)
+        tabs = {"Graph": chart, "Edges": filtered_network_data.data.edges.arrow_table, "Nodes": filtered_network_data.data.nodes.arrow_table}
     else:
         msg = mo.md("No graph created (yet).")
         tabs = {"Graph": msg, "Edges": msg, "Nodes": msg}
     mo.ui.tabs(tabs)
+    return
+
+
+@app.cell
+def _(filtered_network_data):
+    from kiara_plugin.notebooks.widgets.value import ValueWidget
+    value_widget = ValueWidget(value=filtered_network_data)
+    value_widget
     return
 
 

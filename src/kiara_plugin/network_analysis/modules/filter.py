@@ -42,18 +42,32 @@ class NetworkDataFiltersModule(FilterModule):
 
         nodes_table = network_data.nodes.arrow_table
 
-        nodes_table_columns = [NODE_ID_COLUMN_NAME, LABEL_COLUMN_NAME]
+        # Get non-computed node columns (excluding internal columns starting with '_')
+        nodes_table_columns = [LABEL_COLUMN_NAME]
         for column_name in nodes_table.column_names:
             if column_name.startswith("_"):
                 continue
             nodes_table_columns.append(column_name)
 
+        # Filter nodes by component and add a new sequential index
         nodes_query = f"""
-            SELECT {", ".join(nodes_table_columns)} FROM nodes_table WHERE {COMPONENT_ID_COLUMN_NAME} = {component_id}
+            SELECT
+                ROW_NUMBER() OVER (ORDER BY {NODE_ID_COLUMN_NAME}) - 1 AS {NODE_ID_COLUMN_NAME},
+                {NODE_ID_COLUMN_NAME} AS old_node_id,
+                {", ".join(nodes_table_columns)}  -- exclude NODE_ID_COLUMN_NAME since we're creating new_node_id
+            FROM nodes_table
+            WHERE {COMPONENT_ID_COLUMN_NAME} = {component_id}
+            ORDER BY {NODE_ID_COLUMN_NAME}
         """
         nodes_result = duckdb.sql(nodes_query)
-        dbg(nodes_result)
 
+        # Create a mapping table for old_node_id -> new_node_id
+        id_mapping_query = f"""
+            SELECT old_node_id, {NODE_ID_COLUMN_NAME} FROM nodes_result
+        """
+        id_mapping_result = duckdb.sql(id_mapping_query)  # noqa
+
+        # Get non-computed edge columns (excluding internal columns starting with '_')
         edges_table = network_data.edges.arrow_table
         edges_table_columns = [SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME]
         for column_name in edges_table.column_names:
@@ -61,12 +75,23 @@ class NetworkDataFiltersModule(FilterModule):
                 continue
             edges_table_columns.append(column_name)
 
+        # Filter edges by component and translate node IDs using the mapping
         edges_query = f"""
-            SELECT {", ".join(edges_table_columns)} FROM edges_table WHERE {COMPONENT_ID_COLUMN_NAME} = {component_id}
+            SELECT
+                src_map.{NODE_ID_COLUMN_NAME} AS {SOURCE_COLUMN_NAME},
+                e.{SOURCE_COLUMN_NAME} AS old_source_id,
+                tgt_map.{NODE_ID_COLUMN_NAME} AS {TARGET_COLUMN_NAME},
+                e.{TARGET_COLUMN_NAME} AS old_target_id
+                {", " + ", ".join(edges_table_columns[2:]) if len(edges_table_columns) > 2 else ""}
+            FROM edges_table e
+            JOIN id_mapping_result src_map ON e.{SOURCE_COLUMN_NAME} = src_map.old_node_id
+            JOIN id_mapping_result tgt_map ON e.{TARGET_COLUMN_NAME} = tgt_map.old_node_id
+            WHERE e.{COMPONENT_ID_COLUMN_NAME} = {component_id}
         """
         edges_result = duckdb.sql(edges_query)
+
         network_data_result = NetworkData.create_network_data(
             nodes_table=nodes_result.arrow(), edges_table=edges_result.arrow()
         )
-        dbg(network_data_result)
+
         return network_data_result

@@ -17,6 +17,7 @@ from typing import (
     List,
     Literal,
     Protocol,
+    Set,
     Type,
     TypeVar,
     Union,
@@ -970,6 +971,18 @@ class NetworkData(KiaraTables):
             graph.attrs = {"node_id_map": node_map}  # type: ignore
 
         return graph
+
+    @property
+    def component_ids(self) -> Set[int]:
+        import duckdb
+
+        nodes_table = self.nodes.arrow_table  # noqa
+        query = f"""
+        SELECT DISTINCT {COMPONENT_ID_COLUMN_NAME} FROM nodes_table
+        """
+
+        result: Set[int] = {(x[0] for x in duckdb.sql(query).fetchall())}  # type: ignore
+        return result
 
 
 class GraphProperties(BaseModel):

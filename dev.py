@@ -44,4 +44,5 @@ filtered_network_data = kiara.run_job(
     "network_data_filter.select_component", inputs=filter_inputs
 )["value"]
 
-dbg(filtered_network_data)
+dbg(filtered_network_data.data.nodes)
+dbg(filtered_network_data.data.edges)
