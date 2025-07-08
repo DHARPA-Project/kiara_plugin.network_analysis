@@ -59,7 +59,7 @@ uv run marimo edit docs/notebooks/marimo/getting_started.py
 
 Likewise, for the [jupyter](https://jupyter.org/) notebooks you can run them with:
 ```
-uv run jupyter lab run docs/notebooks/jupyter/getting_started.ipynb
+uv run jupyter lab docs/notebooks/jupyter/getting_started.ipynb
 ```
 
 ### Running pre-defined development-related tasks
