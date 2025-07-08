@@ -19,7 +19,6 @@ jobs:
       - name: install uv
         uses: astral-sh/setup-uv@v5
         with:
-          version: "0.5.9"
           use-cache: true
       - name: install Python
         run: uv python install ${{ matrix.python_version }}
