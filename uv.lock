@@ -1801,11 +1801,7 @@ marimo = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "kiara", extra = ["dev-utils", "marimo"] },
-    { name = "marimo" },
-    { name = "pytest-cov" },
-    { name = "types-networkx", version = "3.4.2.20250509", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "types-networkx", version = "3.5.0.20250701", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "kiara", extra = ["dev-utils", "jupyter", "marimo"] },
 ]
 
 [package.metadata]
@@ -1824,12 +1820,7 @@ requires-dist = [
 provides-extras = ["jupyter", "marimo"]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "kiara", extras = ["dev-utils", "marimo"] },
-    { name = "marimo", specifier = ">=0.14.0" },
-    { name = "pytest-cov", specifier = ">=4.1.0" },
-    { name = "types-networkx" },
-]
+dev = [{ name = "kiara", extras = ["dev-utils", "marimo", "jupyter"] }]
 
 [[package]]
 name = "kiara-plugin-tabular"
