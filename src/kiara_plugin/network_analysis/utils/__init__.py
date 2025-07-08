@@ -14,6 +14,7 @@ from typing import (
 )
 
 import duckdb
+from polars import DataFrame
 
 from kiara.exceptions import KiaraException
 from kiara_plugin.network_analysis.defaults import (
@@ -300,13 +301,13 @@ def augment_tables_with_component_ids(
     # create rustworkx graph
     graph = rx.PyGraph(multigraph=False)
 
-    nodes_df = pl.from_arrow(nodes_table)
+    nodes_df: DataFrame = pl.from_arrow(nodes_table)  # type: ignore
     for row in nodes_df.select(NODE_ID_COLUMN_NAME).rows(named=True):
         node_id = row[NODE_ID_COLUMN_NAME]
         graph_node_id = graph.add_node(node_id)
         assert node_id == graph_node_id
 
-    edges_df = pl.from_arrow(edges_table)
+    edges_df: DataFrame = pl.from_arrow(edges_table)  # type: ignore
     for row in edges_df.select(SOURCE_COLUMN_NAME, TARGET_COLUMN_NAME).rows(named=True):
         if row[SOURCE_COLUMN_NAME] == row[TARGET_COLUMN_NAME]:
             continue
@@ -393,7 +394,7 @@ def extract_network_data(network_data: Union["Value", "NetworkData"]) -> "Networ
     if isinstance(network_data, Value):
         assert network_data.data_type_name == "network_data"
         network_data = network_data.data
-    return network_data
+    return network_data  # type: ignore
 
 
 def guess_column_name(

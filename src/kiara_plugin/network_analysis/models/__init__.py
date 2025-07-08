@@ -1102,7 +1102,7 @@ class NetworkGraphProperties(ValueMetadata):
         """
         nodes_result = duckdb.query(components_query_nodes)
         nodes_data = nodes_result.fetchall()
-        nodes_data = {row[0]: row[1] for row in nodes_data}
+        nodes_data_dict = {row[0]: row[1] for row in nodes_data}
 
         components_query_edges = f"""
             SELECT
@@ -1113,11 +1113,11 @@ class NetworkGraphProperties(ValueMetadata):
         """
         edges_result = duckdb.query(components_query_edges)
         edges_data = edges_result.fetchall()
-        edges_data = {row[0]: row[1] for row in edges_data}
+        edges_data_dict = {row[0]: row[1] for row in edges_data}
 
         components_data = {}
-        for component_id, num_nodes in nodes_data.items():
-            num_edges = edges_data.get(component_id, 0)
+        for component_id, num_nodes in nodes_data_dict.items():
+            num_edges = edges_data_dict.get(component_id, 0)
             components_data[component_id] = ComponentProperties(
                 component_id=component_id,
                 number_of_nodes=num_nodes,
