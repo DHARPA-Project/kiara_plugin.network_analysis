@@ -19,7 +19,6 @@ from kiara_plugin.network_analysis.utils import (
     guess_source_column_name,
     guess_target_column_name,
 )
-from kiara_plugin.network_analysis.utils.notebooks.marimo import prepare_altair_graph
 
 __all__ = [
     "get_version",
@@ -29,7 +28,6 @@ __all__ = [
     "guess_target_column_name",
     "NetworkData",
     "NetworkDataType",
-    "prepare_altair_graph",
 ]
 
 __author__ = """Markus Binsteiner"""
