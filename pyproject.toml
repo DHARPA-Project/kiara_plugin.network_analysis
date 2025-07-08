@@ -42,11 +42,7 @@ dynamic = ["version"]
 
 [dependency-groups]
 dev = [
-    "kiara[dev_utils,marimo]",
-    "pytest-cov>=4.1.0",
-    "types-networkx",
-    "marimo>=0.14.0",
-
+    "kiara[dev_utils,marimo,jupyter]",
 ]
 
 [project.entry-points."kiara.plugin"]

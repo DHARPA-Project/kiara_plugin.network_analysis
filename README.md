@@ -49,6 +49,19 @@ source .venv/bin/activate
 kiara module list
 ```
 
+### Run one of the included notebooks
+
+For any of the [marimo](https://marimo.io/) under `docs/notebooks/marimo`, you can run them with:
+
+```
+uv run marimo edit docs/notebooks/marimo/getting_started.py
+```
+
+Likewise, for the [jupyter](https://jupyter.org/) notebooks you can run them with:
+```
+uv run jupyter lab run docs/notebooks/jupyter/getting_started.ipynb
+```
+
 ### Running pre-defined development-related tasks
 
 The included `Makefile` file includes some useful tasks that help with development. This requires `uv` and the `make` tool to be

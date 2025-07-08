@@ -10,7 +10,8 @@ app = marimo.App(width="medium")
 def _():
     from kiara.api import KiaraAPI
     import marimo as mo
-    from kiara_plugin.network_analysis import guess_node_id_column_name, guess_node_label_column_name, guess_source_column_name, guess_target_column_name, NetworkData, prepare_altair_graph
+    from kiara_plugin.network_analysis import guess_node_id_column_name, guess_node_label_column_name, guess_source_column_name, guess_target_column_name, NetworkData
+    from kiara_plugin.network_analysis.utils.notebooks.marimo import prepare_altair_graph
 
 
     kiara = KiaraAPI.instance()
