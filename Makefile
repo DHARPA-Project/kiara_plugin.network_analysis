@@ -26,18 +26,8 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 	rm -fr .mypy_cache
 
-init: clean ## initialize a development environment (to be run in virtualenv)
-	git init
-	git checkout -b develop || true
-	uv run pre-commit install
-	uv run pre-commit install --hook-type commit-msg
-	git add "*" ".*"
-	uv run pre-commit run --all-files || true
-	git add "*" ".*"
-	git commit -m 'chore: initial commit'
-
 mypy: ## run mypy
-	uv run mypy src/
+	uv run mypy --namespace-packages --explicit-package-base src/
 
 lint:
 	uv run ruff check --fix src/

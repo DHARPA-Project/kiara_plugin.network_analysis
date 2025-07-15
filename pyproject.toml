@@ -13,7 +13,7 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.9"
-keywords = ["kiara"]
+keywords = ["kiara", "kiara-plugin"]
 license = {text = "MPL-2.0"}
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -29,7 +29,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13"
 ]
 dependencies = [
-    "graphviz>=0.21",
     "kiara>=0.5.15,<0.6.0",
     "kiara_plugin.core_types>=0.5.2,<0.6.0",
     "kiara_plugin.tabular>=0.5.6,<0.6.0",
@@ -67,7 +66,7 @@ jupyter = [
 ]
 
 marimo = [
-    "kiara[marimo]",
+    "kiara[marimo]"
 ]
 
 
@@ -219,8 +218,7 @@ python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 mypy_path = "src"
-namespace_packages = true
-explicit_package_bases = true
+namespace_packages = false
 plugins = [
     "pydantic.mypy"
 ]

@@ -2,6 +2,7 @@ default_language_version:
     python: python3
 
 repos:
+
 # cleans out all jupyter notebook result cells for git commit
 - repo: https://github.com/srstevenson/nb-clean
   rev: 4.0.1
@@ -55,4 +56,4 @@ repos:
   - id: mixed-line-ending
     args: ['--fix=no']
   - id: no-commit-to-branch
-    args: [--branch, master]
+    args: [--branch, main]

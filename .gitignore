@@ -65,3 +65,6 @@ ci/conda/kiara_plugin.network_analysis/meta.yaml
 .pixi
 pixi.lock
 output/
+uv.lock
+.init.log
+.init.pid

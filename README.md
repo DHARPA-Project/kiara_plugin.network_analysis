@@ -11,7 +11,7 @@ Network-related data-types, modules and pipelines for kiara.
 
  - Documentation: [https://DHARPA-Project.github.io/kiara_plugin.network_analysis](https://DHARPA-Project.github.io/kiara_plugin.network_analysis)
  - Code: [https://github.com/DHARPA-Project/kiara_plugin.network_analysis](https://github.com/DHARPA-Project/kiara_plugin.network_analysis)
- - `kiara`: [https://dharpa.org/kiara.documentation](https://dharpa.org/kiara.documentation)
+ - `kiara`: [https://docs.dharpa.org](https://docs.dharpa.org)
 
 ## Description
 
@@ -25,10 +25,11 @@ TODO
 - git
 - make (on Linux / Mac OS X -- optional)
 
-### Check out the source code
+### Check out the source code & enter the project directory
 
 ```
 git clone https://github.com/DHARPA-Project/kiara_plugin.network_analysis
+cd kiara_plugin.network_analysis
 ```
 
 ### Prepare development environment
@@ -71,6 +72,13 @@ installed, which should be the case for Linux & Mac OS X systems.
 - `make mypy`: run mypy checks
 - `make lint`: run the `ruff` linter on the source code
 - `make format`: run the `ruff` formatter on the source code (similar to `black`)
+
+Alternatively, if you don't have the `make` command available, you can use `uv` directly to run those tasks:
+
+- `uv run pytest tests`
+- `uv run mypy src/`
+- `uv run ruff check --fix src/`
+- `uv run ruff format src/`
 
 ## Copyright & license
 
