@@ -29,7 +29,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13"
 ]
 dependencies = [
-    "kiara>=0.5.15,<0.6.0",
+    "kiara>=0.5.0,<0.6.0",
     "kiara_plugin.core_types>=0.5.2,<0.6.0",
     "kiara_plugin.tabular>=0.5.6,<0.6.0",
     "matplotlib>=3.9.0",
@@ -60,6 +60,9 @@ network_analysis = "kiara_plugin.network_analysis:find_modules"
 network_analysis = "kiara_plugin.network_analysis:find_pipelines"
 
 [project.optional-dependencies]
+dev_utils = [
+    "kiara[dev_utils,marimo,jupyter]",
+]
 
 jupyter = [
     "kiara[jupyter]"
@@ -244,20 +247,23 @@ channels = ["dharpa", "conda-forge"]
 platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
 
 [tool.pixi.dependencies]
-pip = ">=24.0,<25"
+pip = ">=25.0"
 
 [tool.pixi.pypi-dependencies]
-network_analysis = { path = ".", editable = true }
+"kiara_plugin.network_analysis" = { path = ".", editable = true }
+
+[tool.pixi.feature.dev_utils.dependencies]
+pygraphviz = ">=1.14"
+
+[tool.pixi.feature.dev_utils.pypi-dependencies]
+"kiara_plugin.network_analysis" = { path = ".", editable = true, extras = ["dev_utils"] }
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-#dev = { features = ["dev_utils"], solve-group = "default" }
+dev = { features = ["dev_utils"] }  # should be the same solve-group, but that doesn't seem to work with pixi currently
 
 [tool.pixi.tasks]
-pre-commit-check = "pre-commit run --all-files"
-tests = "py.test"
-mypy = "mypy  --namespace-packages --explicit-package-base src/kiara_plugin/network_analysis"
 kiara = "kiara"
+pre-commit-check = "pre-commit run --all-files"
 show-versions = "kiara --version"
 delete-context = "kiara context delete"
-install-dev-dependencies = "pip install --upgrade -e '.[dev_utils]'"

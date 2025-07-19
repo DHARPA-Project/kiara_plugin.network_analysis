@@ -1,0 +1,70 @@
+site_name: "kiara plugin: network_analysis"
+repo_url: https://github.com/DHARPA-Project/kiara_plugin.network_analysis
+site_author: Markus Binsteiner
+docs_dir: docs
+site_dir: build/site
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+- attr_list
+- admonition
+- codehilite:
+    guess_lang: false
+- toc:
+    permalink: true
+- pymdownx.snippets:
+    base_path: docs
+- pymdownx.highlight
+- pymdownx.superfences
+
+extra:
+  version:
+    provider: mike
+
+watch:
+  - src/
+plugins:
+- search
+- autorefs
+- mkdocstrings:
+    default_handler: python
+    handlers:
+      python:
+        path: [src]
+        options:
+          heading_level: 2
+          show_category_heading: true
+          members_order: source
+          show_submodules: false
+          docstring_style: google
+          show_if_no_docstring: true
+          show_signature_annotations: true
+          separate_signature: false
+          filters:
+            - "!^_"  # exlude all members starting with _
+            - "^_config_cls"
+        import:
+        - https://dharpa.org/kiara/latest/objects.inv
+    enable_inventory: true
+
+- macros:
+   modules:
+     - kiara.doc.mkdocs_macros_cli
+     - kiara.doc.mkdocs_macros_kiara
+
+- gen-files:
+    scripts:
+      - docs/.scripts/gen_api_doc_pages.py
+      - docs/.scripts/gen_info_pages.py
+
+- literate-nav:
+    nav_file: SUMMARY.md
+- section-index

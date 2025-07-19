@@ -44,7 +44,7 @@ cover/*
 MANIFEST
 
 # Per-project virtualenvs
-.venv*/
+.venv/
 pip-wheel-metadata/
 .python-version
 src/kiara_plugin/network_analysis/version.txt

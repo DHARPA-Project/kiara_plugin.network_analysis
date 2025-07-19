@@ -38,10 +38,13 @@ format:
 test: ## run tests quickly with the default Python
 	uv run pytest tests
 
-doc:
-	uv run pdoc kiara_plugin.network_analysis
+docs:
+	uv run mkdocs build
 
-check: ruff mypy test ## run dev-related checks
+docs-serve:
+	uv run mkdocs serve
+
+check: lint mypy test ## run dev-related checks
 
 pre-commit: ## run pre-commit on all files
 	uv run pre-commit run --all-files
