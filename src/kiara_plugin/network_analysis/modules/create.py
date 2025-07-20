@@ -452,7 +452,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
                         missing_nodes_data[col_name] = missing_node_ids
                     elif col_name != id_column_name:
                         # Create a series of None values with the same length as missing_node_ids
-                        missing_nodes_data[col_name] = [None] * len(missing_node_ids)
+                        missing_nodes_data[col_name] = [None] * len(missing_node_ids)  # type: ignore
 
                 # Create the new dataframe
                 missing_nodes_df = pl.DataFrame(missing_nodes_data)
