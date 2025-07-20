@@ -425,40 +425,68 @@ class AssembleGraphFromTablesModule(KiaraModule):
             id_column_old_str = id_column_old.cast(pl.Utf8)
             unique_node_ids_nodes_table = id_column_old_str.unique().sort()
 
-            if len(unique_node_ids_old) > len(unique_node_ids_nodes_table):
-                ~(unique_node_ids_old.is_in(unique_node_ids_nodes_table))
-                raise NotImplementedError("MISSING NODE IDS NOT IMPLEMENTED YET")
-            else:
-                new_node_ids = range(0, len(id_column_old_str))  # noqa: PIE808
-                node_id_map = dict(zip(id_column_old_str, new_node_ids))
-                # node_id_map = {
-                #     node_id: new_node_id
-                #     for node_id, new_node_id in
-                # }
-                new_idx_series = pl.Series(
-                    name=NODE_ID_COLUMN_NAME, values=new_node_ids
+            missing_node_ids = unique_node_ids_old.filter(
+                ~unique_node_ids_old.is_in(unique_node_ids_nodes_table)
+            )
+
+            # replace the id column with the stringified version
+            idx_column_old = nodes_arrow_dataframe.get_column_index(id_column_name)
+            nodes_arrow_dataframe = nodes_arrow_dataframe.replace_column(
+                idx_column_old, id_column_old_str
+            )
+
+            # Create a new dataframe with missing nodes
+            if len(missing_node_ids) > 0:
+                # Get the schema from the existing nodes dataframe
+                missing_nodes_data = {}
+
+                # cast the missing_node_ids to a list of strings
+                missing_node_ids = missing_node_ids.cast(pl.Utf8)
+
+                # Set the node ID column (before mapping) with the missing IDs
+                missing_nodes_data[id_column_name] = missing_node_ids
+
+                # Fill other columns with None values
+                for col_name in nodes_arrow_dataframe.columns:
+                    if col_name == label_column_name:
+                        missing_nodes_data[col_name] = missing_node_ids
+                    elif col_name != id_column_name:
+                        # Create a series of None values with the same length as missing_node_ids
+                        missing_nodes_data[col_name] = [None] * len(missing_node_ids)
+
+                # Create the new dataframe
+                missing_nodes_df = pl.DataFrame(missing_nodes_data)
+
+                # Concatenate with the existing nodes dataframe
+                nodes_arrow_dataframe = pl.concat(
+                    [nodes_arrow_dataframe, missing_nodes_df]
                 )
-                nodes_arrow_dataframe.insert_column(0, new_idx_series)
+                id_column_old_str = nodes_arrow_dataframe.get_column(id_column_name)
 
-                if not label_column_name:
-                    label_column_name = NODE_ID_COLUMN_NAME
+            new_node_ids = range(0, len(id_column_old_str))  # noqa: PIE808
+            node_id_map = dict(zip(id_column_old_str, new_node_ids))
 
-                # we create a copy of the label column, and stringify its items
+            new_idx_series = pl.Series(name=NODE_ID_COLUMN_NAME, values=new_node_ids)
 
-                label_column = nodes_arrow_dataframe.get_column(
-                    label_column_name
-                ).rename(LABEL_COLUMN_NAME)
-                if label_column.dtype != pl.Utf8:
-                    label_column = label_column.cast(pl.Utf8)
+            nodes_arrow_dataframe.insert_column(0, new_idx_series)
 
-                if label_column.null_count() != 0:
-                    raise KiaraProcessingException(
-                        f"Label column '{label_column_name}' contains null values. This is not allowed."
-                    )
+            if not label_column_name:
+                label_column_name = NODE_ID_COLUMN_NAME
 
-                nodes_arrow_dataframe = nodes_arrow_dataframe.insert_column(
-                    1, label_column
+            # we create a copy of the label column, and stringify its items
+
+            label_column = nodes_arrow_dataframe.get_column(label_column_name).rename(
+                LABEL_COLUMN_NAME
+            )
+            if label_column.dtype != pl.Utf8:
+                label_column = label_column.cast(pl.Utf8)
+
+            if label_column.null_count() != 0:
+                raise KiaraProcessingException(
+                    f"Label column '{label_column_name}' contains null values. This is not allowed."
                 )
+
+            nodes_arrow_dataframe = nodes_arrow_dataframe.insert_column(1, label_column)
 
         # TODO: deal with different types if node ids are strings or integers
         try:
