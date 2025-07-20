@@ -37,7 +37,7 @@ from kiara_plugin.tabular.models.table import KiaraTable
 KIARA_METADATA = {
     "authors": [
         {"name": "Lena Jaskov", "email": "helena.jaskov@uni.lu"},
-        {"name": "Markus Binsteiner", "email": "markus@frkl.io"},
+        {"name": "Markus Binsteiner", "email": "markus@frkl.dev"},
     ],
     "description": "Modules to create/export network data.",
 }
