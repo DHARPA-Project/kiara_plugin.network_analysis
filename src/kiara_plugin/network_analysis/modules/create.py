@@ -393,10 +393,13 @@ class AssembleGraphFromTablesModule(KiaraModule):
         source_column_old = edges_arrow_dataframe.get_column(edges_source_column_name)
         target_column_old = edges_arrow_dataframe.get_column(edges_target_column_name)
 
+        source_column_old_str = source_column_old.cast(pl.Utf8)
+        target_column_old_str = target_column_old.cast(pl.Utf8)
+
         job_log.add_log("generating node id map and nodes table")
         # fill out the node id map
         unique_node_ids_old = (
-            pl.concat([source_column_old, target_column_old], rechunk=False)
+            pl.concat([source_column_old_str, target_column_old_str], rechunk=False)
             .unique()
             .sort()
         )
@@ -412,21 +415,22 @@ class AssembleGraphFromTablesModule(KiaraModule):
             nodes_arrow_dataframe = pl.DataFrame(
                 {
                     NODE_ID_COLUMN_NAME: new_node_ids,
-                    LABEL_COLUMN_NAME: (str(x) for x in unique_node_ids_old),
+                    LABEL_COLUMN_NAME: unique_node_ids_old,
                     "id": unique_node_ids_old,
                 }
             )
 
         else:
             id_column_old = nodes_arrow_dataframe.get_column(id_column_name)
-            unique_node_ids_nodes_table = id_column_old.unique().sort()
+            id_column_old_str = id_column_old.cast(pl.Utf8)
+            unique_node_ids_nodes_table = id_column_old_str.unique().sort()
 
             if len(unique_node_ids_old) > len(unique_node_ids_nodes_table):
                 ~(unique_node_ids_old.is_in(unique_node_ids_nodes_table))
                 raise NotImplementedError("MISSING NODE IDS NOT IMPLEMENTED YET")
             else:
-                new_node_ids = range(0, len(id_column_old))  # noqa: PIE808
-                node_id_map = dict(zip(id_column_old, new_node_ids))
+                new_node_ids = range(0, len(id_column_old_str))  # noqa: PIE808
+                node_id_map = dict(zip(id_column_old_str, new_node_ids))
                 # node_id_map = {
                 #     node_id: new_node_id
                 #     for node_id, new_node_id in
@@ -458,7 +462,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
 
         # TODO: deal with different types if node ids are strings or integers
         try:
-            source_column_mapped = source_column_old.replace_strict(
+            source_column_mapped = source_column_old_str.replace_strict(
                 node_id_map, default=None
             ).rename(SOURCE_COLUMN_NAME)
         except Exception:
@@ -472,7 +476,7 @@ class AssembleGraphFromTablesModule(KiaraModule):
             )
 
         try:
-            target_column_mapped = target_column_old.replace_strict(
+            target_column_mapped = target_column_old_str.replace_strict(
                 node_id_map, default=None
             ).rename(TARGET_COLUMN_NAME)
         except Exception:
