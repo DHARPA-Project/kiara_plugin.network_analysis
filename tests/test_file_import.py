@@ -50,3 +50,45 @@ def test_wikipedia_data(kiara_api: KiaraAPI):
     nd_value = result_network["network_data"]
     assert nd_value.data.num_nodes == 1402
     assert nd_value.data.num_edges == 1315
+
+
+def test_quakers_data(kiara_api: KiaraAPI):
+    edges_csv = DATA_DIR / "quakers" / "quakers_edgelist.csv"
+
+    job_desc = {
+        "operation": "create.table.from.file",
+        "inputs": {
+            "file": edges_csv.as_posix(),
+            "first_row_is_header": True,
+        },
+        "comment": "Import wikipedia sample edges csv.",
+    }
+
+    edges_table = kiara_api.run_job(**job_desc)["table"]
+
+    nodes_csv = DATA_DIR / "quakers" / "quakers_nodelist.csv"
+    job_desc = {
+        "operation": "create.table.from.file",
+        "inputs": {
+            "file": nodes_csv.as_posix(),
+        },
+        "comment": "Import wikipedia sample nodes csv.",
+    }
+
+    nodes_table = kiara_api.run_job(**job_desc)["table"]
+
+    result_network = kiara_api.run_job(
+        operation="assemble.network_data",
+        inputs={
+            "edges": edges_table,
+            "nodes": nodes_table,
+            "source_column": "Source",
+            "target_column": "Target",
+            "id_column": "Name",
+        },
+        comment="Create network data from wikipedia sample.",
+    )
+
+    nd_value = result_network["network_data"]
+    assert nd_value.data.num_nodes == 119
+    assert nd_value.data.num_edges == 174

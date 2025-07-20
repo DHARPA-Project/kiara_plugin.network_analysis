@@ -47,7 +47,7 @@ class NetworkDataFiltersModule(FilterModule):
         for column_name in nodes_table.column_names:
             if column_name.startswith("_"):
                 continue
-            nodes_table_columns.append(column_name)
+            nodes_table_columns.append(f'"{column_name}"')
 
         # Filter nodes by component and add a new sequential index
         nodes_query = f"""
@@ -73,7 +73,7 @@ class NetworkDataFiltersModule(FilterModule):
         for column_name in edges_table.column_names:
             if column_name.startswith("_"):
                 continue
-            edges_table_columns.append(column_name)
+            edges_table_columns.append(f'"{column_name}"')
 
         # Filter edges by component and translate node IDs using the mapping
         edges_query = f"""

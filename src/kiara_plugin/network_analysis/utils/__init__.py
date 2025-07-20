@@ -185,7 +185,7 @@ def augment_nodes_table_with_connection_counts(
     except Exception:
         nodes_column_names = nodes_table.columns  # type: ignore
 
-    node_attr_columns = [x for x in nodes_column_names if not x.startswith("_")]
+    node_attr_columns = [f'"{x}"' for x in nodes_column_names if not x.startswith("_")]
     if node_attr_columns:
         other_columns = ", " + ", ".join(node_attr_columns)
     else:
@@ -221,7 +221,6 @@ def augment_nodes_table_with_connection_counts(
            on n.{NODE_ID_COLUMN_NAME} = e4.{SOURCE_COLUMN_NAME}
         ORDER BY {NODE_ID_COLUMN_NAME}
     """
-
     nodes_table_result = duckdb.sql(query)  # noqa
 
     centrality_query = f"""
@@ -258,7 +257,7 @@ def augment_edges_table_with_id_and_weights(
     except Exception:
         column_names = edges_table.columns  # type: ignore
 
-    edge_attr_columns = [x for x in column_names if not x.startswith("_")]
+    edge_attr_columns = [f'"{x}"' for x in column_names if not x.startswith("_")]
     if edge_attr_columns:
         other_columns = ", " + ", ".join(edge_attr_columns)
     else:
