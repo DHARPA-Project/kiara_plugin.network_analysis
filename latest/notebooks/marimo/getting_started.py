@@ -1,15 +1,4 @@
 # -*- coding: utf-8 -*-
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "altair==5.5.0",
-#     "kiara==0.5.22",
-#     "kiara_plugin.network_analysis==0.5.2",
-#     "marimo",
-# ]
-# ///
-
-# -*- coding: utf-8 -*-
 
 import marimo
 
