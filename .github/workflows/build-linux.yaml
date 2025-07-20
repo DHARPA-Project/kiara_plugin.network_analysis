@@ -140,7 +140,7 @@ jobs:
           fetch-depth: 0
       - name: Pull latest gh-pages branch
         run: |
-          git fetch origin gh-pages
+          git fetch origin gh-pages --depth=1
       - name: install uv
         uses: astral-sh/setup-uv@v6
         with:
