@@ -9,6 +9,7 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     from kiara.api import KiaraAPI
+    from typing import Union
     import marimo as mo
     from kiara_plugin.network_analysis import guess_node_id_column_name, guess_node_label_column_name, guess_source_column_name, guess_target_column_name, NetworkData
     from kiara_plugin.network_analysis.utils.notebooks.marimo import prepare_altair_graph
@@ -17,6 +18,7 @@ def _():
     kiara = KiaraAPI.instance()
     kiara.set_active_context("network_analysis", create=True)
     return (
+        Union,
         guess_node_id_column_name,
         guess_node_label_column_name,
         guess_source_column_name,
@@ -36,17 +38,31 @@ def _(mo):
 
 @app.cell
 def _(mo):
+    edges_file_first_row_is_header_checkbox = mo.ui.checkbox(label="First row is header")
+    edges_file_first_row_is_header_checkbox
+    return (edges_file_first_row_is_header_checkbox,)
+
+
+@app.cell
+def _(mo):
     nodes_file = mo.ui.file(label="Nodes file")
     nodes_file
     return (nodes_file,)
 
 
 @app.cell
-def _(kiara):
-    def create_table(file, table_type: str):
+def _(mo):
+    nodes_file_first_row_is_header_checkbox = mo.ui.checkbox(label="First row is header")
+    nodes_file_first_row_is_header_checkbox
+    return (nodes_file_first_row_is_header_checkbox,)
+
+
+@app.cell
+def _(Union, kiara):
+    def create_table(file, table_type: str, first_row_is_header: Union[bool, None]=None):
         if file.name():
             kiara_file = kiara.run_job("create.file.from.bytes", inputs={"file_name": file.name(), "bytes": file.contents()}, comment=f"Import {table_type} data.")["file"]
-            kiara_table = kiara.run_job("create.table.from.file", inputs={"file": kiara_file}, comment=f"Create {table_type} table.")["table"]
+            kiara_table = kiara.run_job("create.table.from.file", inputs={"file": kiara_file, "first_row_is_header": first_row_is_header}, comment=f"Create {table_type} table.")["table"]
         else:
             kiara_table = None
         return kiara_table
@@ -54,8 +70,8 @@ def _(kiara):
 
 
 @app.cell
-def _(create_table, edges_file):
-    edges_table = create_table(file=edges_file, table_type="edges")
+def _(create_table, edges_file, edges_file_first_row_is_header_checkbox):
+    edges_table = create_table(file=edges_file, table_type="edges", first_row_is_header=edges_file_first_row_is_header_checkbox.value)
     return (edges_table,)
 
 
@@ -85,8 +101,8 @@ def _(edges_table, guess_source_column_name, guess_target_column_name, mo):
 
 
 @app.cell
-def _(create_table, nodes_file):
-    nodes_table = create_table(file=nodes_file, table_type="nodes")
+def _(create_table, nodes_file, nodes_file_first_row_is_header_checkbox):
+    nodes_table = create_table(file=nodes_file, table_type="nodes", first_row_is_header=nodes_file_first_row_is_header_checkbox.value)
     return (nodes_table,)
 
 

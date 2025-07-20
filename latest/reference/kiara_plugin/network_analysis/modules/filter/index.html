@@ -1374,7 +1374,7 @@
         <span class="k">for</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">nodes_table</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">column_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
                 <span class="k">continue</span>
-            <span class="n">nodes_table_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+            <span class="n">nodes_table_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
         <span class="c1"># Filter nodes by component and add a new sequential index</span>
         <span class="n">nodes_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
@@ -1400,7 +1400,7 @@
         <span class="k">for</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">edges_table</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">column_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
                 <span class="k">continue</span>
-            <span class="n">edges_table_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+            <span class="n">edges_table_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
         <span class="c1"># Filter edges by component and translate node IDs using the mapping</span>
         <span class="n">edges_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
@@ -1596,7 +1596,7 @@
     <span class="k">for</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">nodes_table</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">column_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
             <span class="k">continue</span>
-        <span class="n">nodes_table_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+        <span class="n">nodes_table_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
     <span class="c1"># Filter nodes by component and add a new sequential index</span>
     <span class="n">nodes_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
@@ -1622,7 +1622,7 @@
     <span class="k">for</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">edges_table</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">column_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
             <span class="k">continue</span>
-        <span class="n">edges_table_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+        <span class="n">edges_table_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
     <span class="c1"># Filter edges by component and translate node IDs using the mapping</span>
     <span class="n">edges_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
