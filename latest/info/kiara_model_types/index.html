@@ -1,0 +1,2285 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Markus Binsteiner">
+      
+      
+      
+        <link rel="prev" href="../module_types/">
+      
+      
+        <link rel="next" href="../operations/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+    
+    
+      
+        <title>kiara_model_types - kiara plugin: network_analysis</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#kiara_info.kiara_model_types.network_graph_properties" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="kiara plugin: network_analysis" class="md-header__button md-logo" aria-label="kiara plugin: network_analysis" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            kiara plugin: network_analysis
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              kiara_model_types
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/DHARPA-Project/kiara_plugin.network_analysis" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="kiara plugin: network_analysis" class="md-nav__button md-logo" aria-label="kiara plugin: network_analysis" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    kiara plugin: network_analysis
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/DHARPA-Project/kiara_plugin.network_analysis" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Package contents
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Package contents
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    data_types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../module_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    module_types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    kiara_model_types
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    kiara_model_types
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kiara_info.kiara_model_types.network_graph_properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      network_graph_properties
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kiara_info.kiara_model_types.instance.network_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      instance.network_data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kiara_info.kiara_model_types.metadata.network_node_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      metadata.network_node_attribute
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kiara_info.kiara_model_types.metadata.network_edge_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      metadata.network_edge_attribute
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    operations
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    API reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            API reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    kiara_plugin
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            kiara_plugin
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/kiara_plugin/network_analysis/__init__/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    network_analysis
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_1" id="__nav_4_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            network_analysis
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kiara_plugin/network_analysis/data_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    data_types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kiara_plugin/network_analysis/defaults/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    defaults
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/kiara_plugin/network_analysis/models/__init__/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    models
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_1_3" id="__nav_4_1_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_1_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            models
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kiara_plugin/network_analysis/models/metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    metadata
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_1_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/kiara_plugin/network_analysis/modules/__init__/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    modules
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_1_4" id="__nav_4_1_1_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_1_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            modules
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kiara_plugin/network_analysis/modules/create/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    create
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kiara_plugin/network_analysis/modules/filter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    filter
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kiara_plugin/network_analysis/pipelines/__init__/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    pipelines
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_1_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/kiara_plugin/network_analysis/utils/__init__/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    utils
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_1_6" id="__nav_4_1_1_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_1_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            utils
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_1_6_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/kiara_plugin/network_analysis/utils/notebooks/__init__/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    notebooks
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_1_1_6_1" id="__nav_4_1_1_6_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_4_1_1_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_1_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            notebooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kiara_plugin/network_analysis/utils/notebooks/jupyter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    jupyter
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/kiara_plugin/network_analysis/utils/notebooks/marimo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    marimo
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kiara_info.kiara_model_types.network_graph_properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      network_graph_properties
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kiara_info.kiara_model_types.instance.network_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      instance.network_data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kiara_info.kiara_model_types.metadata.network_node_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      metadata.network_node_attribute
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kiara_info.kiara_model_types.metadata.network_edge_attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      metadata.network_edge_attribute
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>kiara_model_types</h1>
+
+<h3 id="kiara_info.kiara_model_types.network_graph_properties"><code>network_graph_properties</code><a class="headerlink" href="#kiara_info.kiara_model_types.network_graph_properties" title="Permanent link">&para;</a></h3>
+<table>
+  <tr>
+    <td>type_name</td>
+    <td>network_graph_properties</td>
+    <td>The registered name for this item type.</td>
+  </tr>
+  <tr>
+    <td>documentation</td>
+    <td><p>Network data stats.</p>
+</td>
+    <td>Documentation for the item.</td>
+  </tr>
+  <tr>
+    <td>authors</td>
+    <td><ul>
+
+    <li>Markus Binsteiner ( <a href="mailto:markus@frkl.dev">markus@frkl.dev</a> )</li>
+
+</ul></td>
+    <td>Information about authorship for the item.</td>
+  </tr>
+  <tr>
+    <td>context</td>
+    <td><table xmlns="http://www.w3.org/1999/html">
+    <tbody>
+    <tr>
+    <td>tags</td>
+    <td>network_analysis</td>
+    </tr>
+    <tr>
+        <td>labels</td>
+        <td>
+            <ul>
+        
+        <li>package: kiara_plugin.network_analysis</li>
+        
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>references</td>
+        <td>
+        <ul>
+            
+            <li><a href="https://github.com/DHARPA-Project/kiara_plugin.network_analysis">source_repo</a>: The module package git repository.</li>
+            
+            <li><a href="https://DHARPA-Project.github.io/kiara_plugin.network_analysis/">documentation</a>: The url for the module package documentation.</li>
+            
+        </ul>
+        </td>
+    </tr>
+    </tbody>
+</table></td>
+    <td>Generic properties of this item (description, tags, labels, references, ...).</td>
+  </tr>
+  <tr>
+    <td>python_class</td>
+    <td><table>
+  <tr>
+    <td>python_class_name</td>
+    <td>NetworkGraphProperties</td>
+    <td>The name of the Python class.</td>
+  </tr>
+  <tr>
+    <td>python_module_name</td>
+    <td>kiara_plugin.network_analysis.models</td>
+    <td>The name of the Python module this class lives in.</td>
+  </tr>
+  <tr>
+    <td>full_name</td>
+    <td>kiara_plugin.network_analysis.models.NetworkGraphProperties</td>
+    <td>The full class namespace.</td>
+  </tr>
+</table></td>
+    <td>The python class that implements this module type.</td>
+  </tr>
+  <tr>
+    <td>metadata_schema</td>
+    <td><table>
+  <tr>
+    <td>$defs</td>
+    <td><table>
+  <tr>
+    <td>ComponentProperties</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td>Properties of a connected component.</td>
+  </tr>
+  <tr>
+    <td>properties</td>
+    <td><table>
+  <tr>
+    <td>component_id</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td>The id of the component.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Component Id</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>integer</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>number_of_nodes</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td>The number of nodes in the component.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Number Of Nodes</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>integer</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>number_of_associated_edge_rows</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td>The number of edge rows associated to the component.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Number Of Associated Edge Rows</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>integer</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>required</td>
+    <td><ul>
+  <li>
+    component_id
+  </li>
+  <li>
+    number_of_nodes
+  </li>
+  <li>
+    number_of_associated_edge_rows
+  </li>
+</ul></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>ComponentProperties</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>GraphProperties</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td>Properties of graph data, if interpreted as a specific graph type.</td>
+  </tr>
+  <tr>
+    <td>properties</td>
+    <td><table>
+  <tr>
+    <td>number_of_edges</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td>The number of edges.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Number Of Edges</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>integer</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>parallel_edges</td>
+    <td><table>
+  <tr>
+    <td>default</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>The number of parallel edges (if 'multi' graph type).</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Parallel Edges</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>integer</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>required</td>
+    <td><ul>
+  <li>
+    number_of_edges
+  </li>
+</ul></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>GraphProperties</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>additionalProperties</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Network data stats.</td>
+  </tr>
+  <tr>
+    <td>properties</td>
+    <td><table>
+  <tr>
+    <td>number_of_nodes</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td>Number of nodes in the network graph.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Number Of Nodes</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>integer</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>properties_by_graph_type</td>
+    <td><table>
+  <tr>
+    <td>additionalProperties</td>
+    <td><table>
+  <tr>
+    <td>$ref</td>
+    <td>#/$defs/GraphProperties</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Properties of the network data, by graph type.</td>
+  </tr>
+  <tr>
+    <td>propertyNames</td>
+    <td><table>
+  <tr>
+    <td>enum</td>
+    <td><ul>
+  <li>
+    directed
+  </li>
+  <li>
+    undirected
+  </li>
+  <li>
+    undirected_multi
+  </li>
+  <li>
+    directed_multi
+  </li>
+</ul></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Properties By Graph Type</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>number_of_self_loops</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td>Number of edges where source and target point to the same node.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Number Of Self Loops</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>integer</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>number_of_components</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td>Number of connected components in the network graph.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Number Of Components</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>integer</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>components</td>
+    <td><table>
+  <tr>
+    <td>additionalProperties</td>
+    <td><table>
+  <tr>
+    <td>$ref</td>
+    <td>#/$defs/ComponentProperties</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Properties of the components of the network graph.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Components</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>required</td>
+    <td><ul>
+  <li>
+    number_of_nodes
+  </li>
+  <li>
+    properties_by_graph_type
+  </li>
+  <li>
+    number_of_self_loops
+  </li>
+  <li>
+    number_of_components
+  </li>
+  <li>
+    components
+  </li>
+</ul></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>NetworkGraphProperties</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+    <td>The (json) schema for this model data.</td>
+  </tr>
+</table><h3 id="kiara_info.kiara_model_types.instance.network_data"><code>instance.network_data</code><a class="headerlink" href="#kiara_info.kiara_model_types.instance.network_data" title="Permanent link">&para;</a></h3>
+<table>
+  <tr>
+    <td>type_name</td>
+    <td>instance.network_data</td>
+    <td>The registered name for this item type.</td>
+  </tr>
+  <tr>
+    <td>documentation</td>
+    <td><p>A flexible, graph-type agnostic wrapper class for network datasets.</p>
+<p>This class provides a unified interface for working with network data that can represent
+any type of graph structure: directed, undirected, simple, or multi-graphs. The design
+philosophy emphasizes flexibility and performance while maintaining a clean, intuitive API.</p>
+<p><strong>Design Philosophy:</strong></p>
+<ul>
+<li><strong>Graph Type Agnostic</strong>: Supports all graph types (directed/undirected, simple/multi)
+within the same data structure without requiring type-specific conversions</li>
+<li><strong>Efficient Storage</strong>: Uses Apache Arrow tables for high-performance columnar storage</li>
+<li><strong>Flexible Querying</strong>: Provides SQL-based querying capabilities alongside programmatic access</li>
+<li><strong>Seamless Export</strong>: Easy conversion to NetworkX and RustWorkX graph objects, other representations possible in the future</li>
+<li><strong>Metadata Rich</strong>: Automatically computes and stores graph statistics and properties</li>
+</ul>
+<p><strong>Internal Structure:</strong>
+The network data is stored as two Arrow tables:</p>
+<ul>
+<li><strong>nodes table</strong>: Contains node information with required columns '_node_id' (int) and '_label' (str)</li>
+<li><strong>edges table</strong>: Contains edge information with required columns '_source' (int) and '_target' (int)</li>
+</ul>
+<p>Additional computed columns (prefixed with '_') provide graph statistics for different interpretations:</p>
+<ul>
+<li>Degree counts for directed/undirected graphs</li>
+<li>Multi-edge counts and indices</li>
+<li>Centrality measures</li>
+</ul>
+<p><strong>Graph Type Support:</strong></p>
+<ul>
+<li><strong>Simple Graphs</strong>: Single edges between node pairs</li>
+<li><strong>Multi-graphs</strong>: Multiple edges between the same node pairs</li>
+<li><strong>Directed Graphs</strong>: One-way edges with source → target semantics</li>
+<li><strong>Undirected Graphs</strong>: Bidirectional edges</li>
+<li><strong>Mixed Types</strong>: The same data can be interpreted as different graph types</li>
+</ul>
+<p><strong>Note:</strong> Column names prefixed with '_' have internal meaning and are automatically
+computed. Original attributes from source data are stored without the prefix.</p>
+</td>
+    <td>Documentation for the item.</td>
+  </tr>
+  <tr>
+    <td>authors</td>
+    <td><ul>
+
+    <li>Markus Binsteiner ( <a href="mailto:markus@frkl.dev">markus@frkl.dev</a> )</li>
+
+</ul></td>
+    <td>Information about authorship for the item.</td>
+  </tr>
+  <tr>
+    <td>context</td>
+    <td><table xmlns="http://www.w3.org/1999/html">
+    <tbody>
+    <tr>
+    <td>tags</td>
+    <td>network_analysis</td>
+    </tr>
+    <tr>
+        <td>labels</td>
+        <td>
+            <ul>
+        
+        <li>package: kiara_plugin.network_analysis</li>
+        
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>references</td>
+        <td>
+        <ul>
+            
+            <li><a href="https://github.com/DHARPA-Project/kiara_plugin.network_analysis">source_repo</a>: The module package git repository.</li>
+            
+            <li><a href="https://DHARPA-Project.github.io/kiara_plugin.network_analysis/">documentation</a>: The url for the module package documentation.</li>
+            
+        </ul>
+        </td>
+    </tr>
+    </tbody>
+</table></td>
+    <td>Generic properties of this item (description, tags, labels, references, ...).</td>
+  </tr>
+  <tr>
+    <td>python_class</td>
+    <td><table>
+  <tr>
+    <td>python_class_name</td>
+    <td>NetworkData</td>
+    <td>The name of the Python class.</td>
+  </tr>
+  <tr>
+    <td>python_module_name</td>
+    <td>kiara_plugin.network_analysis.models</td>
+    <td>The name of the Python module this class lives in.</td>
+  </tr>
+  <tr>
+    <td>full_name</td>
+    <td>kiara_plugin.network_analysis.models.NetworkData</td>
+    <td>The full class namespace.</td>
+  </tr>
+</table></td>
+    <td>The python class that implements this module type.</td>
+  </tr>
+  <tr>
+    <td>metadata_schema</td>
+    <td><table>
+  <tr>
+    <td>$defs</td>
+    <td><table>
+  <tr>
+    <td>KiaraTable</td>
+    <td><table>
+  <tr>
+    <td>additionalProperties</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>A wrapper class to manage tabular data in a memory efficient way.</td>
+  </tr>
+  <tr>
+    <td>properties</td>
+    <td><table>
+  <tr>
+    <td>data_path</td>
+    <td><table>
+  <tr>
+    <td>anyOf</td>
+    <td><ul>
+  <li>
+    <table>
+  <tr>
+    <td>type</td>
+    <td>string</td>
+  </tr>
+</table>
+  </li>
+  <li>
+    <table>
+  <tr>
+    <td>type</td>
+    <td>null</td>
+  </tr>
+</table>
+  </li>
+</ul></td>
+  </tr>
+  <tr>
+    <td>default</td>
+    <td>None</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>The path to the (feather) file backing this array.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Data Path</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>KiaraTable</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>additionalProperties</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>A flexible, graph-type agnostic wrapper class for network datasets.
+
+This class provides a unified interface for working with network data that can represent
+any type of graph structure: directed, undirected, simple, or multi-graphs. The design
+philosophy emphasizes flexibility and performance while maintaining a clean, intuitive API.
+
+**Design Philosophy:**
+- **Graph Type Agnostic**: Supports all graph types (directed/undirected, simple/multi)
+  within the same data structure without requiring type-specific conversions
+- **Efficient Storage**: Uses Apache Arrow tables for high-performance columnar storage
+- **Flexible Querying**: Provides SQL-based querying capabilities alongside programmatic access
+- **Seamless Export**: Easy conversion to NetworkX and RustWorkX graph objects, other representations possible in the future
+- **Metadata Rich**: Automatically computes and stores graph statistics and properties
+
+**Internal Structure:**
+The network data is stored as two Arrow tables:
+- **nodes table**: Contains node information with required columns '_node_id' (int) and '_label' (str)
+- **edges table**: Contains edge information with required columns '_source' (int) and '_target' (int)
+
+Additional computed columns (prefixed with '_') provide graph statistics for different interpretations:
+- Degree counts for directed/undirected graphs
+- Multi-edge counts and indices
+- Centrality measures
+
+**Graph Type Support:**
+- **Simple Graphs**: Single edges between node pairs
+- **Multi-graphs**: Multiple edges between the same node pairs
+- **Directed Graphs**: One-way edges with source → target semantics
+- **Undirected Graphs**: Bidirectional edges
+- **Mixed Types**: The same data can be interpreted as different graph types
+
+**Note:** Column names prefixed with '_' have internal meaning and are automatically
+computed. Original attributes from source data are stored without the prefix.</td>
+  </tr>
+  <tr>
+    <td>properties</td>
+    <td><table>
+  <tr>
+    <td>tables</td>
+    <td><table>
+  <tr>
+    <td>additionalProperties</td>
+    <td><table>
+  <tr>
+    <td>$ref</td>
+    <td>#/$defs/KiaraTable</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>A dictionary of tables, with the table names as keys.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Tables</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>required</td>
+    <td><ul>
+  <li>
+    tables
+  </li>
+</ul></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>NetworkData</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+    <td>The (json) schema for this model data.</td>
+  </tr>
+</table><h3 id="kiara_info.kiara_model_types.metadata.network_node_attribute"><code>metadata.network_node_attribute</code><a class="headerlink" href="#kiara_info.kiara_model_types.metadata.network_node_attribute" title="Permanent link">&para;</a></h3>
+<table>
+  <tr>
+    <td>type_name</td>
+    <td>metadata.network_node_attribute</td>
+    <td>The registered name for this item type.</td>
+  </tr>
+  <tr>
+    <td>documentation</td>
+    <td><p>-- n/a --</p>
+</td>
+    <td>Documentation for the item.</td>
+  </tr>
+  <tr>
+    <td>authors</td>
+    <td><ul>
+
+    <li>Markus Binsteiner ( <a href="mailto:markus@frkl.dev">markus@frkl.dev</a> )</li>
+
+</ul></td>
+    <td>Information about authorship for the item.</td>
+  </tr>
+  <tr>
+    <td>context</td>
+    <td><table xmlns="http://www.w3.org/1999/html">
+    <tbody>
+    <tr>
+    <td>tags</td>
+    <td>network_analysis</td>
+    </tr>
+    <tr>
+        <td>labels</td>
+        <td>
+            <ul>
+        
+        <li>package: kiara_plugin.network_analysis</li>
+        
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>references</td>
+        <td>
+        <ul>
+            
+            <li><a href="https://github.com/DHARPA-Project/kiara_plugin.network_analysis">source_repo</a>: The module package git repository.</li>
+            
+            <li><a href="https://DHARPA-Project.github.io/kiara_plugin.network_analysis/">documentation</a>: The url for the module package documentation.</li>
+            
+        </ul>
+        </td>
+    </tr>
+    </tbody>
+</table></td>
+    <td>Generic properties of this item (description, tags, labels, references, ...).</td>
+  </tr>
+  <tr>
+    <td>python_class</td>
+    <td><table>
+  <tr>
+    <td>python_class_name</td>
+    <td>NetworkNodeAttributeMetadata</td>
+    <td>The name of the Python class.</td>
+  </tr>
+  <tr>
+    <td>python_module_name</td>
+    <td>kiara_plugin.network_analysis.models.metadata</td>
+    <td>The name of the Python module this class lives in.</td>
+  </tr>
+  <tr>
+    <td>full_name</td>
+    <td>kiara_plugin.network_analysis.models.metadata.NetworkNodeAttributeMetadata</td>
+    <td>The full class namespace.</td>
+  </tr>
+</table></td>
+    <td>The python class that implements this module type.</td>
+  </tr>
+  <tr>
+    <td>metadata_schema</td>
+    <td><table>
+  <tr>
+    <td>$defs</td>
+    <td><table>
+  <tr>
+    <td>DocumentationMetadataModel</td>
+    <td><table>
+  <tr>
+    <td>additionalProperties</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Documentation about a resource.</td>
+  </tr>
+  <tr>
+    <td>properties</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td><table>
+  <tr>
+    <td>default</td>
+    <td>-- n/a --</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Short description of the item.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Description</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>string</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>doc</td>
+    <td><table>
+  <tr>
+    <td>anyOf</td>
+    <td><ul>
+  <li>
+    <table>
+  <tr>
+    <td>type</td>
+    <td>string</td>
+  </tr>
+</table>
+  </li>
+  <li>
+    <table>
+  <tr>
+    <td>type</td>
+    <td>null</td>
+  </tr>
+</table>
+  </li>
+</ul></td>
+  </tr>
+  <tr>
+    <td>default</td>
+    <td>None</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Detailed documentation of the item (in markdown).</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Doc</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Documentation</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>additionalProperties</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>properties</td>
+    <td><table>
+  <tr>
+    <td>doc</td>
+    <td><table>
+  <tr>
+    <td>$ref</td>
+    <td>#/$defs/DocumentationMetadataModel</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Explanation what this attribute is about.</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>computed_attribute</td>
+    <td><table>
+  <tr>
+    <td>default</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Whether this is the default attribute that is always automatically added by kiara.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Computed Attribute</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>boolean</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>NetworkNodeAttributeMetadata</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+    <td>The (json) schema for this model data.</td>
+  </tr>
+</table><h3 id="kiara_info.kiara_model_types.metadata.network_edge_attribute"><code>metadata.network_edge_attribute</code><a class="headerlink" href="#kiara_info.kiara_model_types.metadata.network_edge_attribute" title="Permanent link">&para;</a></h3>
+<table>
+  <tr>
+    <td>type_name</td>
+    <td>metadata.network_edge_attribute</td>
+    <td>The registered name for this item type.</td>
+  </tr>
+  <tr>
+    <td>documentation</td>
+    <td><p>-- n/a --</p>
+</td>
+    <td>Documentation for the item.</td>
+  </tr>
+  <tr>
+    <td>authors</td>
+    <td><ul>
+
+    <li>Markus Binsteiner ( <a href="mailto:markus@frkl.dev">markus@frkl.dev</a> )</li>
+
+</ul></td>
+    <td>Information about authorship for the item.</td>
+  </tr>
+  <tr>
+    <td>context</td>
+    <td><table xmlns="http://www.w3.org/1999/html">
+    <tbody>
+    <tr>
+    <td>tags</td>
+    <td>network_analysis</td>
+    </tr>
+    <tr>
+        <td>labels</td>
+        <td>
+            <ul>
+        
+        <li>package: kiara_plugin.network_analysis</li>
+        
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>references</td>
+        <td>
+        <ul>
+            
+            <li><a href="https://github.com/DHARPA-Project/kiara_plugin.network_analysis">source_repo</a>: The module package git repository.</li>
+            
+            <li><a href="https://DHARPA-Project.github.io/kiara_plugin.network_analysis/">documentation</a>: The url for the module package documentation.</li>
+            
+        </ul>
+        </td>
+    </tr>
+    </tbody>
+</table></td>
+    <td>Generic properties of this item (description, tags, labels, references, ...).</td>
+  </tr>
+  <tr>
+    <td>python_class</td>
+    <td><table>
+  <tr>
+    <td>python_class_name</td>
+    <td>NetworkEdgeAttributeMetadata</td>
+    <td>The name of the Python class.</td>
+  </tr>
+  <tr>
+    <td>python_module_name</td>
+    <td>kiara_plugin.network_analysis.models.metadata</td>
+    <td>The name of the Python module this class lives in.</td>
+  </tr>
+  <tr>
+    <td>full_name</td>
+    <td>kiara_plugin.network_analysis.models.metadata.NetworkEdgeAttributeMetadata</td>
+    <td>The full class namespace.</td>
+  </tr>
+</table></td>
+    <td>The python class that implements this module type.</td>
+  </tr>
+  <tr>
+    <td>metadata_schema</td>
+    <td><table>
+  <tr>
+    <td>$defs</td>
+    <td><table>
+  <tr>
+    <td>DocumentationMetadataModel</td>
+    <td><table>
+  <tr>
+    <td>additionalProperties</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Documentation about a resource.</td>
+  </tr>
+  <tr>
+    <td>properties</td>
+    <td><table>
+  <tr>
+    <td>description</td>
+    <td><table>
+  <tr>
+    <td>default</td>
+    <td>-- n/a --</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Short description of the item.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Description</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>string</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>doc</td>
+    <td><table>
+  <tr>
+    <td>anyOf</td>
+    <td><ul>
+  <li>
+    <table>
+  <tr>
+    <td>type</td>
+    <td>string</td>
+  </tr>
+</table>
+  </li>
+  <li>
+    <table>
+  <tr>
+    <td>type</td>
+    <td>null</td>
+  </tr>
+</table>
+  </li>
+</ul></td>
+  </tr>
+  <tr>
+    <td>default</td>
+    <td>None</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Detailed documentation of the item (in markdown).</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Doc</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Documentation</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>additionalProperties</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>properties</td>
+    <td><table>
+  <tr>
+    <td>doc</td>
+    <td><table>
+  <tr>
+    <td>$ref</td>
+    <td>#/$defs/DocumentationMetadataModel</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Explanation what this attribute is about.</td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>computed_attribute</td>
+    <td><table>
+  <tr>
+    <td>default</td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>Whether this is the computed attribute that is automatically added by kiara.</td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>Computed Attribute</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>boolean</td>
+  </tr>
+</table></td>
+  </tr>
+</table></td>
+  </tr>
+  <tr>
+    <td>title</td>
+    <td>NetworkEdgeAttributeMetadata</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>object</td>
+  </tr>
+</table></td>
+    <td>The (json) schema for this model data.</td>
+  </tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      
+    
+  </body>
+</html>
