@@ -712,6 +712,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#kiara_plugin.network_analysis.models.metadata.NODE_IS_SOURCE_COLUMN_METADATA" class="md-nav__link">
+    <span class="md-ellipsis">
+      NODE_IS_SOURCE_COLUMN_METADATA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kiara_plugin.network_analysis.models.metadata.NODE_IS_TARGET_COLUMN_METADATA" class="md-nav__link">
+    <span class="md-ellipsis">
+      NODE_IS_TARGET_COLUMN_METADATA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#kiara_plugin.network_analysis.models.metadata.NODE_COUNT_EDGES_COLUMN_METADATA" class="md-nav__link">
     <span class="md-ellipsis">
       NODE_COUNT_EDGES_COLUMN_METADATA
@@ -1386,6 +1404,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#kiara_plugin.network_analysis.models.metadata.NODE_IS_SOURCE_COLUMN_METADATA" class="md-nav__link">
+    <span class="md-ellipsis">
+      NODE_IS_SOURCE_COLUMN_METADATA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kiara_plugin.network_analysis.models.metadata.NODE_IS_TARGET_COLUMN_METADATA" class="md-nav__link">
+    <span class="md-ellipsis">
+      NODE_IS_TARGET_COLUMN_METADATA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#kiara_plugin.network_analysis.models.metadata.NODE_COUNT_EDGES_COLUMN_METADATA" class="md-nav__link">
     <span class="md-ellipsis">
       NODE_COUNT_EDGES_COLUMN_METADATA
@@ -1772,6 +1808,46 @@
 
 
 
+<h3 id="kiara_plugin.network_analysis.models.metadata.NODE_IS_SOURCE_COLUMN_METADATA" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">NODE_IS_SOURCE_COLUMN_METADATA</span> <span class="o">=</span> <span class="n">NetworkNodeAttributeMetadata</span><span class="p">(</span><span class="n">doc</span><span class="o">=</span><span class="n">NODE_IS_SOURCE_TEXT</span><span class="p">,</span> <span class="n">computed_attribute</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#kiara_plugin.network_analysis.models.metadata.NODE_IS_SOURCE_COLUMN_METADATA" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="kiara_plugin.network_analysis.models.metadata.NODE_IS_TARGET_COLUMN_METADATA" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">NODE_IS_TARGET_COLUMN_METADATA</span> <span class="o">=</span> <span class="n">NetworkNodeAttributeMetadata</span><span class="p">(</span><span class="n">doc</span><span class="o">=</span><span class="n">NODE_IS_TARGET_TEXT</span><span class="p">,</span> <span class="n">computed_attribute</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#kiara_plugin.network_analysis.models.metadata.NODE_IS_TARGET_COLUMN_METADATA" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
 <h3 id="kiara_plugin.network_analysis.models.metadata.NODE_COUNT_EDGES_COLUMN_METADATA" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">NODE_COUNT_EDGES_COLUMN_METADATA</span> <span class="o">=</span> <span class="n">NetworkNodeAttributeMetadata</span><span class="p">(</span><span class="n">doc</span><span class="o">=</span><span class="n">NODE_COUNT_EDGES_TEXT</span><span class="p">,</span> <span class="n">computed_attribute</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
@@ -2093,9 +2169,7 @@
 
               <details class="quote">
                 <summary>Source code in <code>src/kiara_plugin/network_analysis/models/metadata.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">29</span>
 <span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span>
@@ -2108,7 +2182,9 @@
 <span class="normal">39</span>
 <span class="normal">40</span>
 <span class="normal">41</span>
-<span class="normal">42</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">NetworkNodeAttributeMetadata</span><span class="p">(</span><span class="n">KiaraModel</span><span class="p">):</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">NetworkNodeAttributeMetadata</span><span class="p">(</span><span class="n">KiaraModel</span><span class="p">):</span>
     <span class="n">_kiara_model_id</span><span class="p">:</span> <span class="n">ClassVar</span> <span class="o">=</span> <span class="s2">&quot;metadata.network_node_attribute&quot;</span>
 
     <span class="n">doc</span><span class="p">:</span> <span class="n">DocumentationMetadataModel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -2199,10 +2275,10 @@
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/models/metadata.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;doc&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;doc&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
 <span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_doc</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">DocumentationMetadataModel</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -2244,9 +2320,7 @@
 
               <details class="quote">
                 <summary>Source code in <code>src/kiara_plugin/network_analysis/models/metadata.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">47</span>
 <span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span>
@@ -2259,7 +2333,9 @@
 <span class="normal">57</span>
 <span class="normal">58</span>
 <span class="normal">59</span>
-<span class="normal">60</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">NetworkEdgeAttributeMetadata</span><span class="p">(</span><span class="n">KiaraModel</span><span class="p">):</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">NetworkEdgeAttributeMetadata</span><span class="p">(</span><span class="n">KiaraModel</span><span class="p">):</span>
     <span class="n">_kiara_model_id</span><span class="p">:</span> <span class="n">ClassVar</span> <span class="o">=</span> <span class="s2">&quot;metadata.network_edge_attribute&quot;</span>
 
     <span class="n">doc</span><span class="p">:</span> <span class="n">DocumentationMetadataModel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -2350,10 +2426,10 @@
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/models/metadata.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;doc&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;doc&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
 <span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_doc</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">DocumentationMetadataModel</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
