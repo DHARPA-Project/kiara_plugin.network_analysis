@@ -2,7 +2,7 @@
 
 import marimo
 
-__generated_with = "0.14.10"
+__generated_with = "0.14.12"
 app = marimo.App(width="medium")
 
 
@@ -226,7 +226,12 @@ def _(filtered_network_data, kiara_network_data, mo, prepare_altair_graph):
 
 
 @app.cell
-def _():
+def _(filtered_network_data):
+    if filtered_network_data is not None:
+        properties = filtered_network_data.get_property_data("metadata.network_data")
+    else:
+        properties = None
+    properties
     return
 
 
