@@ -1263,9 +1263,7 @@
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 58</span>
-<span class="normal"> 59</span>
-<span class="normal"> 60</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 60</span>
 <span class="normal"> 61</span>
 <span class="normal"> 62</span>
 <span class="normal"> 63</span>
@@ -1327,7 +1325,9 @@
 <span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">extract_networkx_nodes_as_table</span><span class="p">(</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">extract_networkx_nodes_as_table</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">:</span> <span class="s2">&quot;nx.Graph&quot;</span><span class="p">,</span>
     <span class="n">label_attr_name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">ignore_attributes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1462,9 +1462,7 @@
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
@@ -1513,7 +1511,9 @@
 <span class="normal">173</span>
 <span class="normal">174</span>
 <span class="normal">175</span>
-<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">extract_networkx_edges_as_table</span><span class="p">(</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">extract_networkx_edges_as_table</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">:</span> <span class="s2">&quot;nx.Graph&quot;</span><span class="p">,</span> <span class="n">node_id_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;pa.Table&quot;</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract the edges of this graph as a pyarrow table.</span>
@@ -1585,9 +1585,7 @@
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">181</span>
 <span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
@@ -1663,7 +1661,33 @@
 <span class="normal">254</span>
 <span class="normal">255</span>
 <span class="normal">256</span>
-<span class="normal">257</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">augment_nodes_table_with_connection_counts</span><span class="p">(</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">augment_nodes_table_with_connection_counts</span><span class="p">(</span>
     <span class="n">nodes_table</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="s2">&quot;pl.DataFrame&quot;</span><span class="p">],</span>
     <span class="n">edges_table</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="s2">&quot;pl.DataFrame&quot;</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;pa.Table&quot;</span><span class="p">:</span>
@@ -1680,15 +1704,11 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">other_columns</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-    <span class="c1"># we can avoid &#39;COUNT(*)&#39; calls in the following  query</span>
-    <span class="n">nodes_table_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_table</span><span class="p">)</span>
-
     <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">    SELECT</span>
 <span class="s2">         </span><span class="si">{</span><span class="n">NODE_ID_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         </span><span class="si">{</span><span class="n">LABEL_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         COALESCE(e1.</span><span class="si">{</span><span class="n">IN_DIRECTED_COLUMN_NAME</span><span class="si">}</span><span class="s2">, 0) + COALESCE(e3.</span><span class="si">{</span><span class="n">OUT_DIRECTED_COLUMN_NAME</span><span class="si">}</span><span class="s2">, 0) as </span><span class="si">{</span><span class="n">CONNECTIONS_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
-<span class="s2">         (COALESCE(e1._in_edges, 0) + COALESCE(e3._out_edges, 0)) / </span><span class="si">{</span><span class="n">nodes_table_rows</span><span class="si">}</span><span class="s2"> AS _degree_centrality,</span>
 <span class="s2">         COALESCE(e2.</span><span class="si">{</span><span class="n">IN_DIRECTED_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">, 0) + COALESCE(e4.</span><span class="si">{</span><span class="n">OUT_DIRECTED_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">, 0) as </span><span class="si">{</span><span class="n">CONNECTIONS_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         COALESCE(e1.</span><span class="si">{</span><span class="n">IN_DIRECTED_COLUMN_NAME</span><span class="si">}</span><span class="s2">, 0) as </span><span class="si">{</span><span class="n">IN_DIRECTED_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         COALESCE(e2.</span><span class="si">{</span><span class="n">IN_DIRECTED_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">, 0) as </span><span class="si">{</span><span class="n">IN_DIRECTED_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
@@ -1720,14 +1740,42 @@
 <span class="s2">    &quot;&quot;&quot;</span>
     <span class="n">nodes_table_result</span> <span class="o">=</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>  <span class="c1"># noqa</span>
 
+    <span class="c1"># we can avoid &#39;COUNT(*)&#39; calls in the following  query</span>
+    <span class="n">nodes_table_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_table</span><span class="p">)</span>
+
+    <span class="c1"># get all ids of nodes that have &#39;_is_source&#39; set to True</span>
+    <span class="n">nodes_table_rows_sources_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT DISTINCT </span><span class="si">{</span><span class="n">NODE_ID_COLUMN_NAME</span><span class="si">}</span><span class="s2"> FROM nodes_table_result</span>
+<span class="s2">        WHERE </span><span class="si">{</span><span class="n">NODE_IS_SOURCE_COLUMN_NAME</span><span class="si">}</span><span class="s2"> = True</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    <span class="n">nodes_table_sources</span> <span class="o">=</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">nodes_table_rows_sources_query</span><span class="p">)</span>
+
+    <span class="c1"># get all ids of nodes that have &#39;_is_target&#39; set to True</span>
+    <span class="n">nodes_table_rows_targets_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT DISTINCT </span><span class="si">{</span><span class="n">NODE_ID_COLUMN_NAME</span><span class="si">}</span><span class="s2"> FROM nodes_table_result</span>
+<span class="s2">        WHERE </span><span class="si">{</span><span class="n">NODE_IS_TARGET_COLUMN_NAME</span><span class="si">}</span><span class="s2"> = True</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    <span class="n">nodes_table_targets</span> <span class="o">=</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">nodes_table_rows_targets_query</span><span class="p">)</span>
+
+    <span class="n">nodes_table_rows_sources</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_table_sources</span><span class="p">)</span>
+    <span class="n">nodes_table_rows_targets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_table_targets</span><span class="p">)</span>
+
     <span class="n">centrality_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">    SELECT</span>
 <span class="s2">         </span><span class="si">{</span><span class="n">NODE_ID_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         </span><span class="si">{</span><span class="n">LABEL_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         </span><span class="si">{</span><span class="n">CONNECTIONS_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
-<span class="s2">         </span><span class="si">{</span><span class="n">CONNECTIONS_COLUMN_NAME</span><span class="si">}</span><span class="s2"> / (SELECT COUNT(*) FROM nodes_table_result) AS </span><span class="si">{</span><span class="n">UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">         </span><span class="si">{</span><span class="n">CONNECTIONS_COLUMN_NAME</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">nodes_table_rows</span><span class="si">}</span><span class="s2"> AS </span><span class="si">{</span><span class="n">UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">         CASE</span>
+<span class="s2">             WHEN </span><span class="si">{</span><span class="n">NODE_IS_SOURCE_COLUMN_NAME</span><span class="si">}</span><span class="s2"> = True THEN </span><span class="si">{</span><span class="n">OUT_DIRECTED_COLUMN_NAME</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">nodes_table_rows_sources</span><span class="si">}</span>
+<span class="s2">             ELSE </span><span class="si">{</span><span class="n">IN_DIRECTED_COLUMN_NAME</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">nodes_table_rows_targets</span><span class="si">}</span>
+<span class="s2">         END AS </span><span class="si">{</span><span class="n">UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         </span><span class="si">{</span><span class="n">CONNECTIONS_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
-<span class="s2">         </span><span class="si">{</span><span class="n">CONNECTIONS_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2"> / (SELECT COUNT(*) FROM nodes_table_result) AS </span><span class="si">{</span><span class="n">UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">         </span><span class="si">{</span><span class="n">CONNECTIONS_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">nodes_table_rows</span><span class="si">}</span><span class="s2"> AS </span><span class="si">{</span><span class="n">UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">         CASE</span>
+<span class="s2">             WHEN </span><span class="si">{</span><span class="n">NODE_IS_SOURCE_COLUMN_NAME</span><span class="si">}</span><span class="s2"> = True THEN </span><span class="si">{</span><span class="n">OUT_DIRECTED_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">nodes_table_rows_sources</span><span class="si">}</span>
+<span class="s2">             ELSE </span><span class="si">{</span><span class="n">IN_DIRECTED_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">nodes_table_rows_targets</span><span class="si">}</span>
+<span class="s2">         END AS </span><span class="si">{</span><span class="n">UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         </span><span class="si">{</span><span class="n">IN_DIRECTED_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         </span><span class="si">{</span><span class="n">IN_DIRECTED_MULTI_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
 <span class="s2">         </span><span class="si">{</span><span class="n">OUT_DIRECTED_COLUMN_NAME</span><span class="si">}</span><span class="s2">,</span>
@@ -1764,40 +1812,40 @@
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">286</span>
 <span class="normal">287</span>
 <span class="normal">288</span>
 <span class="normal">289</span>
 <span class="normal">290</span>
 <span class="normal">291</span>
 <span class="normal">292</span>
-<span class="normal">293</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">augment_edges_table_with_id_and_weights</span><span class="p">(</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">augment_edges_table_with_id_and_weights</span><span class="p">(</span>
     <span class="n">edges_table</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="s2">&quot;pl.DataFrame&quot;</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;pa.Table&quot;</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Augment the edges table with additional pre-computed columns for directed and undirected weights..&quot;&quot;&quot;</span>
@@ -1849,7 +1897,7 @@
     <div class="doc doc-contents ">
 
         <p>Augment the nodes and edges table with a component id column.</p>
-<p>The component id is a unique id for each connected component in the graph. The id of thte component is
+<p>The component id is a unique id for each connected component in the graph. The id of the component is
 assigned in a deterministic way, based on the size of the components. The largest component gets id 0, the
 second largest 1, and so on.</p>
 <p>Should 2 components have the same amount of nodes, the component id is not deterministic anymore.</p>
@@ -1857,33 +1905,7 @@ second largest 1, and so on.</p>
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span>
-<span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span>
-<span class="normal">306</span>
-<span class="normal">307</span>
-<span class="normal">308</span>
-<span class="normal">309</span>
-<span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span>
-<span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">322</span>
 <span class="normal">323</span>
 <span class="normal">324</span>
 <span class="normal">325</span>
@@ -1960,12 +1982,38 @@ second largest 1, and so on.</p>
 <span class="normal">396</span>
 <span class="normal">397</span>
 <span class="normal">398</span>
-<span class="normal">399</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">augment_tables_with_component_ids</span><span class="p">(</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">augment_tables_with_component_ids</span><span class="p">(</span>
     <span class="n">nodes_table</span><span class="p">:</span> <span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="n">edges_table</span><span class="p">:</span> <span class="s2">&quot;pa.Table&quot;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="s2">&quot;pa.Table&quot;</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Augment the nodes and edges table with a component id column.</span>
 
-<span class="sd">    The component id is a unique id for each connected component in the graph. The id of thte component is</span>
+<span class="sd">    The component id is a unique id for each connected component in the graph. The id of the component is</span>
 <span class="sd">    assigned in a deterministic way, based on the size of the components. The largest component gets id 0, the</span>
 <span class="sd">    second largest 1, and so on.</span>
 
@@ -2084,13 +2132,13 @@ second largest 1, and so on.</p>
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">extract_network_data</span><span class="p">(</span><span class="n">network_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">,</span> <span class="s2">&quot;NetworkData&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;NetworkData&quot;</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">extract_network_data</span><span class="p">(</span><span class="n">network_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">,</span> <span class="s2">&quot;NetworkData&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;NetworkData&quot;</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">kiara.models.values.value</span><span class="w"> </span><span class="kn">import</span> <span class="n">Value</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">network_data</span><span class="p">,</span> <span class="n">Value</span><span class="p">):</span>
@@ -2117,34 +2165,34 @@ second largest 1, and so on.</p>
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span>
-<span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_column_name</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_column_name</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="s2">&quot;KiaraTable&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">],</span> <span class="n">suggestions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
     <span class="n">column_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2192,13 +2240,13 @@ second largest 1, and so on.</p>
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_node_id_column_name</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_node_id_column_name</span><span class="p">(</span>
     <span class="n">nodes_table</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="s2">&quot;KiaraTable&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">],</span>
     <span class="n">suggestions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
@@ -2225,13 +2273,13 @@ second largest 1, and so on.</p>
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_node_label_column_name</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_node_label_column_name</span><span class="p">(</span>
     <span class="n">nodes_table</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="s2">&quot;KiaraTable&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">],</span>
     <span class="n">suggestions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
@@ -2258,13 +2306,13 @@ second largest 1, and so on.</p>
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">459</span>
-<span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_source_column_name</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_source_column_name</span><span class="p">(</span>
     <span class="n">edges_table</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="s2">&quot;KiaraTable&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">],</span>
     <span class="n">suggestions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
@@ -2291,13 +2339,13 @@ second largest 1, and so on.</p>
 
             <details class="quote">
               <summary>Source code in <code>src/kiara_plugin/network_analysis/utils/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span>
-<span class="normal">473</span>
-<span class="normal">474</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_target_column_name</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guess_target_column_name</span><span class="p">(</span>
     <span class="n">edges_table</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;pa.Table&quot;</span><span class="p">,</span> <span class="s2">&quot;KiaraTable&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">],</span>
     <span class="n">suggestions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
