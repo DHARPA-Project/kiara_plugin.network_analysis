@@ -1043,7 +1043,7 @@ class NetworkGraphProperties(ValueMetadata):
     number_of_components: int = Field(
         description="Number of connected components in the network graph."
     )
-    # is_bipartite: bool = Field(description="Whether the network graph is bipartite.")
+    is_bipartite: bool = Field(description="Whether the network graph is bipartite.")
     components: Dict[int, ComponentProperties] = Field(
         description="Properties of the components of the network graph."
     )
@@ -1060,6 +1060,18 @@ class NetworkGraphProperties(ValueMetadata):
 
         # check whether the network graph is bipartite
         # for that, we check if there are is any overlap between elements in the source and target columns
+        intersect_query = f"""
+SELECT value FROM (
+    SELECT DISTINCT {SOURCE_COLUMN_NAME} as value FROM {EDGES_TABLE_NAME}
+    INTERSECT
+    SELECT DISTINCT {TARGET_COLUMN_NAME} as value FROM {EDGES_TABLE_NAME}
+)
+ORDER BY value
+"""
+        intersect_result = network_data.query_edges(intersect_query)
+        intersection_values = list(intersect_result[0].to_pylist())
+
+        is_bipartite = len(intersection_values) == 0
 
         num_rows = network_data.num_nodes
         num_edges = network_data.num_edges
@@ -1153,6 +1165,7 @@ class NetworkGraphProperties(ValueMetadata):
             properties_by_graph_type=props,
             number_of_self_loops=num_self_loops,
             number_of_components=number_of_components,
+            is_bipartite=is_bipartite,
             components={k: components_data[k] for k in sorted(components_data.keys())},
         )
         return result
