@@ -32,6 +32,8 @@ from kiara_plugin.network_analysis.defaults import (
     LABEL_COLUMN_NAME,
     NODE_ID_ALIAS_NAMES,
     NODE_ID_COLUMN_NAME,
+    NODE_IS_SOURCE_COLUMN_NAME,
+    NODE_IS_TARGET_COLUMN_NAME,
     OUT_DIRECTED_COLUMN_NAME,
     OUT_DIRECTED_MULTI_COLUMN_NAME,
     SOURCE_COLUMN_ALIAS_NAMES,
@@ -204,7 +206,9 @@ def augment_nodes_table_with_connection_counts(
          COALESCE(e1.{IN_DIRECTED_COLUMN_NAME}, 0) as {IN_DIRECTED_COLUMN_NAME},
          COALESCE(e2.{IN_DIRECTED_MULTI_COLUMN_NAME}, 0) as {IN_DIRECTED_MULTI_COLUMN_NAME},
          COALESCE(e3.{OUT_DIRECTED_COLUMN_NAME}, 0) as {OUT_DIRECTED_COLUMN_NAME},
-         COALESCE(e4.{OUT_DIRECTED_MULTI_COLUMN_NAME}, 0) as {OUT_DIRECTED_MULTI_COLUMN_NAME}
+         COALESCE(e4.{OUT_DIRECTED_MULTI_COLUMN_NAME}, 0) as {OUT_DIRECTED_MULTI_COLUMN_NAME},
+         CASE WHEN e5.{SOURCE_COLUMN_NAME} IS NOT NULL THEN true ELSE false END as {NODE_IS_SOURCE_COLUMN_NAME},
+         CASE WHEN e6.{TARGET_COLUMN_NAME} IS NOT NULL THEN true ELSE false END as {NODE_IS_TARGET_COLUMN_NAME}
          {other_columns}
          FROM nodes_table n
          left join
@@ -219,6 +223,12 @@ def augment_nodes_table_with_connection_counts(
          left join
            (SELECT {SOURCE_COLUMN_NAME}, COUNT(*) as {OUT_DIRECTED_MULTI_COLUMN_NAME} from edges_table GROUP BY {SOURCE_COLUMN_NAME}) e4
            on n.{NODE_ID_COLUMN_NAME} = e4.{SOURCE_COLUMN_NAME}
+        left join
+           (SELECT DISTINCT {SOURCE_COLUMN_NAME} from edges_table) e5
+           on n.{NODE_ID_COLUMN_NAME} = e5.{SOURCE_COLUMN_NAME}
+        left join
+           (SELECT DISTINCT {TARGET_COLUMN_NAME} from edges_table) e6
+           on n.{NODE_ID_COLUMN_NAME} = e6.{TARGET_COLUMN_NAME}
         ORDER BY {NODE_ID_COLUMN_NAME}
     """
     nodes_table_result = duckdb.sql(query)  # noqa
@@ -234,7 +244,9 @@ def augment_nodes_table_with_connection_counts(
          {IN_DIRECTED_COLUMN_NAME},
          {IN_DIRECTED_MULTI_COLUMN_NAME},
          {OUT_DIRECTED_COLUMN_NAME},
-         {OUT_DIRECTED_MULTI_COLUMN_NAME}
+         {OUT_DIRECTED_MULTI_COLUMN_NAME},
+         {NODE_IS_SOURCE_COLUMN_NAME},
+         {NODE_IS_TARGET_COLUMN_NAME}
          {other_columns}
     FROM nodes_table_result
     """
@@ -363,9 +375,9 @@ def augment_tables_with_component_ids(
     except Exception:
         column_names = edges_table.columns  # type: ignore
 
-    computed_attr_columns = [x for x in column_names if x.startswith("_")]
+    computed_attr_columns = [f'"{x}"' for x in column_names if x.startswith("_")]
     computed_columns = ", ".join(computed_attr_columns)
-    edge_attr_columns = [x for x in column_names if not x.startswith("_")]
+    edge_attr_columns = [f'"{x}"' for x in column_names if not x.startswith("_")]
     if edge_attr_columns:
         other_columns = ", " + ", ".join(edge_attr_columns)
     else:

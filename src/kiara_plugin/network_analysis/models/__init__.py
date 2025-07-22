@@ -44,6 +44,8 @@ from kiara_plugin.network_analysis.defaults import (
     IN_DIRECTED_MULTI_COLUMN_NAME,
     LABEL_COLUMN_NAME,
     NODE_ID_COLUMN_NAME,
+    NODE_IS_SOURCE_COLUMN_NAME,
+    NODE_IS_TARGET_COLUMN_NAME,
     NODES_TABLE_NAME,
     OUT_DIRECTED_COLUMN_NAME,
     OUT_DIRECTED_MULTI_COLUMN_NAME,
@@ -230,6 +232,8 @@ class NetworkData(KiaraTables):
         - '_out_edges_multi': Outgoing edge count (directed, multi)
         - '_degree_centrality': Normalized degree centrality
         - '_degree_centrality_multi': Normalized degree centrality (multi-graph)
+        - '_is_source': Whether the node appears in the source column of the edges table
+        - '_is_target': Whether the node appears in the target column of the edges table
 
         Args:
             nodes_table: PyArrow table containing node data
@@ -266,6 +270,8 @@ class NetworkData(KiaraTables):
             NODE_DEGREE_COLUMN_METADATA,
             NODE_DEGREE_MULTI_COLUMN_METADATA,
             NODE_ID_COLUMN_METADATA,
+            NODE_IS_SOURCE_COLUMN_METADATA,
+            NODE_IS_TARGET_COLUMN_METADATA,
             NODE_LABEL_COLUMN_METADATA,
         )
 
@@ -347,6 +353,18 @@ class NetworkData(KiaraTables):
             LABEL_COLUMN_NAME,
             ATTRIBUTE_PROPERTY_KEY,
             NODE_LABEL_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
+            NODE_IS_SOURCE_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_IS_SOURCE_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
+            NODE_IS_TARGET_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_IS_TARGET_COLUMN_METADATA,
             overwrite_existing=False,
         )
         network_data.nodes.set_column_metadata(
@@ -1025,6 +1043,7 @@ class NetworkGraphProperties(ValueMetadata):
     number_of_components: int = Field(
         description="Number of connected components in the network graph."
     )
+    # is_bipartite: bool = Field(description="Whether the network graph is bipartite.")
     components: Dict[int, ComponentProperties] = Field(
         description="Properties of the components of the network graph."
     )
@@ -1038,6 +1057,9 @@ class NetworkGraphProperties(ValueMetadata):
         import duckdb
 
         network_data: NetworkData = value.data
+
+        # check whether the network graph is bipartite
+        # for that, we check if there are is any overlap between elements in the source and target columns
 
         num_rows = network_data.num_nodes
         num_edges = network_data.num_edges

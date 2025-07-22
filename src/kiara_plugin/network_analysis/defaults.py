@@ -47,6 +47,8 @@ IN_DIRECTED_MULTI_COLUMN_NAME = "_in_edges_multi"
 OUT_DIRECTED_MULTI_COLUMN_NAME = "_out_edges_multi"
 CONNECTIONS_MULTI_COLUMN_NAME = "_count_edges_multi"
 
+NODE_IS_SOURCE_COLUMN_NAME = "_is_source"
+NODE_IS_TARGET_COLUMN_NAME = "_is_target"
 
 RANKING_TABLE_NAME = "ranking"
 RANKING_COLUNN_NAME = "_rank"
@@ -95,6 +97,13 @@ This is a (potentially non-unique) (ideally) human meaningful lable for the node
 how the 'network_data' was created, this could be a name, title, etc. If no such label was available or specified
 by the user, the node id will be used as label.
 """
+
+NODE_IS_SOURCE_TEXT = (
+    """True if the node appears in the source column of the edges table."""
+)
+NODE_IS_TARGET_TEXT = (
+    """True if the node appears in the target column of the edges table."""
+)
 
 NODE_COUNT_EDGES_TEXT = """The number of edges that are connected to this node if the network_data is interpreted as a non-multi graph
 

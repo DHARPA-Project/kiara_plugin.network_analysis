@@ -19,6 +19,8 @@ from kiara_plugin.network_analysis.defaults import (
     NODE_COUNT_OUT_EDGES_MULTI_TEXT,
     NODE_COUNT_OUT_EDGES_TEXT,
     NODE_ID_TEXT,
+    NODE_IS_SOURCE_TEXT,
+    NODE_IS_TARGET_TEXT,
     NODE_LABEL_TEXT,
     UNWEIGHTED_DEGREE_CENTRALITY_TEXT,
 )
@@ -66,6 +68,12 @@ NODE_ID_COLUMN_METADATA = NetworkNodeAttributeMetadata(
 NODE_LABEL_COLUMN_METADATA = NetworkNodeAttributeMetadata(
     doc=NODE_LABEL_TEXT, computed_attribute=True
 )  # type: ignore
+NODE_IS_SOURCE_COLUMN_METADATA = NetworkNodeAttributeMetadata(
+    doc=NODE_IS_SOURCE_TEXT, computed_attribute=True
+)
+NODE_IS_TARGET_COLUMN_METADATA = NetworkNodeAttributeMetadata(
+    doc=NODE_IS_TARGET_TEXT, computed_attribute=True
+)
 
 NODE_COUNT_EDGES_COLUMN_METADATA = NetworkNodeAttributeMetadata(
     doc=NODE_COUNT_EDGES_TEXT, computed_attribute=True
