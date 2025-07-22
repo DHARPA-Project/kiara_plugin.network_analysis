@@ -40,6 +40,8 @@ from kiara_plugin.network_analysis.defaults import (
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_ALIAS_NAMES,
     TARGET_COLUMN_NAME,
+    UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_COLUMN_NAME,
+    UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
     UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME,
     UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
 )
@@ -193,15 +195,11 @@ def augment_nodes_table_with_connection_counts(
     else:
         other_columns = ""
 
-    # we can avoid 'COUNT(*)' calls in the following  query
-    nodes_table_rows = len(nodes_table)
-
     query = f"""
     SELECT
          {NODE_ID_COLUMN_NAME},
          {LABEL_COLUMN_NAME},
          COALESCE(e1.{IN_DIRECTED_COLUMN_NAME}, 0) + COALESCE(e3.{OUT_DIRECTED_COLUMN_NAME}, 0) as {CONNECTIONS_COLUMN_NAME},
-         (COALESCE(e1._in_edges, 0) + COALESCE(e3._out_edges, 0)) / {nodes_table_rows} AS _degree_centrality,
          COALESCE(e2.{IN_DIRECTED_MULTI_COLUMN_NAME}, 0) + COALESCE(e4.{OUT_DIRECTED_MULTI_COLUMN_NAME}, 0) as {CONNECTIONS_MULTI_COLUMN_NAME},
          COALESCE(e1.{IN_DIRECTED_COLUMN_NAME}, 0) as {IN_DIRECTED_COLUMN_NAME},
          COALESCE(e2.{IN_DIRECTED_MULTI_COLUMN_NAME}, 0) as {IN_DIRECTED_MULTI_COLUMN_NAME},
@@ -233,14 +231,42 @@ def augment_nodes_table_with_connection_counts(
     """
     nodes_table_result = duckdb.sql(query)  # noqa
 
+    # we can avoid 'COUNT(*)' calls in the following  query
+    nodes_table_rows = len(nodes_table)
+
+    # get all ids of nodes that have '_is_source' set to True
+    nodes_table_rows_sources_query = f"""
+        SELECT DISTINCT {NODE_ID_COLUMN_NAME} FROM nodes_table_result
+        WHERE {NODE_IS_SOURCE_COLUMN_NAME} = True
+    """
+    nodes_table_sources = duckdb.sql(nodes_table_rows_sources_query)
+
+    # get all ids of nodes that have '_is_target' set to True
+    nodes_table_rows_targets_query = f"""
+        SELECT DISTINCT {NODE_ID_COLUMN_NAME} FROM nodes_table_result
+        WHERE {NODE_IS_TARGET_COLUMN_NAME} = True
+    """
+    nodes_table_targets = duckdb.sql(nodes_table_rows_targets_query)
+
+    nodes_table_rows_sources = len(nodes_table_sources)
+    nodes_table_rows_targets = len(nodes_table_targets)
+
     centrality_query = f"""
     SELECT
          {NODE_ID_COLUMN_NAME},
          {LABEL_COLUMN_NAME},
          {CONNECTIONS_COLUMN_NAME},
-         {CONNECTIONS_COLUMN_NAME} / (SELECT COUNT(*) FROM nodes_table_result) AS {UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME},
+         {CONNECTIONS_COLUMN_NAME} / {nodes_table_rows} AS {UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME},
+         CASE
+             WHEN {NODE_IS_SOURCE_COLUMN_NAME} = True THEN {OUT_DIRECTED_COLUMN_NAME} / {nodes_table_rows_sources}
+             ELSE {IN_DIRECTED_COLUMN_NAME} / {nodes_table_rows_targets}
+         END AS {UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_COLUMN_NAME},
          {CONNECTIONS_MULTI_COLUMN_NAME},
-         {CONNECTIONS_MULTI_COLUMN_NAME} / (SELECT COUNT(*) FROM nodes_table_result) AS {UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME},
+         {CONNECTIONS_MULTI_COLUMN_NAME} / {nodes_table_rows} AS {UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME},
+         CASE
+             WHEN {NODE_IS_SOURCE_COLUMN_NAME} = True THEN {OUT_DIRECTED_MULTI_COLUMN_NAME} / {nodes_table_rows_sources}
+             ELSE {IN_DIRECTED_MULTI_COLUMN_NAME} / {nodes_table_rows_targets}
+         END AS {UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_MULTI_COLUMN_NAME},
          {IN_DIRECTED_COLUMN_NAME},
          {IN_DIRECTED_MULTI_COLUMN_NAME},
          {OUT_DIRECTED_COLUMN_NAME},
@@ -298,7 +324,7 @@ def augment_tables_with_component_ids(
 ) -> Tuple["pa.Table", "pa.Table"]:
     """Augment the nodes and edges table with a component id column.
 
-    The component id is a unique id for each connected component in the graph. The id of thte component is
+    The component id is a unique id for each connected component in the graph. The id of the component is
     assigned in a deterministic way, based on the size of the components. The largest component gets id 0, the
     second largest 1, and so on.
 

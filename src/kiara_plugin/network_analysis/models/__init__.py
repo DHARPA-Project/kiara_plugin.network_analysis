@@ -51,6 +51,8 @@ from kiara_plugin.network_analysis.defaults import (
     OUT_DIRECTED_MULTI_COLUMN_NAME,
     SOURCE_COLUMN_NAME,
     TARGET_COLUMN_NAME,
+    UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_COLUMN_NAME,
+    UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
     UNWEIGHTED_DEGREE_CENTRALITY_COLUMN_NAME,
     UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
     GraphType,
@@ -261,6 +263,7 @@ class NetworkData(KiaraTables):
             EDGE_IDX_DUP_UNDIRECTED_COLUMN_METADATA,
             EDGE_SOURCE_COLUMN_METADATA,
             EDGE_TARGET_COLUMN_METADATA,
+            NODE_BIPARTITE_DEGREE_COLUMN_METADATA,
             NODE_COUND_EDGES_MULTI_COLUMN_METADATA,
             NODE_COUNT_EDGES_COLUMN_METADATA,
             NODE_COUNT_IN_EDGES_COLUMN_METADATA,
@@ -380,6 +383,12 @@ class NetworkData(KiaraTables):
             overwrite_existing=False,
         )
         network_data.nodes.set_column_metadata(
+            UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_BIPARTITE_DEGREE_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
             CONNECTIONS_MULTI_COLUMN_NAME,
             ATTRIBUTE_PROPERTY_KEY,
             NODE_COUND_EDGES_MULTI_COLUMN_METADATA,
@@ -389,6 +398,12 @@ class NetworkData(KiaraTables):
             UNWEIGHTED_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
             ATTRIBUTE_PROPERTY_KEY,
             NODE_DEGREE_MULTI_COLUMN_METADATA,
+            overwrite_existing=False,
+        )
+        network_data.nodes.set_column_metadata(
+            UNWEIGHTED_BIPARTITE_DEGREE_CENTRALITY_MULTI_COLUMN_NAME,
+            ATTRIBUTE_PROPERTY_KEY,
+            NODE_BIPARTITE_DEGREE_COLUMN_METADATA,
             overwrite_existing=False,
         )
         network_data.nodes.set_column_metadata(
