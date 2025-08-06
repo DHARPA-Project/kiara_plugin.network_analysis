@@ -107,7 +107,8 @@ packages = ["src/kiara_plugin"]
 
 [tool.pytest.ini_options]
 pythonpath = [
-    "src"
+    "src",
+    "tests"
 ]
 addopts = "--verbose"
 norecursedirs = [
